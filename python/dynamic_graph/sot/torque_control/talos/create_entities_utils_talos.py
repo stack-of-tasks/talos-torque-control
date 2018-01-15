@@ -509,7 +509,7 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
 def connect_ctrl_manager(robot):    
     # connect to device    
     plug(robot.device.currents,               robot.ctrl_manager.i_measured);
-    #plug(robot.estimator_ft.jointsTorques,    robot.ctrl_manager.tau);
+    plug(robot.device.ptorque,    robot.ctrl_manager.tau);
     robot.ctrl_manager.addCtrlMode("pos");
     robot.ctrl_manager.addCtrlMode("torque");    
     plug(robot.torque_ctrl.u,                           robot.ctrl_manager.ctrl_torque);
