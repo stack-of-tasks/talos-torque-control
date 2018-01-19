@@ -8,7 +8,7 @@ import numpy as np
 from dynamic_graph import plug
 from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ
-from dynamic_graph.sot.torque_control.talos.utils.sot_utils_talos import start_sot, stop_sot, Bunch
+from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, Bunch
 from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_topic
 from dynamic_graph.sot.torque_control.talos.main_talos import main_v3

@@ -114,6 +114,7 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/tests/__init__.py
   DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/tests)
          
 INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
+              python/dynamic_graph/sot/torque_control/talos/admittance_ctrl_conf.py
               python/dynamic_graph/sot/torque_control/talos/balance_ctrl_conf.py
               python/dynamic_graph/sot/torque_control/talos/balance_ctrl_sim_conf.py
 	      python/dynamic_graph/sot/torque_control/talos/base_estimator_conf.py

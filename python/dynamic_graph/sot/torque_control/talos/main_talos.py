@@ -13,7 +13,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import c
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_ctrl_manager, create_ros_topics
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_free_flyer_locator#, create_flex_estimator, create_floatingBase
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_current_controller, connect_ctrl_manager
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_tracer, create_topic
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_tracer, create_topic, create_admittance_ctrl
 from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, go_to_position, Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_chebi2_lp_filter_Wn_03_N_4
@@ -22,18 +22,18 @@ from time import sleep
 
 def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
+    import dynamic_graph.sot.torque_control.talos.admittance_ctrl_conf as admittance_ctrl_conf
     import dynamic_graph.sot.torque_control.talos.base_estimator_conf as base_estimator_conf
     import dynamic_graph.sot.torque_control.talos.control_manager_conf as control_manager_conf
-    #import dynamic_graph.sot.torque_control.talos.current_controller_conf as current_controller_conf
     import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains as pos_ctrl_gains
     import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
     conf = Bunch();
     conf.balance_ctrl              = balance_ctrl_conf;
+    conf.adm_ctrl                  = admittance_ctrl_conf;
     conf.base_estimator            = base_estimator_conf;
     conf.control_manager           = control_manager_conf;
-    #conf.current_ctrl              = current_controller_conf;
     conf.force_torque_estimator    = force_torque_estimator_conf;
     conf.joint_torque_controller   = joint_torque_controller_conf;
     conf.pos_ctrl_gains            = pos_ctrl_gains;
@@ -99,15 +99,15 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
     plug(robot.encoders.sout,             robot.encoder_filter.x)
     #plug(robot.encoder_filter.dx,         robot.current_ctrl.dq);
     plug(robot.encoder_filter.dx,         robot.torque_ctrl.jointsVelocities);
-    plug(robot.encoder_filter.x_filtered, robot.base_estimator.joint_positions);
-    plug(robot.encoder_filter.dx,         robot.base_estimator.joint_velocities);
+    #plug(robot.encoder_filter.x_filtered, robot.base_estimator.joint_positions);
+    #plug(robot.encoder_filter.dx,         robot.base_estimator.joint_velocities);
 
     robot.ros = RosPublish('rosPublish');
     robot.device.after.addDownsampledSignal('rosPublish.trigger',1);
 
     #robot.estimator_ft.dgyro.value = (0.0, 0.0, 0.0);
     #robot.estimator_ft.gyro.value = (0.0, 0.0, 0.0);
-    #estimator.accelerometer.value = (0.0, 0.0, 9.81);
+#    estimator.accelerometer.value = (0.0, 0.0, 9.81);
     if(startSoT):
         print "Gonna start SoT";
         sleep(1.0);
