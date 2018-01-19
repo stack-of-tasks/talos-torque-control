@@ -8,8 +8,8 @@ import numpy as np
 
 NJ = 32;
 TAU_MAX                     = 1e3;   # max joint torques (security check of ControlManager)
-CURRENT_MAX                 = 8.0;   # max motor current (security check of ControlManager)
-CTRL_MAX                    = 10.0;   # max desired current (security check of ControlManager)
+CURRENT_MAX                 = 10000.0;   # max motor current (security check of ControlManager)
+CTRL_MAX                    = 10000.0;   # max desired current (security check of ControlManager)
 model_path                  = ["/opt/openrobots/share"];
 urdfFileName                = model_path[0] + "/talos_data/robots/talos_reduced.urdf";
 ImuJointName                = "imu_joint";
