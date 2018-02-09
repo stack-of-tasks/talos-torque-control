@@ -598,7 +598,7 @@ def addSignalsToTracer(tracer, device):
     addTrace(tracer,device,'currents');
 
 
-def create_tracer(device, traj_gen=None, estimator_ft=None, estimator_kin=None,
+def create_tracer(device, traj_gen=None, estimator_kin=None,
                   inv_dyn=None, torque_ctrl=None):
     tracer = TracerRealTime('motor_id_trace');
     tracer.setBufferSize(80*(2**20));
@@ -608,15 +608,6 @@ def create_tracer(device, traj_gen=None, estimator_ft=None, estimator_kin=None,
     addSignalsToTracer(tracer, device);
         
     with open('/tmp/dg_info.dat', 'a') as f:
-        if(estimator_ft!=None):
-            #f.write('Estimator F/T sensors delay: {0}\n'.format(robot.estimator_ft.getDelayFTsens()));
-            f.write('Estimator use reference velocities: {0}\n'.format(robot.estimator_ft.getUseRefJointVel()));
-            f.write('Estimator use reference accelerations: {0}\n'.format(robot.estimator_ft.getUseRefJointAcc()));
-            #f.write('Estimator accelerometer delay: {0}\n'.format(robot.estimator_ft.getDelayAcc()));
-            #f.write('Estimator gyroscope delay: {0}\n'.format(robot.estimator_ft.getDelayGyro()));
-            f.write('Estimator use raw encoders: {0}\n'.format(robot.estimator_ft.getUseRawEncoders()));
-            f.write('Estimator use f/t sensors: {0}\n'.format(robot.estimator_ft.getUseFTsensors()));
-            f.write('Estimator f/t sensor offsets: {0}\n'.format(robot.estimator_ft.getFTsensorOffsets()));
         if(estimator_kin!=None):
             f.write('Estimator encoder delay: {0}\n'.format(robot.filters.estimator_kin.getDelay()));
         if(inv_dyn!=None):

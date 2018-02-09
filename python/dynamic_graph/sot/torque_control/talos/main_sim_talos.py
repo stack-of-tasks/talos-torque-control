@@ -36,7 +36,7 @@ def get_sim_conf():
     conf.motor_params              = motor_params;
     return conf;
 
-def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state=True, startSoT=True):
+def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state=False, startSoT=True):
     # BUILD THE STANDARD GRAPH
     conf = get_sim_conf();
     robot = main_v3(robot, startSoT=False, go_half_sitting=False, conf=conf);
@@ -63,15 +63,17 @@ def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state
     # BYPASS JOINT VELOCITY ESTIMATOR
     if(use_real_vel):
         robot.dq = Selec_of_vector("dq");
-        plug(robot.device.robotVelocity, robot.dq.sin);
+        #plug(robot.device.robotVelocity, robot.dq.sin); # to check robotVelocity empty
+        plug(robot.device.velocity, robot.dq.sin);
         robot.dq.selec(6, NJ+6);
-        #plug(robot.dq.sout,             robot.pos_ctrl.jointsVelocities); # generate seg fault
+        plug(robot.dq.sout,             robot.pos_ctrl.jointsVelocities); # generate seg fault
         plug(robot.dq.sout,             robot.base_estimator.joint_velocities);
         plug(robot.device.gyrometer,    robot.base_estimator.gyroscope);
 
     # BYPASS BASE ESTIMATOR
     robot.v = Selec_of_vector("v");
-    plug(robot.device.robotVelocity, robot.v.sin);
+    #plug(robot.device.robotVelocity, robot.dq.sin); # to check robotVelocity empty
+    plug(robot.device.velocity, robot.dq.sin);
     robot.v.selec(0, NJ+6);
     if(use_real_base_state):
         plug(robot.q.sout,              robot.inv_dyn.q);

@@ -61,7 +61,7 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
          # Head
          0.0,0.0);
 
-    robot.device.setControlInputType('noInteg');
+    #robot.device.setControlInputType('noInteg');
     robot.ctrl_manager    = create_ctrl_manager(conf.control_manager, conf.motor_params, dt);
 
     robot.traj_gen        = create_trajectory_generator(robot.device, dt);

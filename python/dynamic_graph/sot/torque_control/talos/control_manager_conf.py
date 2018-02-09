@@ -7,7 +7,7 @@ Created on Mon Feb  9 13:55:16 2015
 import numpy as np
 
 NJ = 32;
-TAU_MAX                     = 1e3;   # max joint torques (security check of ControlManager)
+TAU_MAX                     = 100.*1e3;   # max joint torques (security check of ControlManager)
 CURRENT_MAX                 = 10000.0;   # max motor current (security check of ControlManager)
 CTRL_MAX                    = 10000.0;   # max desired current (security check of ControlManager)
 model_path                  = ["/opt/openrobots/share"];

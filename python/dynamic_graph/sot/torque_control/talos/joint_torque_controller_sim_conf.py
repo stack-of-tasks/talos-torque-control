@@ -9,7 +9,7 @@ import numpy as np
 NJ = 32;
 
 COULOMB_FRICTION_COMPENSATION_PERCENTAGE = 0.0;
-k_p_torque                              = np.array(NJ*[0.0,]);   # torque control proportional gains
+k_p_torque                              = np.array(NJ*[1.0,]);   # torque control proportional gains
 k_d_torque                              = np.array(NJ*[0.0,]);   # torque control derivative gains
 k_i_torque                              = np.array(NJ*[0.0,]);   # torque control integral gains
 torque_integral_saturation              = np.array(NJ*[0.0,]);
