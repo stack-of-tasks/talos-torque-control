@@ -596,6 +596,7 @@ def addSignalsToTracer(tracer, device):
     addTrace(tracer,device,'forceLARM');
     addTrace(tracer,device,'control');
     addTrace(tracer,device,'currents');
+    addTrace(tracer,device,'ptorque');
 
 
 def create_tracer(device, traj_gen=None, estimator_kin=None,
