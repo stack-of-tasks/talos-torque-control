@@ -147,10 +147,12 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
     posCtrl.Kp.value = tuple(gains.kp_pos[round(dt,3)]);
     posCtrl.Kd.value = tuple(gains.kd_pos[round(dt,3)]);
     posCtrl.Ki.value = tuple(gains.ki_pos[round(dt,3)]);
+    posCtrl.iClamp.value = tuple(gains.iclamp);
     posCtrl.dqRef.value = NJ*(0.0,);
     plug(robot.device.robotState,             posCtrl.base6d_encoders);
     try:  # this works only in simulation
         plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        #plug(robot.device.robotVelocity,    posCtrl.jointsVelocities);
     except:
         plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities);
         pass;
