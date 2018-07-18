@@ -135,3 +135,12 @@ def dump_signal_to_file(sig_list, index, filename, T, dt):
         sleep(dt);
     f.close();
 
+def start_movement_sinusoid(robot):
+    go_to_position(robot.traj_gen, robot.position1[6:], 10.0);
+    sleep(20.0)
+    robot.traj_gen.startSinusoid('le',-1.9,3);
+    return robot;
+
+def stop_movement_sinusoid(robot):
+    robot.traj_gen.stop('le');
+    return robot;
