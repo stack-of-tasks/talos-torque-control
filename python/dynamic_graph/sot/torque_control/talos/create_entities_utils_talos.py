@@ -5,7 +5,7 @@
 """
 
 from dynamic_graph import plug
-from dynamic_graph.sot.core.switch import Switch
+from dynamic_graph.sot.core.latch import Latch
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
@@ -26,6 +26,13 @@ def create_encoders(robot):
     from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('qn')
     plug(robot.device.robotState,     encoders.sin);
+    encoders.selec(6,NJ+6);
+    return encoders
+
+def create_encoders_velocity(robot):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('dqn')
+    plug(robot.device.robotVelocity,     encoders.sin);
     encoders.selec(6,NJ+6);
     return encoders
 
@@ -98,7 +105,7 @@ def create_force_traj_gen(name, initial_value, dt):
     return force_traj_gen ;
 
 def create_trajectory_switch():
-    traj_sync = Switch("traj_sync");
+    traj_sync = Latch("traj_sync");
     return traj_sync ;
 
 def connect_synchronous_trajectories(switch, list_of_traj_gens):
@@ -150,7 +157,8 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
     posCtrl.dqRef.value = NJ*(0.0,);
     plug(robot.device.robotState,             posCtrl.base6d_encoders);
     try:  # this works only in simulation
-        plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        #plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        plug(robot.encoders_velocity.sout,    posCtrl.jointsVelocities);
     except:
         plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities);
         pass;
