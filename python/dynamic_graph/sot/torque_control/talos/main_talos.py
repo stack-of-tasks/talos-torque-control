@@ -7,7 +7,7 @@
 from dynamic_graph import plug
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_generator, create_com_traj_gen, create_encoders#, create_encoders_velocity
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_generator, create_com_traj_gen, create_encoders, create_encoders_velocity
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_imu_offset_compensation, create_filters, create_imu_filter
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_base_estimator, create_position_controller, create_torque_controller
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_ctrl_manager, create_ros_topics
@@ -76,7 +76,7 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
     robot.lf_traj_gen.init(dt);
     
     robot.encoders                              = create_encoders(robot);
-    #robot.encoders_velocity                     = create_encoders_velocity(robot);
+    robot.encoders_velocity                     = create_encoders_velocity(robot);
     robot.imu_offset_compensation               = create_imu_offset_compensation(robot, dt);
     #(robot.estimator_ft, robot.filters)         = create_estimators(robot, conf.force_torque_estimator, conf.motor_params, dt);
     robot.filters                               = create_filters(robot, conf.force_torque_estimator, conf.motor_params, dt);

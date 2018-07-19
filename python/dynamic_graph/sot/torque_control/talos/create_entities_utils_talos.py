@@ -29,12 +29,12 @@ def create_encoders(robot):
     encoders.selec(6,NJ+6);
     return encoders
 
-'''def create_encoders_velocity(robot):
+def create_encoders_velocity(robot):
     from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('dqn')
     plug(robot.device.robotVelocity,     encoders.sin);
     encoders.selec(6,NJ+6);
-    return encoders'''
+    return encoders
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    
     from dynamic_graph.sot.torque_control.base_estimator import BaseEstimator
@@ -157,7 +157,8 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
     posCtrl.dqRef.value = NJ*(0.0,);
     plug(robot.device.robotState,             posCtrl.base6d_encoders);
     try:  # this works only in simulation
-        plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        #plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        plug(robot.encoders_velocity.sout,    posCtrl.jointsVelocities);
     except:
         plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities);
         pass;
