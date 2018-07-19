@@ -136,6 +136,21 @@ def dump_signal_to_file(sig_list, index, filename, T, dt):
     f.close();
 
 def start_movement_sinusoid(robot):
+
+    robot.position1 = (
+         # Free flyer
+         0., 0., 1.018213, 0., 0. , 0.,
+         # legs
+         0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708,
+         0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708,
+         # Chest
+         0.0 ,  0.006761,
+         # arms
+         0.25847 ,  0.173046, -0.4, -1.3, 1.6, -0.0,  0.1, -0.005,
+         -0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,
+         # Head
+         0.0,0.0);
+
     go_to_position(robot.traj_gen, robot.position1[6:], 10.0);
     sleep(20.0)
     robot.traj_gen.startSinusoid('le',-1.9,3);

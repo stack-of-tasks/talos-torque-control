@@ -7,7 +7,7 @@ COM_DES = (0.00, 0.0, 0.81);
 
 # CONTROLLER GAINS
 NJ = 32;
-kp_posture  = NJ*(1000.0,);   # proportional gain of postural task
+kp_posture  = NJ*(100.0,);   # proportional gain of postural task
 kd_posture  = NJ*(0*sqrt(kp_posture[0]),);
 kp_pos      = NJ*(0.0,);   # proportional gain of position controller
 kd_pos      = NJ*(0*sqrt(kp_pos[0]),);
