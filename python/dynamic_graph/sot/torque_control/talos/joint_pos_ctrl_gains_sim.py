@@ -9,7 +9,55 @@ Position control PID gains stored according to the controller time step (1, 2, 5
 from joint_pos_ctrl_gains import *
 
 key = round(0.001,3);
-kp_pos[key] = 20*np.array(
+kp_pos[key] = np.array(
+ (5000.,  5000.,  5000.,  5000.,  5000.,  5000.,
+  5000.,  5000.,  5000.,  5000.,  5000.,  5000.,
+  10000.,  10000.,
+  10000.0, 20000.,  5000.,  5000.,  500.,  500.,  500.,   
+  1000.0,
+  10000.,  20000.,  5000.,  5000.,  500.,  500.,  500.,
+  1000.0,
+  300.0, 300.0));
+kd_pos[key] = np.array(
+ (20.,  20.,  20.,  20.,  20.,  20.,
+  20.,  20.,  20.,  20.,  20.,  20.,
+  10.,  10.,
+  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   
+  0.0,
+  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  0.0,
+  0.1, 0.1));
+ki_pos[key] = np.array(
+ (5.,  5.,  5.,  5.,  5.,  5.,
+  5.,  5.,  5.,  5.,  5.,  5.,
+  1.,  1.,
+  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   
+  0.0,
+  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  0.0,
+1.0, 1.0));
+
+key = round(0.002,3);
+kp_pos[key] = kp_pos[round(0.001,3)];
+kd_pos[key] = kd_pos[round(0.001,3)];
+ki_pos[key] = ki_pos[round(0.001,3)];
+
+key = round(0.003,3);
+kp_pos[key] = kp_pos[round(0.001,3)];
+kd_pos[key] = kd_pos[round(0.001,3)];
+ki_pos[key] = ki_pos[round(0.001,3)];
+               
+key = round(0.005,3);
+kp_pos[key] = kp_pos[round(0.001,3)];
+kd_pos[key] = kd_pos[round(0.001,3)];
+ki_pos[key] = ki_pos[round(0.001,3)];
+               
+key = round(0.010,3);
+kp_pos[key] = kp_pos[round(0.001,3)];
+kd_pos[key] = kd_pos[round(0.001,3)];
+ki_pos[key] = ki_pos[round(0.001,3)];
+
+'''kp_pos[key] = 20*np.array(
              (500.,  500.,  500.,  500.,  800.,  800.,
               500.,  500.,  500.,  500.,  800.,  800.,
               500.,  500.,
@@ -27,7 +75,7 @@ kd_pos[key] = .0*np.array(
                32.35, 55.86, 10.83, 87.05, 13.87, 11.19, 6.93,
                1.0,
                1.0,1.0));
-ki_pos[key] = np.zeros(NJ);
+ki_pos[key] = np.zeros(NJ);'''
                
 '''key = round(0.002,3);
 kp_pos[key] = np.array(
