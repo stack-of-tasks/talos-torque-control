@@ -15,7 +15,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_current_controller, connect_ctrl_manager
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_tracer, create_topic, create_admittance_ctrl
 from dynamic_graph.ros import RosPublish
-from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, go_to_position, Bunch, start_movement_sinusoid, stop_movement_sinusoid
+from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, go_to_position, Bunch, start_movement_sinusoid, stop_movement_sinusoid, go_to_position_sinusoid
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_chebi2_lp_filter_Wn_03_N_4
 
 from time import sleep
