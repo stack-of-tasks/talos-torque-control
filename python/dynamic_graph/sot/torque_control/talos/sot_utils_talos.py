@@ -135,7 +135,7 @@ def dump_signal_to_file(sig_list, index, filename, T, dt):
         sleep(dt);
     f.close();
 
-def start_movement_sinusoid(robot):
+def go_to_position_sinusoid(robot):
 
     robot.position1 = (
          # Free flyer
@@ -152,7 +152,10 @@ def start_movement_sinusoid(robot):
          0.0,0.0);
 
     go_to_position(robot.traj_gen, robot.position1[6:], 10.0);
-    sleep(20.0)
+    return robot;
+
+def start_movement_sinusoid(robot):
+
     robot.traj_gen.startSinusoid('le',-1.9,3);
     return robot;
 
