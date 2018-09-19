@@ -8,7 +8,7 @@ import numpy as np
 from dynamic_graph import plug
 from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ
-from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, Bunch, start_movement_sinusoid, stop_movement_sinusoid
+from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, Bunch, start_movement_sinusoid, stop_movement_sinusoid, go_to_position, go_to_SE3_position_fixed_orientation, go_to_SE3_orientation, go_to_SE3_position
 from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_topic
 from dynamic_graph.sot.torque_control.talos.main_talos import main_v3
@@ -81,6 +81,20 @@ def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state
         plug(robot.v.sout,              robot.inv_dyn.v);'''
 
     robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);
+
+    robot.pos = (
+         # Free flyer
+         0., 0., 1.018213, 0., 0. , 0.,
+         # legs
+         0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708,
+         0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708,
+         # Chest
+         0.0 ,  0.006761,
+         # arms
+         0.0 ,  1.0, -0.0002, -2.0, 0.0, -0.0,  0.2, -0.005,
+         -0.0 , -1.0, 0.0002  , -2.0, 0.0,  0.0,  0.2,-0.005,
+         # Head
+         0.0,0.0);
 
     if(startSoT):
         start_sot();
