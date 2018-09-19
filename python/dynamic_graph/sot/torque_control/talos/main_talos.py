@@ -72,8 +72,12 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
     robot.traj_sync       = create_trajectory_switch();
     robot.rf_traj_gen     = SE3TrajectoryGenerator("tg_rf");
     robot.lf_traj_gen     = SE3TrajectoryGenerator("tg_lf");
+    robot.rh_traj_gen     = SE3TrajectoryGenerator("tg_rh");
+    robot.lh_traj_gen     = SE3TrajectoryGenerator("tg_lh");
     robot.rf_traj_gen.init(dt);
     robot.lf_traj_gen.init(dt);
+    robot.rh_traj_gen.init(dt);
+    robot.lh_traj_gen.init(dt);
     
     robot.encoders                              = create_encoders(robot);
     robot.encoders_velocity                     = create_encoders_velocity(robot);
@@ -86,7 +90,8 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
     connect_synchronous_trajectories(robot.traj_sync,
                                      [robot.com_traj_gen,
                                       robot.rf_force_traj_gen, robot.lf_force_traj_gen,
-                                      robot.rf_traj_gen, robot.lf_traj_gen])
+                                      robot.rf_traj_gen, robot.lf_traj_gen,
+                                      robot.rh_traj_gen, robot.lh_traj_gen])
     #robot.rf_traj_gen, robot.lf_traj_gen])
 
     robot.pos_ctrl        = create_position_controller(robot, conf.pos_ctrl_gains, dt);
@@ -126,40 +131,3 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
 def main_post_start(robot):
     ros = create_ros_topics(robot);
     return ros;
-
-''' Main function to call before starting the graph. '''
-'''def main_v2(robot, delay=0.01, startSoT=True, go_half_sitting=True, urdfFileName='/opt/openrobots/share/hrp2_14_description/urdf/talos.urdf'):
-    dt = robot.timeStep;
-    robot.device.setControlInputType('position');
-    
-    robot.traj_gen        = create_trajectory_generator(robot.device, dt);
-    robot.com_traj_gen    = create_com_traj_gen(dt);
-    robot.rf_traj_gen     = SE3TrajectoryGenerator("tg_rf");
-    robot.lf_traj_gen     = SE3TrajectoryGenerator("tg_lf");
-    robot.rf_traj_gen.init(dt);
-    robot.lf_traj_gen.init(dt);
-    (robot.estimator_ft, robot.filters)       = create_estimators(robot, dt, delay);
-
-    robot.ff_locator      = create_free_flyer_locator(robot, urdfFileName);
-    robot.flex_est        = create_flex_estimator(robot, dt);
-    robot.floatingBase    = create_floatingBase(robot);
-
-    robot.pos_ctrl        = create_position_controller(robot, dt);
-    robot.torque_ctrl     = create_torque_controller(robot);
-#    inv_dyn         = create_inverse_dynamics(robot, dt);    
-    robot.inv_dyn         = create_balance_controller(robot, urdfFileName, dt);
-    robot.ctrl_manager    = create_ctrl_manager(robot, dt);
-    
-    robot.estimator_ft.gyro.value = (0.0, 0.0, 0.0);
-#    estimator.accelerometer.value = (0.0, 0.0, 9.81);
-    if(startSoT):
-        print "Gonna start SoT";
-        sleep(1.0);
-        start_sot();
-
-        if(go_half_sitting):
-            print "Gonna go to half sitting";
-            sleep(1.0);
-            go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0);
-
-    return robot;'''

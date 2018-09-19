@@ -316,6 +316,16 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos);
     plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel);
     plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc);
+
+    plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
+    plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos);
+    plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel);
+    plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc);
+
+    plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
+    plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos);
+    plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel);
+    plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc);
     
     plug(robot.traj_gen.q,                        ctrl.posture_ref_pos);
     plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel);
@@ -348,6 +358,8 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     ctrl.kd_constraints.value = 6*(conf.kd_constr,);
     ctrl.kp_feet.value = 6*(conf.kp_feet,);
     ctrl.kd_feet.value = 6*(conf.kd_feet,);
+    ctrl.kp_hands.value = 6*(conf.kp_hands,);
+    ctrl.kd_hands.value = 6*(conf.kd_hands,);
     ctrl.kp_posture.value = conf.kp_posture;
     ctrl.kd_posture.value = conf.kd_posture;
     ctrl.kp_pos.value = conf.kp_pos;
@@ -355,6 +367,7 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
 
     ctrl.w_com.value = conf.w_com;
     ctrl.w_feet.value = conf.w_feet;
+    ctrl.w_hands.value = conf.w_hands;
     ctrl.w_forces.value = conf.w_forces;
     ctrl.w_posture.value = conf.w_posture;
     ctrl.w_base_orientation.value = conf.w_base_orientation;
@@ -433,6 +446,10 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     # Set the foot frame name
     for key in conf.footFrameNames:
       ctrl_manager.setFootFrameName(key,conf.footFrameNames[key])
+
+    # Set the hand frame name
+    for key in conf.handFrameNames:
+      ctrl_manager.setHandFrameName(key,conf.handFrameNames[key])
     
     # Set IMU hosting joint name
     ctrl_manager.setImuJointName(conf.ImuJointName)

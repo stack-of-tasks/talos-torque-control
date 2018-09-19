@@ -162,3 +162,33 @@ def start_movement_sinusoid(robot):
 def stop_movement_sinusoid(robot):
     robot.traj_gen.stop('le');
     return robot;
+
+def go_to_SE3_position_fixed_orientation(traj_gen, pos, T=10.0):
+    traj_gen.move(0, pos[0], T)
+    traj_gen.move(1, pos[1], T)
+    traj_gen.move(2, pos[2], T)
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, 0, T)
+    traj_gen.move(5, 1, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 1, T)
+    traj_gen.move(8, 0, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_orientation(traj_gen, T=10):
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, 0, T)
+    traj_gen.move(5, 1, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 1, T)
+    traj_gen.move(8, 0, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_position(traj_gen, pos, T=10):
+    traj_gen.move(0, pos[0], T)
+    traj_gen.move(1, pos[1], T)
+    traj_gen.move(2, pos[2], T)
