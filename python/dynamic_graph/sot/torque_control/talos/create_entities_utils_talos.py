@@ -408,7 +408,7 @@ def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     inv_dyn_ctrl.controlledJoints.value = NJ*(1.0,);
     inv_dyn_ctrl.init(dt);
     return inv_dyn_ctrl;
-        
+
 def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     ctrl_manager = ControlManager("ctrl_man");        
 

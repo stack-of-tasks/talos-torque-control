@@ -126,7 +126,6 @@ def main_v3(robot, startSoT=True, go_half_sitting=True, conf=None):
 
     return robot;
 
-
 ''' Main function to call after having started the graph. '''
 def main_post_start(robot):
     ros = create_ros_topics(robot);
