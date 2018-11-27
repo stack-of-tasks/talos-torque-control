@@ -1,17 +1,6 @@
 /*
  * Copyright 2014, Oscar E. Ramos Ponce, LAAS-CNRS
  *
- * This file is part of sot-torque-control.
- * sot-torque-control is free software: you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- * sot-torque-control is distributed in the hope that it will be
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
- * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.  You should
- * have received a copy of the GNU Lesser General Public License along
- * with sot-torque-control.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __sot_torque_control_talos_common_H__
@@ -54,7 +43,7 @@ namespace dynamicgraph {
 
 const double DEFAULT_MAX_DELTA_Q = 0.1; /// max joint position tracking error [rad]
 
-const double DEFAULT_MAX_CURRENT = 5;     /// max CURRENT (double in [0 Amp, 20 Amp]) 
+const double DEFAULT_MAX_CURRENT = 5;     /// max CURRENT (double in [0 Amp, 20 Amp])
 
       // Information on the location of the IMU and F/T sensors of HRP-2
       // copied from the urdf file (in stacks/hrp2/hrp2_14_description/urdf):
