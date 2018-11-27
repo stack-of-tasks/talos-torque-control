@@ -22,9 +22,10 @@ INCLUDE(cmake/cpack.cmake)
 INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/python.cmake)
 
-SET(PROJECT_NAME sot-torque-control-talos)
+SET(PROJECT_ORG pyrene-dev)
+SET(PROJECT_NAME talos-torque-control)
 SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aiming at the implementation of torque control on TALOS.")
-SET(PROJECT_URL "ssh://git@redmine.laas.fr/laas/sot-torque-control/talos-torque-control.git")
+SET(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
 
 SET(CUSTOM_HEADER_DIR "sot/torque-control")
 
@@ -109,10 +110,10 @@ TARGET_LINK_LIBRARIES(${TALOS_LIBRARY_NAME} ${Boost_LIBRARIES})
 INSTALL(TARGETS ${TALOS_LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 FINDPYTHON()
-         
+
 INSTALL(FILES python/dynamic_graph/sot/torque_control/tests/__init__.py
   DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/tests)
-         
+
 INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/admittance_ctrl_conf.py
               python/dynamic_graph/sot/torque_control/talos/balance_ctrl_conf.py
