@@ -36,6 +36,79 @@ def create_encoders_velocity(robot):
     encoders.selec(6,NJ+6);
     return encoders
 
+def create_joint_pos_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpJointPos')
+    plug(robot.device.robotState,     encoders.sin);
+    encoders.selec(conf.controlled_joint+6, conf.controlled_joint+7);
+    return encoders
+
+def create_joint_vel_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpJointVel')
+    plug(robot.device.robotVelocity,     encoders.sin);
+    encoders.selec(conf.controlled_joint+6, conf.controlled_joint+7);
+    return encoders
+
+def create_joint_torque_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpJointTorque')
+    plug(robot.device.ptorque,     encoders.sin);
+    encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
+    return encoders
+
+def create_pos_des_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpJointPosDes')
+    plug(robot.traj_gen.q,     encoders.sin);
+    encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
+    return encoders
+
+def create_motor_pos_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpMotorPos')
+    plug(robot.device.motor_angles,     encoders.sin);
+    encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
+    return encoders
+
+def create_tau_des_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpTauDes')
+    plug(robot.inv_dyn.tau_des,     encoders.sin);
+    encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
+    return encoders
+
+def create_torque_des_selector(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpTorqueDes')
+    plug(robot.torque_ctrl.u,     encoders.sin);
+    encoders.selec(0, 31);
+    return encoders
+
+def create_torque_des_selector2(robot, conf):
+    from dynamic_graph.sot.core import Selec_of_vector
+    encoders = Selec_of_vector('selecDdpTorqueDes2')
+    plug(robot.torque_ctrl.u,     encoders.sin);
+    encoders.selec(31, 32);
+    return encoders
+
+def create_signal_mixer(robot, conf):
+    from dynamic_graph.sot.core import Mix_of_vector
+    signal_mixer = Mix_of_vector('mix');
+    signal_mixer.setSignalNumber(2);
+    plug(robot.torque_des_selec_ddp.sout,      signal_mixer.default);
+    #plug(robot.inv_dyn.tau_des,                signal_mixer.default);
+    plug(robot.ddp_ctrl.tau,                   signal_mixer.sin1);
+    #plug(robot.torque_des_selec_ddp2.sout,     signal_mixer.sin1);
+    #plug(robot.inv_dyn.tau_des,                signal_mixer.sin1);
+
+    #signal_mixer.addSelec(1, 1, 31);
+    signal_mixer.addSelec(1, 0, 1);
+
+    #signal_mixer.addSelec(1, conf.controlled_joint+1, conf.NJ-conf.controlled_joint);
+    #plug(signal_mixer.sout,   robot.torque_ctrl.jointsTorquesDesired);
+    return signal_mixer
+
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    
     from dynamic_graph.sot.torque_control.base_estimator import BaseEstimator
     base_estimator = BaseEstimator('base_estimator');
@@ -409,6 +482,39 @@ def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     inv_dyn_ctrl.init(dt);
     return inv_dyn_ctrl;
 
+'''def create_ddp_controller(robot, conf, dt):
+    from dynamic_graph.sot.torque_control.ddp_actuator_solver import DdpActuatorSolver
+    ddp_controller = DdpActuatorSolver("ddp_ctrl");
+    plug(robot.encoders.sout,              ddp_controller.pos_joint_measure);
+    plug(robot.encoders_velocity.sout,     ddp_controller.dx_measure);
+    plug(robot.traj_gen.q,                 ddp_controller.pos_des);
+    plug(robot.device.ptorque,             ddp_controller.tau_measure);
+    plug(robot.device.motor_angles,        ddp_controller.pos_motor_measure);
+    
+    ddp_controller.temp_measure.value = conf.temp_const;
+
+    #plug(ddp_controller.tau,            robot.torque_ctrl.jointsTorquesDesired);
+
+    ddp_controller.init(dt, conf.T, conf.nb_init, conf.stop_criteria)
+    return ddp_controller;'''
+
+def create_ddp_controller(robot, conf, dt):
+    from dynamic_graph.sot.torque_control.ddp_actuator_solver import DdpActuatorSolver
+    ddp_controller = DdpActuatorSolver("ddp_ctrl");
+    plug(robot.joint_pos_selec_ddp.sout,        ddp_controller.pos_joint_measure);
+    plug(robot.joint_vel_selec_ddp.sout,        ddp_controller.dx_measure);
+    plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des);
+    plug(robot.joint_torque_selec_ddp.sout,     ddp_controller.tau_measure);
+    plug(robot.motor_pos_selec_ddp.sout,        ddp_controller.pos_motor_measure);
+    plug(robot.tau_des_selec_ddp.sout,           ddp_controller.tau_des);
+    
+    ddp_controller.temp_measure.value = conf.temp_const;
+
+    #plug(ddp_controller.tau,            robot.torque_ctrl.jointsTorquesDesired);
+
+    ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
+    return ddp_controller;
+
 def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     ctrl_manager = ControlManager("ctrl_man");        
 
@@ -465,7 +571,7 @@ def connect_ctrl_manager(robot):
     plug(robot.device.ptorque,    robot.ctrl_manager.tau);
     robot.ctrl_manager.addCtrlMode("pos");
     robot.ctrl_manager.addCtrlMode("torque");    
-    plug(robot.torque_ctrl.u,                           robot.ctrl_manager.ctrl_torque);
+    #plug(robot.torque_ctrl.u,                           robot.ctrl_manager.ctrl_torque);
     plug(robot.pos_ctrl.pwmDes,                         robot.ctrl_manager.ctrl_pos);
     plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints);
     robot.ctrl_manager.setCtrlMode("all", "pos");

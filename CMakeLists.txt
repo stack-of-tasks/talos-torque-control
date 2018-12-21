@@ -125,6 +125,7 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters_sim.py
 	      python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
+	      python/dynamic_graph/sot/torque_control/talos/ddp_controller_conf.py
          DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
 
