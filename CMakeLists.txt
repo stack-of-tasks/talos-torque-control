@@ -28,6 +28,8 @@ SET(PROJECT_URL "ssh://git@redmine.laas.fr/laas/sot-torque-control/talos-torque-
 
 SET(CUSTOM_HEADER_DIR "sot/torque-control")
 
+SET(DOXYGEN_USE_MATHJAX YES)
+
 # Disable -Werror on Unix for now.
 SET(CXX_DISABLE_WERROR True)
 #add_compile_options(-std=c++11) # CMake 2.8.12 or newer
@@ -140,8 +142,9 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
          DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
 
-
+ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(doc)
 
 SETUP_PROJECT_FINALIZE()
 SETUP_PROJECT_CPACK()
