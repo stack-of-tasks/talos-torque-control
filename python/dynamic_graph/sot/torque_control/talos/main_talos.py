@@ -189,11 +189,11 @@ def main_v4(robot, startSoT=True, go_half_sitting=True, conf=None):
                                       robot.rh_traj_gen, robot.lh_traj_gen]);
     #robot.rf_traj_gen, robot.lf_traj_gen])
 
-    robot.pos_ctrl        = create_position_controller(robot, conf.pos_ctrl_gains, dt);
-    robot.torque_ctrl     = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt);
-    robot.inv_dyn         = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt);
-    robot.tau_des_selec_ddp                     = create_tau_des_selector(robot, conf.ddp_controller);
-    robot.ddp_ctrl        = create_ddp_controller(robot, conf.ddp_controller, dt);
+    robot.pos_ctrl          = create_position_controller(robot, conf.pos_ctrl_gains, dt);
+    robot.torque_ctrl       = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt);
+    robot.inv_dyn           = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt);
+    robot.tau_des_selec_ddp = create_tau_des_selector(robot, conf.ddp_controller);
+    robot.ddp_ctrl          = create_ddp_controller(robot, conf.ddp_controller, dt);
     
     #robot.torque_des_selec_ddp                  = create_torque_des_selector(robot, conf.ddp_controller);
     #robot.torque_des_selec_ddp2                 = create_torque_des_selector2(robot, conf.ddp_controller);

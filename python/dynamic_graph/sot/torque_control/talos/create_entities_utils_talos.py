@@ -6,14 +6,15 @@
 
 from dynamic_graph import plug
 from dynamic_graph.sot.core.latch import Latch
+from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
-from dynamic_graph.sot.torque_control.nd_trajectory_generator import NdTrajectoryGenerator
+from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot.torque_control.control_manager import ControlManager
 from dynamic_graph.sot.torque_control.current_controller import CurrentController
-from dynamic_graph.sot.torque_control.admittance_controller import AdmittanceController
+from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
 from dynamic_graph.sot.torque_control.position_controller import PositionController
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.torque_control.talos.motors_parameters import NJ
@@ -23,77 +24,76 @@ from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp
 #from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
 def create_encoders(robot):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('qn')
     plug(robot.device.robotState,     encoders.sin);
     encoders.selec(6,NJ+6);
     return encoders
 
 def create_encoders_velocity(robot):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('dqn')
     plug(robot.device.robotVelocity,     encoders.sin);
     encoders.selec(6,NJ+6);
     return encoders
 
 def create_joint_pos_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpJointPos')
     plug(robot.device.robotState,     encoders.sin);
     encoders.selec(conf.controlled_joint+6, conf.controlled_joint+7);
     return encoders
 
 def create_joint_vel_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpJointVel')
     plug(robot.device.robotVelocity,     encoders.sin);
     encoders.selec(conf.controlled_joint+6, conf.controlled_joint+7);
     return encoders
 
 def create_joint_torque_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpJointTorque')
     plug(robot.device.ptorque,     encoders.sin);
     encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
     return encoders
 
 def create_pos_des_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpJointPosDes')
     plug(robot.traj_gen.q,     encoders.sin);
     encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
     return encoders
 
 def create_motor_pos_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpMotorPos')
     plug(robot.device.motor_angles,     encoders.sin);
     encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
     return encoders
 
 def create_tau_des_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpTauDes')
     plug(robot.inv_dyn.tau_des,     encoders.sin);
     encoders.selec(conf.controlled_joint, conf.controlled_joint+1);
     return encoders
 
 def create_torque_des_selector(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpTorqueDes')
     plug(robot.torque_ctrl.u,     encoders.sin);
     encoders.selec(0, 31);
     return encoders
 
 def create_torque_des_selector2(robot, conf):
-    from dynamic_graph.sot.core import Selec_of_vector
     encoders = Selec_of_vector('selecDdpTorqueDes2')
     plug(robot.torque_ctrl.u,     encoders.sin);
     encoders.selec(31, 32);
     return encoders
 
+def create_ddp_torque_mix(robot, conf):
+    signal_mixer = Mix_of_vector('Ddp_torque_mix')
+    signal_mixer.setSignalNumber(2)
+    plug(robot.torque_ctrl.u, signal_mixer.sin1)
+    plug(robot.ddp_ctrl.tau,  signal_mixer.default)
+    signal_mixer.addSelec(1, 0, conf.controlled_joint)
+    signal_mixer.addSelec(1, conf.controlled_joint, conf.NJ-conf.controlled_joint+1)
+    #plug(signal_mixer.sout, robot.ctrl_manager.ctrl_torque)
+    return signal_mixer
+
 def create_signal_mixer(robot, conf):
-    from dynamic_graph.sot.core import Mix_of_vector
     signal_mixer = Mix_of_vector('mix');
     signal_mixer.setSignalNumber(2);
     plug(robot.torque_des_selec_ddp.sout,      signal_mixer.default);
@@ -158,7 +158,7 @@ def create_imu_offset_compensation(robot, dt):
     return imu_offset_compensation;
 
 def create_imu_filter(robot, dt):
-    from dynamic_graph.sot.torque_control.madgwickahrs import MadgwickAHRS
+    from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
     imu_filter = MadgwickAHRS('imu_filter');
     imu_filter.init(dt);
     plug(robot.imu_offset_compensation.accelerometer_out, imu_filter.accelerometer);
@@ -326,7 +326,7 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     plug(robot.filters.estimator_kin.dx,                torque_ctrl.jointsVelocities);
     plug(robot.filters.estimator_kin.ddx,               torque_ctrl.jointsAccelerations);
     #plug(robot.estimator_ft.jointsTorques,              torque_ctrl.jointsTorques);
-    plug(robot.device.ptorque,                              torque_ctrl.jointsTorques); #New
+    plug(robot.device.ptorque,                          torque_ctrl.jointsTorques); #New
     torque_ctrl.jointsTorquesDesired.value              = NJ*(0.0,);
     torque_ctrl.jointsTorquesDerivative.value           = NJ*(0.0,);
     torque_ctrl.dq_des.value                            = NJ*(0.0,);
@@ -506,11 +506,21 @@ def create_ddp_controller(robot, conf, dt):
     plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des);
     plug(robot.joint_torque_selec_ddp.sout,     ddp_controller.tau_measure);
     plug(robot.motor_pos_selec_ddp.sout,        ddp_controller.pos_motor_measure);
-    plug(robot.tau_des_selec_ddp.sout,           ddp_controller.tau_des);
+    plug(robot.tau_des_selec_ddp.sout,          ddp_controller.tau_des);
     
     ddp_controller.temp_measure.value = conf.temp_const;
 
     #plug(ddp_controller.tau,            robot.torque_ctrl.jointsTorquesDesired);
+
+    ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
+    return ddp_controller;
+
+def create_pyrene_ddp_controller(robot, conf, dt):
+    from dynamic_graph.sot.torque_control.ddp_pyrene_actuator_solver import DdpPyreneActuatorSolver
+    ddp_controller = DdpPyreneActuatorSolver("ddp_ctrl");
+    plug(robot.joint_pos_selec_ddp.sout,        ddp_controller.pos_joint_measure);
+    plug(robot.joint_vel_selec_ddp.sout,        ddp_controller.dx_joint_measure);
+    plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des);
 
     ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
     return ddp_controller;

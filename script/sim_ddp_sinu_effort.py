@@ -22,15 +22,15 @@ try:
 
     raw_input("Waiting before launching the graph")
     runCommandClient("from dynamic_graph import *")
-    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_talos_sinusoid import *")
+    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_ddp_talos import *")
 
-    print("Initialize sinusoid simulation (Dynamic Graph)")
-    runCommandClient("main_sim_v3(robot, startSoT=True, go_half_sitting=True)")
+    print("Initialize DDP sinusoid simulation (Dynamic Graph)")
+    runCommandClient("ddp_actuator(robot, startSoT=True, go_half_sitting=True)")
 
-    print("WriteGraph in /tmp/sot_talos_tsid_effort.dot")
-    runCommandClient("writeGraph('/tmp/sot_talos_tsid_effort.dot')")
-    print("Convert graph to PDF in /tmp/sot_talos_tsid_effort.pdf")
-    proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_effort.dot", "-o", "/tmp/sot_talos_tsid_effort.pdf"])
+    print("WriteGraph in /tmp/sot_ddp_talos_tsid_effort.dot")
+    runCommandClient("writeGraph('/tmp/sot_ddp_talos_tsid_effort.dot')")
+    print("Convert graph to PDF in /tmp/sot_ddp_talos_tsid_effort.pdf")
+    proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_ddp_talos_tsid_effort.dot", "-o", "/tmp/sot_ddp_talos_tsid_effort.pdf"])
 
     raw_input("Wait before starting the dynamic graph (SoT)")
     runCommandClient("start_sot()")

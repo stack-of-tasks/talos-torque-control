@@ -135,6 +135,7 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/main_talos.py
               python/dynamic_graph/sot/torque_control/talos/main_talos_sinusoid.py
               python/dynamic_graph/sot/torque_control/talos/main_sim_talos.py
+              python/dynamic_graph/sot/torque_control/talos/main_sim_ddp_talos.py
               python/dynamic_graph/sot/torque_control/talos/main_sim_talos_sinusoid.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters_sim.py
@@ -142,9 +143,6 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/ddp_controller_conf.py
 DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
-
-ADD_SUBDIRECTORY(include)
-ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(doc)
 
 SETUP_PROJECT_FINALIZE()
