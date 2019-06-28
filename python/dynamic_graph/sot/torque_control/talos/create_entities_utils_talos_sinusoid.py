@@ -9,16 +9,17 @@ from dynamic_graph.sot.core.latch import Latch
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
-from dynamic_graph.sot.torque_control.nd_trajectory_generator import NdTrajectoryGenerator
+from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot.torque_control.control_manager import ControlManager
 from dynamic_graph.sot.torque_control.current_controller import CurrentController
-from dynamic_graph.sot.torque_control.admittance_controller import AdmittanceController
+from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
 from dynamic_graph.sot.torque_control.position_controller import PositionController
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.torque_control.talos.motors_parameters import NJ
 from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
+from dynamic_graph.sot.core.filter_differentiator import FilterDifferentiator
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
 #from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
@@ -85,7 +86,7 @@ def create_imu_offset_compensation(robot, dt):
     return imu_offset_compensation;
 
 def create_imu_filter(robot, dt):
-    from dynamic_graph.sot.torque_control.madgwickahrs import MadgwickAHRS
+    from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
     imu_filter = MadgwickAHRS('imu_filter');
     imu_filter.init(dt);
     plug(robot.imu_offset_compensation.accelerometer_out, imu_filter.accelerometer);
@@ -525,7 +526,7 @@ def create_ros_topics(robot):
     from dynamic_graph.ros import RosPublish
     ros = RosPublish('rosPublish');
     try:
-        create_topic(ros, robot.device.robotState,      'robotState');
+        create_topic(ros, robot.device.robotState,      'position');
         create_topic(ros, robot.device.gyrometer,       'gyrometer');
         create_topic(ros, robot.device.accelerometer,   'accelerometer');
         create_topic(ros, robot.device.forceRLEG,       'forceRLEG');
@@ -618,14 +619,14 @@ def create_tracer(device, traj_gen=None, estimator_kin=None,
         
     with open('/tmp/dg_info.dat', 'a') as f:
         if(estimator_kin!=None):
-            f.write('Estimator encoder delay: {0}\n'.format(robot.filters.estimator_kin.getDelay()));
+            f.write('Estimator encoder delay: {0}\n'.format(estimator_kin.getDelay()));
         if(inv_dyn!=None):
             f.write('Inv dyn Ks: {0}\n'.format(inv_dyn.Kp.value));
             f.write('Inv dyn Kd: {0}\n'.format(inv_dyn.Kd.value));
             f.write('Inv dyn Kf: {0}\n'.format(inv_dyn.Kf.value));
             f.write('Inv dyn Ki: {0}\n'.format(inv_dyn.Ki.value));
         if(torque_ctrl!=None):
-            f.write('Torque ctrl KpTorque: {0}\n'.format (robot.torque_ctrl.KpTorque.value ));
+            f.write('Torque ctrl KpTorque: {0}\n'.format (torque_ctrl.KpTorque.value ));
     f.close();
     return tracer;
 

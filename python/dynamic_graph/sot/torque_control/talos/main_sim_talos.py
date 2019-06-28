@@ -146,7 +146,7 @@ def test_ddp_actuator(robot, startSoT=True):
 def start_tracer_perso(robot):
     robot.tracer = TracerRealTime('robot_trace');
     robot.tracer.setBufferSize(80*(2**20));
-    robot.tracer.open('/home/pdandign/tmp/tracer/','dg_','.dat');
+    robot.tracer.open('~/tmp/tracer/','dg_','.dat');
     robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name));
 
     #robot.tracer.add('PYRENE.control','PYRENE-control');

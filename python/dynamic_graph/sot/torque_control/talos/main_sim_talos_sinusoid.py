@@ -13,7 +13,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_balance_controller, create_ctrl_manager, create_ros_topics
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_free_flyer_locator#, create_flex_estimator, create_floatingBase
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_current_controller, connect_ctrl_manager
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_tracer, create_topic, create_admittance_ctrl
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos_sinusoid import create_tracer, create_topic
 from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, go_to_position, Bunch, start_movement_sinusoid, stop_movement_sinusoid, go_to_position_sinusoid
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_chebi2_lp_filter_Wn_03_N_4
@@ -46,6 +46,15 @@ def main_sim_v3(robot, startSoT=True, go_half_sitting=True):
     conf = get_sim_conf();
     dt = robot.timeStep;
     
+    # q =  [0., 0., 1.018213, 0., 0., 0.]                                  #Base
+    # q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Left Leg
+    # q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Right Leg
+    # q += [0.0 ,  0.006761]                                               #Chest
+    # q += [0.25847 ,  0.173046, -0.0002, -0.525366, 0., 0.,  0.1, -0.005] #Left Arm
+    # q += [-0.25847 , -0.173046, 0.0002, -0.525366, 0., 0.,  0.1, -0.005] #Right Arm
+    # q += [0.,  0.]                                                       #Head
+    # robot.device.set(q)
+   
     # TMP: overwrite halfSitting configuration to use SoT joint order
     robot.halfSitting = (
          # Free flyer
@@ -103,9 +112,11 @@ def main_sim_v3(robot, startSoT=True, go_half_sitting=True):
     #plug(robot.encoder_filter.x_filtered, robot.base_estimator.joint_positions);
     #plug(robot.encoder_filter.dx,         robot.base_estimator.joint_velocities);
 
+    # tracer = create_tracer(robot.device, robot.traj_gen, robot.filters.estimator_kin)
+    # tracer.start()
     robot.ros = RosPublish('rosPublish');
     robot.device.after.addDownsampledSignal('rosPublish.trigger',1);
-
+    # create_ros_topics(robot);
     #robot.estimator_ft.dgyro.value = (0.0, 0.0, 0.0);
     #robot.estimator_ft.gyro.value = (0.0, 0.0, 0.0);
 #    estimator.accelerometer.value = (0.0, 0.0, 9.81);
@@ -114,7 +125,7 @@ def main_sim_v3(robot, startSoT=True, go_half_sitting=True):
         sleep(1.0);
         start_sot();
 
-        if(go_half_sitting):
+        if(go_half_sitting):    
             print "Gonna go to half sitting in 1 sec";
             sleep(1.0);
             go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0);
