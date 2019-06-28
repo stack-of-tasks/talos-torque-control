@@ -132,7 +132,8 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
     robot.device.after.addDownsampledSignal('rosPublish.trigger',1);
     
     robot.mix_torque_ddp = create_ddp_torque_mix(robot, conf.ddp_controller)
-    plug(robot.torque_ctrl.u,    robot.ctrl_manager.ctrl_torque);
+    plug(robot.mix_torque_ddp.sout, robot.ctrl_manager.ctrl_torque)
+    # plug(robot.torque_ctrl.u,    robot.ctrl_manager.ctrl_torque)
     robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
     robot.pos = (
          # Free flyer
