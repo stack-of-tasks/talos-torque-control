@@ -32,8 +32,8 @@ try:
     print("Convert graph to PDF in /tmp/sot_talos_tsid_effort.pdf")
     proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_effort.dot", "-o", "/tmp/sot_talos_tsid_effort.pdf"])
 
-    raw_input("Wait before starting the dynamic graph (SoT)")
-    runCommandClient("start_sot()")
+    # raw_input("Wait before starting the dynamic graph (SoT)")
+    # runCommandClient("start_sot()")
 
     raw_input("Waiting before going to sinusoid pose")
     print("Go to sinusoid pose")

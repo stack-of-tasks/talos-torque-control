@@ -121,32 +121,18 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
     robot.tau_des_selec_ddp = create_tau_des_selector(robot, conf.ddp_controller);
     robot.ddp_ctrl          = create_pyrene_ddp_controller(robot, conf.ddp_controller, dt);
     
-    #robot.torque_des_selec_ddp                  = create_torque_des_selector(robot, conf.ddp_controller);
-    #robot.torque_des_selec_ddp2                 = create_torque_des_selector2(robot, conf.ddp_controller);
-    #robot.sig_mix         = create_signal_mixer(robot, conf.ddp_controller);
-    #robot.current_ctrl    = create_current_controller(robot, conf.current_ctrl, conf.motor_params, dt);
     connect_ctrl_manager(robot);
 
     # create low-pass filter for computing joint velocities
     robot.encoder_filter = create_chebi2_lp_filter_Wn_03_N_4('encoder_filter', dt, conf.motor_params.NJ);
     plug(robot.encoders.sout,             robot.encoder_filter.x);
-    #plug(robot.encoder_filter.dx,         robot.current_ctrl.dq);
     plug(robot.encoder_filter.dx,         robot.torque_ctrl.jointsVelocities);
-    #plug(robot.encoder_filter.x_filtered, robot.base_estimator.joint_positions);
-    #plug(robot.encoder_filter.dx,         robot.base_estimator.joint_velocities);
 
     robot.ros = RosPublish('rosPublish');
     robot.device.after.addDownsampledSignal('rosPublish.trigger',1);
-
-    #robot.estimator_ft.dgyro.value = (0.0, 0.0, 0.0);
-    #robot.estimator_ft.gyro.value = (0.0, 0.0, 0.0);
-    #estimator.accelerometer.value = (0.0, 0.0, 9.81);
     
-    #plug(robot.sig_mix.sout,     robot.ctrl_manager.ctrl_torque);
     robot.mix_torque_ddp = create_ddp_torque_mix(robot, conf.ddp_controller)
-    plug(robot.mix_torque_ddp.sout, robot.ctrl_manager.ctrl_torque)
-    # plug(robot.ddp_ctrl.tau,     robot.ctrl_manager.ctrl_torque);
-    # plug(robot.torque_ctrl.u,    robot.ctrl_manager.ctrl_torque);
+    plug(robot.torque_ctrl.u,    robot.ctrl_manager.ctrl_torque);
     robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
     robot.pos = (
          # Free flyer
@@ -161,7 +147,7 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
          -0.4 , -0.3, 0.30 , -1.57, 0.0,  0.0,  0.2, -0.005,
          # Head
          0.0,0.0);
-    #start_tracer_perso(robot);
+
 
     if(startSoT):
         print "Gonna start SoT";
@@ -173,9 +159,6 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
             sleep(1.0);
             go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0);
 
-            # RESET FORCE/TORQUE SENSOR OFFSET
-            # sleep(10*robot.timeStep);
-            #robot.estimator_ft.setFTsensorOffsets(24*(0.0,));
     
     # # --- ROS PUBLISHER ----------------------------------------------------------
 
@@ -183,7 +166,6 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
     create_topic(robot.publisher, robot.joint_pos_selec_ddp, 'sout', 'joint_pos', robot=robot, data_type='vector')
     create_topic(robot.publisher, robot.joint_vel_selec_ddp, 'sout', 'joint_vel', robot=robot, data_type='vector')
     create_topic(robot.publisher, robot.joint_torque_selec_ddp, 'sout', 'torque_ext', robot=robot, data_type='vector')
-    # create_topic(robot.publisher, robot.motor_pos_selec_ddp, 'sout', 'motor_pos', robot=robot, data_type='vector')
 
 
     # # --- ROS SUBSCRIBER
@@ -191,6 +173,5 @@ def ddp_actuator(robot, startSoT=True, go_half_sitting=True):
     robot.subscriber.add("vector", "joint_pos", "/ddp/joint_pos")
     robot.subscriber.add("vector", "joint_vel", "/ddp/joint_vel")
     robot.subscriber.add("vector", "torque_ext", "/ddp/torque_ext")
-    # robot.subscriber.add("vector", "motor_pos", "/ddp/motor_pos")
 
     return robot;

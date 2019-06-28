@@ -25,7 +25,7 @@ try:
     runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_ddp_talos import *")
 
     print("Initialize DDP sinusoid simulation (Dynamic Graph)")
-    runCommandClient("ddp_actuator(robot, startSoT=True, go_half_sitting=True)")
+    runCommandClient("ddp_actuator(robot, startSoT=False, go_half_sitting=True)")
 
     print("WriteGraph in /tmp/sot_ddp_talos_tsid_effort.dot")
     runCommandClient("writeGraph('/tmp/sot_ddp_talos_tsid_effort.dot')")
