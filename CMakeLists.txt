@@ -129,6 +129,10 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters_sim.py
               python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
               python/dynamic_graph/sot/torque_control/talos/ddp_controller_conf.py
+              python/dynamic_graph/sot/torque_control/talos/main_ddp_talos.py
+              script/run_test_utils.py
+              script/test_ddp_sinu_effort.py
+              script/sim_ddp_sinu_effort.py
 DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
 ADD_SUBDIRECTORY(doc)
