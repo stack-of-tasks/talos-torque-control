@@ -22,7 +22,7 @@ try:
 
     raw_input("Waiting before launching the graph")
     runCommandClient("from dynamic_graph import *")
-    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_ddp_talos import *")
+    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_ddp_talos import *")
 
     print("Initialize DDP sinusoid simulation (Dynamic Graph)")
     runCommandClient("ddp_actuator(robot, startSoT=False)")

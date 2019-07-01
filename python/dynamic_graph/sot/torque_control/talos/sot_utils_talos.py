@@ -146,8 +146,10 @@ def go_to_position_sinusoid(robot):
          # Chest
          0.0 ,  0.006761,
          # arms
-         0.25847 ,  0.173046, -0.4, -1.3, 1.6, -0.0,  0.1, -0.005,
-         -0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,
+         0.25847 ,  0.173046, -0.0002, -0.525366, 0.0, -0.0,  0.1, -0.005,
+         -0.25847 , -0.173046, 0.4  ,  -1.3,      -1.6,  0.0,  0.1, -0.005,
+         #0.25847 ,  0.173046, -0.4, -1.3, 1.6, -0.0,  0.1, -0.005,
+         #-0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,
          # Head
          0.0,0.0);
 
@@ -156,11 +158,11 @@ def go_to_position_sinusoid(robot):
 
 def start_movement_sinusoid(robot):
 
-    robot.traj_gen.startSinusoid('le',-1.9,3);
+    robot.traj_gen.startSinusoid('re',-1.9,3);
     return robot;
 
 def stop_movement_sinusoid(robot):
-    robot.traj_gen.stop('le');
+    robot.traj_gen.stop('re');
     return robot;
 
 def go_to_SE3_position_fixed_orientation(traj_gen, pos, T=10.0):
