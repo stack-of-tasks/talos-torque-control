@@ -83,16 +83,6 @@ def create_torque_des_selector2(robot, conf):
     encoders.selec(31, 32);
     return encoders
 
-def create_ddp_torque_mix(robot, conf):
-    signal_mixer = Mix_of_vector('Ddp_torque_mix')
-    signal_mixer.setSignalNumber(2)
-    plug(robot.torque_ctrl.u, signal_mixer.sin1)
-    plug(robot.ddp_ctrl.tau,  signal_mixer.default)
-    signal_mixer.addSelec(1, 0, conf.controlled_joint)
-    signal_mixer.addSelec(1, conf.controlled_joint, conf.NJ-conf.controlled_joint+1)
-    #plug(signal_mixer.sout, robot.ctrl_manager.ctrl_torque)
-    return signal_mixer
-
 def create_signal_mixer(robot, conf):
     signal_mixer = Mix_of_vector('mix');
     signal_mixer.setSignalNumber(2);
@@ -518,12 +508,12 @@ def create_ddp_controller(robot, conf, dt):
 def create_pyrene_ddp_controller(robot, conf, dt):
     from dynamic_graph.sot.torque_control.ddp_pyrene_actuator_solver import DdpPyreneActuatorSolver
     ddp_controller = DdpPyreneActuatorSolver("ddp_ctrl");
-    plug(robot.joint_pos_selec_ddp.sout,        ddp_controller.pos_joint_measure);
-    plug(robot.joint_vel_selec_ddp.sout,        ddp_controller.dx_joint_measure);
-    plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des);
-
+    plug(robot.joint_pos_selec_ddp.sout,        ddp_controller.pos_joint_measure)
+    plug(robot.joint_vel_selec_ddp.sout,        ddp_controller.dx_joint_measure)
+    plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des)
+    plug(robot.torque_ctrl.u,                   ddp_controller.tau_des)
     ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
-    return ddp_controller;
+    return ddp_controller
 
 def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     ctrl_manager = ControlManager("ctrl_man");        
