@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import sys
-import rospy
 import subprocess, time
 from std_srvs.srv import *
 from dynamic_graph_bridge.srv import *
