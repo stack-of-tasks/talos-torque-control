@@ -152,12 +152,12 @@ def ddp_actuator(robot, startSoT=True):
     create_topic(robot.publisher, robot.ddp_ctrl, 'tau', 'ddp_ctrl_tau', robot=robot, data_type='vector')    
 
     # # # # --- ROS SUBSCRIBER
-    robot.subscriber = RosSubscribe("ddp_subscriber")    
-    robot.subscriber.add("vector", "torque_ctrl_u", "/torque_ctrl/u")
-    robot.subscriber.add("vector", "joint_pos", "/joint_pos_selec_ddp/sout")
-    robot.subscriber.add("vector", "q_des", "/traj_gen/q_des")
-    # robot.subscriber.add("vector", "manager_u", "/ctrl_manager/u")
-    # robot.subscriber.add("vector", "manager_u_safe", "/ctrl_manager/u_safe")
-    robot.subscriber.add("vector", "ddp_ctrl_tau", "/ddp_ctrl/tau")
+    # robot.subscriber = RosSubscribe("ddp_subscriber")    
+    # robot.subscriber.add("vector", "torque_ctrl_u", "/torque_ctrl/u")
+    # robot.subscriber.add("vector", "joint_pos", "/joint_pos_selec_ddp/sout")
+    # robot.subscriber.add("vector", "q_des", "/traj_gen/q_des")
+    # # robot.subscriber.add("vector", "manager_u", "/ctrl_manager/u")
+    # # robot.subscriber.add("vector", "manager_u_safe", "/ctrl_manager/u_safe")
+    # robot.subscriber.add("vector", "ddp_ctrl_tau", "/ddp_ctrl/tau")
 
     return robot;

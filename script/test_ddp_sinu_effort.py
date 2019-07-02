@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import sys
-import rospy
 import subprocess, time
 from std_srvs.srv import *
 from dynamic_graph_bridge.srv import *
@@ -27,10 +26,10 @@ try:
     print("Initialize DDP sinusoid simulation (Dynamic Graph)")
     runCommandClient("ddp_actuator(robot, startSoT=False)")
 
-    print("WriteGraph in /tmp/sot_ddp_talos_tsid_effort.dot")
-    runCommandClient("writeGraph('/tmp/sot_ddp_talos_tsid_effort.dot')")
-    print("Convert graph to PDF in /tmp/sot_ddp_talos_tsid_effort.pdf")
-    proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_ddp_talos_tsid_effort.dot", "-o", "/tmp/sot_ddp_talos_tsid_effort.pdf"])
+    # print("WriteGraph in /tmp/sot_ddp_talos_tsid_effort.dot")
+    # runCommandClient("writeGraph('/tmp/sot_ddp_talos_tsid_effort.dot')")
+    # print("Convert graph to PDF in /tmp/sot_ddp_talos_tsid_effort.pdf")
+    # proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_ddp_talos_tsid_effort.dot", "-o", "/tmp/sot_ddp_talos_tsid_effort.pdf"])
 
     raw_input("Wait before starting the dynamic graph (SoT)")
     runCommandClient("start_sot()")
