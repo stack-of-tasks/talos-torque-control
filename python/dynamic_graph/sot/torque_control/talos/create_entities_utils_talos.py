@@ -511,7 +511,8 @@ def create_pyrene_ddp_controller(robot, conf, dt):
     plug(robot.joint_pos_selec_ddp.sout,        ddp_controller.pos_joint_measure)
     plug(robot.joint_vel_selec_ddp.sout,        ddp_controller.dx_joint_measure)
     plug(robot.pos_des_selec_ddp.sout,          ddp_controller.pos_des)
-    plug(robot.torque_ctrl.u,                   ddp_controller.tau_des)
+    ddp_controller.tau_des.value = NJ*(0.0,)
+    # plug(robot.torque_ctrl.u,                   ddp_controller.tau_des)
     ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
     return ddp_controller
 
@@ -520,7 +521,7 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
 
     ctrl_manager.tau_predicted.value    = NJ*(0.0,);
     ctrl_manager.i_measured.value       = NJ*(0.0,);
-    ctrl_manager.tau_max.value          = NJ*(conf.TAU_MAX,);
+    ctrl_manager.tau_max.value          = conf.TAU_MAX;
     ctrl_manager.i_max.value            = NJ*(conf.CURRENT_MAX,);
     ctrl_manager.u_max.value            = NJ*(conf.CTRL_MAX,);
     
@@ -573,7 +574,8 @@ def connect_ctrl_manager(robot):
     robot.ctrl_manager.addCtrlMode("torque");    
     #plug(robot.torque_ctrl.u,                           robot.ctrl_manager.ctrl_torque);
     plug(robot.pos_ctrl.pwmDes,                         robot.ctrl_manager.ctrl_pos);
-    plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints);
+    # plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints);
+    robot.ctrl_manager.joints_ctrl_mode_torque.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
     robot.ctrl_manager.setCtrlMode("all", "pos");
     #plug(robot.ctrl_manager.u_safe,                     robot.current_ctrl.i_des);
     plug(robot.ctrl_manager.u_safe,                     robot.device.control);
