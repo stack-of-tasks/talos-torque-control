@@ -141,13 +141,13 @@ def ddp_actuator(robot, startSoT=True):
     
     # # # --- ROS PUBLISHER ----------------------------------------------------------
 
-    # robot.publisher = create_rospublish(robot, 'robot_publisher')
-    # create_topic(robot.publisher, robot.joint_pos_selec_ddp, 'sout', 'joint_pos', robot=robot, data_type='vector')
+    robot.publisher = create_rospublish(robot, 'robot_publisher')
+    create_topic(robot.publisher, robot.joint_pos_selec_ddp, 'sout', 'joint_pos', robot=robot, data_type='vector')
     # create_topic(robot.publisher, robot.torque_ctrl, 'u', 'torque_ctrl_u', robot=robot, data_type='vector')
-    # create_topic(robot.publisher, robot.traj_gen, 'q', 'q_des', robot=robot, data_type='vector')
+    create_topic(robot.publisher, robot.traj_gen, 'q', 'q_des', robot=robot, data_type='vector')
     # # create_topic(robot.publisher, robot.ctrl_manager, 'u', 'manager_u', robot=robot, data_type='vector')
     # # create_topic(robot.publisher, robot.ctrl_manager, 'u_safe', 'manager_u_safe', robot=robot, data_type='vector')
-    # create_topic(robot.publisher, robot.ddp_ctrl, 'tau', 'ddp_ctrl_tau', robot=robot, data_type='vector')    
+    create_topic(robot.publisher, robot.ddp_ctrl, 'tau', 'ddp_ctrl_tau', robot=robot, data_type='vector')    
 
     # # # # --- ROS SUBSCRIBER
     # robot.subscriber = RosSubscribe("ddp_subscriber")    
