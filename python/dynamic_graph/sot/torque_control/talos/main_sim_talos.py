@@ -10,7 +10,7 @@ from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, Bunch, start_movement_sinusoid, stop_movement_sinusoid, start_tracer, go_to_position, go_to_SE3_position_fixed_orientation, go_to_SE3_front_orientation, go_to_SE3_right_orientation, go_to_SE3_left_orientation, go_to_SE3_position
 from dynamic_graph.ros import RosPublish
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_topic
+# from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_topic
 from dynamic_graph.sot.torque_control.talos.main_talos import main_v3, main_v4
 from dynamic_graph.tracer_real_time import TracerRealTime
 from time import sleep
@@ -54,7 +54,7 @@ def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state
     # BYPASS TORQUE CONTROLLER
     #plug(robot.inv_dyn.tau_des,     robot.ctrl_manager.ctrl_torque);
 
-    '''# CREATE SIGNALS WITH ROBOT STATE WITH CORRECT SIZE (36)
+    # CREATE SIGNALS WITH ROBOT STATE WITH CORRECT SIZE (36)
     robot.q = Selec_of_vector("q");
     plug(robot.device.robotState, robot.q.sin);
     robot.q.selec(0, NJ+6);
@@ -71,18 +71,18 @@ def test_balance_ctrl_talos_gazebo(robot, use_real_vel=True, use_real_base_state
         #plug(robot.device.robotVelocity, robot.dq.sin); # to check robotVelocity empty
         plug(robot.device.velocity, robot.dq.sin);
         robot.dq.selec(6, NJ+6);
-        plug(robot.dq.sout,             robot.pos_ctrl.jointsVelocities); # generate seg fault
+        # plug(robot.dq.sout,             robot.pos_ctrl.jointsVelocities); # generate seg fault
         plug(robot.dq.sout,             robot.base_estimator.joint_velocities);
         plug(robot.device.gyrometer,    robot.base_estimator.gyroscope);
 
     # BYPASS BASE ESTIMATOR
-    robot.v = Selec_of_vector("v");
+    # robot.v = Selec_of_vector("v");
     #plug(robot.device.robotVelocity, robot.dq.sin); # to check robotVelocity empty
-    plug(robot.device.velocity, robot.dq.sin);
-    robot.v.selec(0, NJ+6);
+    # plug(robot.device.velocity, robot.dq.sin);
+    # robot.v.selec(0, NJ+6);
     if(use_real_base_state):
         plug(robot.q.sout,              robot.inv_dyn.q);
-        plug(robot.v.sout,              robot.inv_dyn.v);'''
+        plug(robot.dq.sout,             robot.inv_dyn.v);
     
     plug(robot.inv_dyn.tau_des,   robot.torque_ctrl.jointsTorquesDesired);
     robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);
