@@ -40,7 +40,7 @@ try:
 
     raw_input("Waiting before starting sinusoid move")
     print("Start Sinusoid move")
-    runCommandClient("start_movement_sinusoid(robot)") 
+    runCommandClient("start_sinusoid(robot)") 
 
     raw_input("Waiting before stopping sinusoid move")
     print("Stop Sinusoid move")

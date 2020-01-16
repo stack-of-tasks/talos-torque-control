@@ -13,6 +13,10 @@ from dynamic_graph.ros import RosPublish, RosSubscribe
 from dynamic_graph.tracer_real_time import TracerRealTime
 from time import sleep
 
+def start_sinusoid(robot, pos=-1.9, dt=1.5):
+    robot.traj_gen.startSinusoid('re', pos, dt);
+    return robot;
+
 def create_rospublish(robot, name):
     rospub = RosPublish(name)
     robot.device.after.addSignal(rospub.name+'.trigger')

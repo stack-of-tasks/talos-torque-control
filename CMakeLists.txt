@@ -113,8 +113,8 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/control_manager_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos.py
               python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos_sinusoid.py
-              #python/dynamic_graph/sot/torque_control/talos/current_controller_conf.py
-              #python/dynamic_graph/sot/torque_control/talos/current_controller_sim_conf.py
+              python/dynamic_graph/sot/torque_control/talos/current_controller_conf.py
+              python/dynamic_graph/sot/torque_control/talos/current_controller_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/force_torque_estimator_conf.py
               python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains.py
               python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains_sim.py
