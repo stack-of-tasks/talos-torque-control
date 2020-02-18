@@ -156,12 +156,12 @@ def create_imu_filter(robot, dt):
     plug(robot.imu_offset_compensation.gyrometer_out,     imu_filter.gyroscope);
     return imu_filter;
 
-def create_com_traj_gen(conf, dt):
+def create_com_traj_gen(robot, dt):
     com_traj_gen = NdTrajectoryGenerator("com_traj_gen");
-    com_traj_gen.initial_value.value = conf.COM_DES;
+    com_traj_gen.initial_value.value = robot.dynamic.com.value 
     com_traj_gen.trigger.value = 1.0
-    com_traj_gen.init(dt,3);
-    return com_traj_gen ;
+    com_traj_gen.init(dt,3)
+    return com_traj_gen
 
 def create_force_traj_gen(name, initial_value, dt):
     force_traj_gen = NdTrajectoryGenerator(name);
@@ -250,9 +250,9 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
     posCtrl.init(dt, robot_name);
     return posCtrl;
 
-def create_trajectory_generator(device, dt=0.001, robot_name="robot"):
+def create_trajectory_generator(robot, dt=0.001, robot_name="robot"):
     jtg = JointTrajectoryGenerator("jtg");
-    plug(device.robotState,             jtg.base6d_encoders);
+    plug(robot.device.robotState, jtg.base6d_encoders);
     jtg.init(dt, robot_name);
     return jtg;
 
@@ -488,79 +488,80 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
 
 def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     from dynamic_graph.sot.torque_control.simple_inverse_dyn import SimpleInverseDyn
-    ctrl = SimpleInverseDyn("invDynCtrl");
-    plug(robot.base_estimator.q, ctrl.q);
-    plug(robot.base_estimator.v, ctrl.v);
+    ctrl = SimpleInverseDyn("invDynCtrl")
+    # plug(robot.device.robotState, ctrl.q)
+    # plug(robot.device.robotVelocity, ctrl.v)
+    ctrl.q.value = robot.halfSitting
+    ctrl.v.value = 38 * (0.0,)
     # except:        
-    #     plug(robot.ff_locator.base6dFromFoot_encoders, ctrl.q);
-    #     plug(robot.ff_locator.v, ctrl.v);
-    # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value);
+    #     plug(robot.ff_locator.base6dFromFoot_encoders, ctrl.q)
+    #     plug(robot.ff_locator.v, ctrl.v)
+    # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
     # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
     # ctrl.rf_ref_vel.value =           12*(0.0,)
     # ctrl.rf_ref_acc.value =           12*(0.0,)
-    # plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos);
-    # plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel);
-    # plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc);
+    # plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
+    # plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
+    # plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
 
-    # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value);
+    # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
     # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
     # ctrl.lf_ref_vel.value =           12*(0.0,)
     # ctrl.lf_ref_acc.value =           12*(0.0,)
-    # plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos);
-    # plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel);
-    # plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc);
+    # plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
+    # plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
+    # plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
     
-    # ctrl.posture_ref_pos.value = robot.device.robotState.value[6:] #robot.halfSitting[6:]
+    # ctrl.posture_ref_pos.value = robot.halfSitting[6:]
     # ctrl.posture_ref_vel.value = 32*(0.0,)
     # ctrl.posture_ref_acc.value = 32*(0.0,)
 
-    # ctrl.com_ref_pos.value = robot.dynamic.com.value
+    # ctrl.com_ref_pos.value = robot.dynamic.com.value 
     # ctrl.com_ref_vel.value = 3*(0.0,)
     # ctrl.com_ref_acc.value = 3*(0.0,)
 
     # ctrl.waist_ref_pos.value = robot.waist_traj_gen.initial_value.value
-    # ctrl.waist_ref_vel.value = 12*(0.0,)
-    # ctrl.waist_ref_acc.value = 12*(0.0,)
+    # ctrl.waist_ref_vel.value = 6*(0.0,)
+    # ctrl.waist_ref_acc.value = 6*(0.0,)
 
-    plug(robot.traj_gen.q,                        ctrl.posture_ref_pos);
-    plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel);
-    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc);
-    plug(robot.com_traj_gen.x,                    ctrl.com_ref_pos);
-    plug(robot.com_traj_gen.dx,                   ctrl.com_ref_vel);
-    plug(robot.com_traj_gen.ddx,                  ctrl.com_ref_acc);
-    # plug(robot.waist_traj_gen.x,                  ctrl.waist_ref_pos);
-    # plug(robot.waist_traj_gen.dx,                 ctrl.waist_ref_vel);
-    # plug(robot.waist_traj_gen.ddx,                ctrl.waist_ref_acc);
+    plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
+    plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
+    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)
+    plug(robot.com_traj_gen.x,                    ctrl.com_ref_pos)
+    plug(robot.com_traj_gen.dx,                   ctrl.com_ref_vel)
+    plug(robot.com_traj_gen.ddx,                  ctrl.com_ref_acc)
+    plug(robot.waist_traj_gen.x,                  ctrl.waist_ref_pos)
+    plug(robot.waist_traj_gen.dx,                 ctrl.waist_ref_vel)
+    plug(robot.waist_traj_gen.ddx,                ctrl.waist_ref_acc)
+#    plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
+#    plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
 
-#    plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot);
-#    plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot);
 
+    ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
+    ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS
+    ctrl.f_min.value = conf.fMin
+    ctrl.f_max.value = conf.fMax
+    ctrl.mu.value = conf.mu[0]
+    ctrl.kp_com.value = 3*(conf.kp_com,)
+    ctrl.kd_com.value = 3*(conf.kd_com,)
+    ctrl.kp_contact.value = 6*(conf.kp_contact,)
+    ctrl.kd_contact.value = 6*(conf.kd_contact,)
 
-    # ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL;
-    # ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS;
-    # ctrl.f_min.value = conf.fMin;
-    # ctrl.f_max.value = conf.fMax;
-    # ctrl.mu.value = conf.mu[0];
-    ctrl.kp_com.value = 3*(conf.kp_com,);
-    ctrl.kd_com.value = 3*(conf.kd_com,);
-    # ctrl.kp_contact.value = 6*(conf.kp_contact,);
-    # ctrl.kd_contact.value = 6*(conf.kd_contact,);
+    ctrl.kp_posture.value = conf.kp_posture
+    ctrl.kd_posture.value = conf.kd_posture
+    ctrl.kp_pos.value = conf.kp_pos
+    ctrl.kd_pos.value = conf.kd_pos
+    ctrl.kp_waist.value = 6*(conf.kp_waist,)
+    ctrl.kd_waist.value = 6*(conf.kd_waist,)
 
-    ctrl.kp_posture.value = conf.kp_posture;
-    ctrl.kd_posture.value = conf.kd_posture;
-    ctrl.kp_pos.value = conf.kp_pos;
-    ctrl.kd_pos.value = conf.kd_pos;
-    # ctrl.kp_waist.value = 6*(conf.kp_waist,);
-    # ctrl.kd_waist.value = 6*(conf.kd_waist,);
+    ctrl.w_com.value = conf.w_com
+    ctrl.w_forces.value = conf.w_forces
+    ctrl.w_posture.value = conf.w_posture
+    ctrl.w_waist.value = conf.w_waist
+    # ctrl.w_torques.value = conf.w_torques
 
-    ctrl.w_com.value = conf.w_com;
-    # ctrl.w_forces.value = conf.w_forces;
-    ctrl.w_posture.value = conf.w_posture;
-    # ctrl.w_waist.value = conf.w_waist;
-    # ctrl.w_torques.value = conf.w_torques;
-
-    ctrl.init(dt, robot_name);    
-    return ctrl;
+    ctrl.init(dt, robot_name)
+    return ctrl
     
 def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     inv_dyn_ctrl = InverseDynamicsController("inv_dyn");
@@ -892,6 +893,14 @@ def create_tracer(device, traj_gen=None, estimator_kin=None,
             f.write('Torque ctrl KpTorque: {0}\n'.format (robot.torque_ctrl.KpTorque.value ));
     f.close();
     return tracer;
+
+def dump_tracer(tracer):
+    from time import sleep
+    tracer.stop()
+    sleep(0.2)
+    tracer.dump()
+    sleep(0.2)
+    tracer.close()
 
 def reset_tracer(device,tracer):
     from time import sleep
