@@ -14,7 +14,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import c
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_base_estimator, create_position_controller, create_torque_controller
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_simple_inverse_dyn_controller, create_ctrl_manager
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_free_flyer_locator#, create_flex_estimator, create_floatingBase
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_current_controller, connect_ctrl_manager, addTrace
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_current_controller, connect_ctrl_manager, addTrace, dump_tracer
 from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import start_sot, stop_sot, Bunch, start_movement_sinusoid, stop_movement_sinusoid, go_to_position
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_chebi2_lp_filter_Wn_03_N_4
@@ -103,10 +103,19 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
          # Head
          0.0,0.0);
     
-    robot.device.setControlInputType('noInteg')
+    # robot.device.setControlInputType('noInteg')
     robot.ctrl_manager    = create_ctrl_manager(conf.control_manager, conf.motor_params, dt)
     
-    robot.traj_gen        = create_trajectory_generator(robot.device, dt)
+  
+    robot.encoders                              = create_encoders(robot)
+    # robot.encoders_velocity                     = create_encoders_velocity(robot)
+    # robot.imu_offset_compensation               = create_imu_offset_compensation(robot, dt)
+    # robot.filters                               = create_filters(robot, conf.force_torque_estimator, conf.motor_params, dt)
+    # robot.imu_filter                            = create_imu_filter(robot, dt)
+    # robot.base_estimator                        = create_base_estimator(robot, dt, conf.base_estimator)
+
+    robot.traj_gen        = create_trajectory_generator(robot, dt)
+    robot.traj_gen.q.recompute(0)
     robot.com_traj_gen    = create_com_traj_gen(robot, dt)
     robot.com_traj_gen.x.recompute(0)
     # robot.rf_force_traj_gen  = create_force_traj_gen("rf_force_ref", conf.balance_ctrl.RF_FORCE_DES, dt)
@@ -123,30 +132,31 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     # robot.lf_traj_gen.init(dt)
     # robot.rh_traj_gen.init(dt)
     # robot.lh_traj_gen.init(dt)
-
-
     
-    robot.encoders                              = create_encoders(robot)
-    robot.encoders_velocity                     = create_encoders_velocity(robot)
-    robot.imu_offset_compensation               = create_imu_offset_compensation(robot, dt)
-    robot.filters                               = create_filters(robot, conf.force_torque_estimator, conf.motor_params, dt)
-    robot.imu_filter                            = create_imu_filter(robot, dt)
-    robot.base_estimator                        = create_base_estimator(robot, dt, conf.base_estimator)
-
     # connect_synchronous_trajectories(robot.traj_sync,
     #                                  [robot.com_traj_gen, robot.waist_traj_gen])#,
     #                                   robot.rf_force_traj_gen, robot.lf_force_traj_gen, 
     #                                   robot.rf_traj_gen, robot.lf_traj_gen,
     #                                   robot.rh_traj_gen, robot.lh_traj_gen])
 
-    robot.pos_ctrl        = create_position_controller(robot, conf.pos_ctrl_gains, dt);
-    robot.torque_ctrl     = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt)
+    # robot.pos_ctrl        = create_position_controller(robot, conf.pos_ctrl_gains, dt)
+    # robot.torque_ctrl     = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt)
     robot.inv_dyn         = create_simple_inverse_dyn_controller(robot, conf.balance_ctrl, dt)
+    robot.inv_dyn.setControlOutputType("velocity")
 
-    plug(robot.inv_dyn.tau_des, robot.torque_ctrl.jointsTorquesDesired)
+    # plug(robot.inv_dyn.tau_des, robot.torque_ctrl.jointsTorquesDesired)
     # robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
-    connect_ctrl_manager(robot);
 
+    # Connect control manager
+    plug(robot.device.currents,   robot.ctrl_manager.i_measured)
+    plug(robot.device.ptorque,    robot.ctrl_manager.tau)
+    robot.ctrl_manager.addCtrlMode("vel")
+    plug(robot.inv_dyn.v_des, robot.device.control)
+    robot.ctrl_manager.setCtrlMode("all", "vel")
+    plug(robot.ctrl_manager.joints_ctrl_mode_vel, robot.inv_dyn.active_joints) 
+    # plug(robot.ctrl_manager.u_safe,  robot.device.control)
+
+    # Errors
     robot.errorComTSID = Substract_of_vector('error_com')
     plug(robot.inv_dyn.com_ref_pos, robot.errorComTSID.sin2)
     plug(robot.dynamic.com, robot.errorComTSID.sin1)
@@ -180,7 +190,7 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     # BYPASS TORQUE CONTROLLER
     # plug(robot.inv_dyn.tau_des,     robot.ctrl_manager.ctrl_torque);
 
-    # # CREATE SIGNALS WITH ROBOT STATE WITH CORRECT SIZE (36)
+    # CREATE SIGNALS WITH ROBOT STATE WITH CORRECT SIZE (36)
     # robot.q = Selec_of_vector("q");
     # plug(robot.device.robotState, robot.q.sin);
     # robot.q.selec(0, NJ+6);
@@ -192,14 +202,14 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     #     robot.dq = Selec_of_vector("dq");
     #     plug(robot.device.velocity, robot.dq.sin);
     #     robot.dq.selec(6, NJ+6);
-    #     plug(robot.device.velocity,     robot.pos_ctrl.jointsVelocities);
+    #     # plug(robot.device.velocity,     robot.pos_ctrl.jointsVelocities);
     #     plug(robot.dq.sout,             robot.base_estimator.joint_velocities);
     #     plug(robot.device.gyrometer,    robot.base_estimator.gyroscope);
 
-    # # BYPASS BASE ESTIMATOR
+    # BYPASS BASE ESTIMATOR
     # if(use_real_base_state):
     #     plug(robot.q.sout,              robot.inv_dyn.q);
-    #     plug(robot.dq.sout,             robot.inv_dyn.v);
+    #     plug(robot.device.robotVelocity,robot.inv_dyn.v);
 
     # create low-pass filter for computing joint velocities
     #robot.encoder_filter = create_chebi2_lp_filter_Wn_03_N_4('encoder_filter', dt, conf.motor_params.NJ)
@@ -233,6 +243,9 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
     create_topic(robot.publisher, robot.errorComTSID, 'sout', 'errorComTSID', robot=robot, data_type='vector')
     create_topic(robot.publisher, robot.dynamic, 'com', 'dynCom', robot=robot, data_type='vector') 
+    create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
+    create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
+    create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
 
     # # # create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_pos', robot=robot, data_type='vector')
     # # # create_topic(robot.publisher, robot.inv_dyn, 'com_ref_pos', 'inv_com_ref_pos', robot=robot, data_type='vector')
@@ -247,12 +260,13 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
     addTrace(robot.tracer, robot.inv_dyn, 'tau_des')
-    addTrace(robot.tracer, robot.inv_dyn, 'u')
+    addTrace(robot.tracer, robot.inv_dyn, 'q_des')
+    addTrace(robot.tracer, robot.inv_dyn, 'v_des')
     addTrace(robot.tracer, robot.inv_dyn, 'dv_des')
     addTrace(robot.tracer, robot.errorPoseTSID, 'sout')
     addTrace(robot.tracer, robot.errorComTSID, 'sout')
-    addTrace(robot.tracer, robot.inv_dyn, 'com_ref_pos')
-    addTrace(robot.tracer, robot.dynamic, 'com')
+    addTrace(robot.tracer, robot.device, 'robotState')
+    addTrace(robot.tracer, robot.device, 'motorcontrol')
     # addTrace(robot.tracer, robot.inv_dyn, 'check_Ma_tau')
     # addTrace(robot.tracer, robot.pos_ctrl, 'pwmDes')
     

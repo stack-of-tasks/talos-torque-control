@@ -22,7 +22,7 @@ try:
 
     raw_input("Waiting before launching the graph")
     runCommandClient("from dynamic_graph import *")
-    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_com import *")
+    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_com_vel import *")
 
     print("Initialize sinusoid simulation (Dynamic Graph)")
     runCommandClient("main_com(robot, use_real_base_state=True)")
@@ -34,6 +34,7 @@ try:
 
     raw_input("Wait before starting the dynamic graph (SoT)")
     runCommandClient("start_sot()")
+    # runCommandClient("robot.com_traj_gen.move(0,-0.005,0.50)")
 
     raw_input("Wait before going to halfSitting")
     runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0)")    
