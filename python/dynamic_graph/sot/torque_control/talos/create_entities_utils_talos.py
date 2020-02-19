@@ -174,11 +174,8 @@ def create_waist_traj_gen(name, robot, dt):
     ref_waist = robot.dynamic.data.oMi[robot.dynamic.model.getJointId('root_joint')]
     trans = ref_waist.translation
     rot = ref_waist.rotation
-    rot.resize(9,1)
-    matrix = np.concatenate((trans,rot))
-    initial_value = []
-    for i in range(len(matrix)):
-        initial_value += [matrix[i,0]]
+    rot = rot.reshape(9)
+    initial_value = np.concatenate((trans,rot))
     waist_traj_gen.initial_value.value = tuple(initial_value)
     waist_traj_gen.trigger.value = 1.0
     waist_traj_gen.init(dt);
@@ -489,10 +486,20 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
 def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     from dynamic_graph.sot.torque_control.simple_inverse_dyn import SimpleInverseDyn
     ctrl = SimpleInverseDyn("invDynCtrl")
+    q = Mix_of_vector('selecJointConf')
+    q.setSignalNumber(2);
+    plug(robot.device.robotState,     q.default)
+    q.sin1.value = robot.halfSitting
+    q.addSelec(1, 0, 6)
+    plug(q.sout, ctrl.q)
+    plug(robot.device.robotVelocity, ctrl.v)
+
+    # plug(robot.base_estimator.q, ctrl.q)
+    # plug(robot.base_estimator.v, ctrl.v)
     # plug(robot.device.robotState, ctrl.q)
     # plug(robot.device.robotVelocity, ctrl.v)
-    ctrl.q.value = robot.halfSitting
-    ctrl.v.value = 38 * (0.0,)
+    # ctrl.q.value = robot.halfSitting
+    # ctrl.v.value = 38 * (0.0,)
     # except:        
     #     plug(robot.ff_locator.base6dFromFoot_encoders, ctrl.q)
     #     plug(robot.ff_locator.v, ctrl.v)
@@ -698,26 +705,10 @@ def connect_ctrl_manager(robot):
     plug(robot.inv_dyn.u,                               robot.ctrl_manager.ctrl_torque)
     plug(robot.pos_ctrl.pwmDes,                         robot.ctrl_manager.ctrl_pos)
 
-    # connect it to torque control
-    # from dynamic_graph.sot.core import Add_of_vector
-    # robot.sum_torque_adm = Add_of_vector('sum_torque_adm')
-    # plug(robot.torque_ctrl.u,       robot.sum_torque_adm.sin1)
-    # plug(robot.adm_ctrl_hand.u,     robot.sum_torque_adm.sin2)
-    # plug(robot.sum_torque_adm.sout, robot.ctrl_manager.ctrl_torque)
-    # 
-    robot.ctrl_manager.setCtrlMode("hp-hy-rh-lh-lwy-lwp-lwr-rwy-rwp-rwr-ty-tp", "pos")
-    # robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar", "torque")
-    robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-rhy-rhr-rhp-lk-lap-lar-rk-rap-rar-lsy-lsr-lay-le-rsy-rsr-ray-re", "torque") #
-    # robot.ctrl_manager.joints_ctrl_mode_torque.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
-    # robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-rhy-rhr-rhp-lk-lap-lar-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
-    # robot.ctrl_manager.setCtrlMode("hp-hy-rh-lh", "pos")   
-    plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints) 
-    
-    # robot.ctrl_manager.setCtrlMode("hy", "pos")
-    # robot.ctrl_manager.setCtrlMode("rh", "pos")
-    # robot.ctrl_manager.setCtrlMode("lh", "pos")
-    
-    #plug(robot.ctrl_manager.u_safe,                     robot.current_ctrl.i_des)
+    robot.ctrl_manager.setCtrlMode("rh-lh-lwy-lwp-lwr-rwy-rwp-rwr", "pos")
+    robot.ctrl_manager.setCtrlMode("hp-hy-ty-tp-lhy-lhr-lhp-rhy-rhr-rhp-lk-lap-lar-rk-rap-rar-lsy-lsr-lay-le-rsy-rsr-ray-re", "torque") #
+
+    robot.inv_dyn.active_joints.value = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     plug(robot.ctrl_manager.u_safe,                     robot.device.control)
     return
     
