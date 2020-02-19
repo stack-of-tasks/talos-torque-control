@@ -106,7 +106,7 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     robot.device.setControlInputType('noInteg')
     robot.ctrl_manager    = create_ctrl_manager(conf.control_manager, conf.motor_params, dt)
     
-    robot.traj_gen        = create_trajectory_generator(robot.device, dt)
+    robot.traj_gen        = create_trajectory_generator(robot, dt)
     robot.com_traj_gen    = create_com_traj_gen(robot, dt)
     robot.com_traj_gen.x.recompute(0)
     # robot.rf_force_traj_gen  = create_force_traj_gen("rf_force_ref", conf.balance_ctrl.RF_FORCE_DES, dt)
@@ -131,7 +131,7 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     robot.imu_offset_compensation               = create_imu_offset_compensation(robot, dt)
     robot.filters                               = create_filters(robot, conf.force_torque_estimator, conf.motor_params, dt)
     robot.imu_filter                            = create_imu_filter(robot, dt)
-    robot.base_estimator                        = create_base_estimator(robot, dt, conf.base_estimator)
+    # robot.base_estimator                        = create_base_estimator(robot, dt, conf.base_estimator)
 
     # connect_synchronous_trajectories(robot.traj_sync,
     #                                  [robot.com_traj_gen, robot.waist_traj_gen])#,
@@ -140,10 +140,11 @@ def main_com(robot, startSoT=True, go_half_sitting=True, use_real_vel=True, use_
     #                                   robot.rh_traj_gen, robot.lh_traj_gen])
 
     robot.pos_ctrl        = create_position_controller(robot, conf.pos_ctrl_gains, dt);
-    robot.torque_ctrl     = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt)
+    # robot.torque_ctrl     = create_torque_controller(robot, conf.joint_torque_controller, conf.motor_params, dt)
     robot.inv_dyn         = create_simple_inverse_dyn_controller(robot, conf.balance_ctrl, dt)
+    robot.inv_dyn.setControlOutputType("torque")
 
-    plug(robot.inv_dyn.tau_des, robot.torque_ctrl.jointsTorquesDesired)
+    # plug(robot.inv_dyn.tau_des, robot.torque_ctrl.jointsTorquesDesired)
     # robot.inv_dyn.active_joints.value=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);    
     connect_ctrl_manager(robot);
 

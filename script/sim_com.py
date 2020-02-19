@@ -21,7 +21,7 @@ try:
     runCommandStartDynamicGraph = rospy.ServiceProxy('start_dynamic_graph', Empty)
 
     raw_input("Waiting before launching the graph")
-    runCommandClient("from dynamic_graph import *")
+    runCommandClient("from dynamic_graph import writeGraph")
     runCommandClient("from dynamic_graph.sot.torque_control.talos.main_sim_com_vel import *")
 
     print("Initialize sinusoid simulation (Dynamic Graph)")
