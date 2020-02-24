@@ -2,7 +2,7 @@ from dynamic_graph import plug
 from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf 
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen, create_encoders
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_simple_inverse_dyn_controller, create_ctrl_manager
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_simple_inverse_dyn_controller, create_ctrl_manager, connect_ctrl_manager
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
@@ -11,6 +11,7 @@ from dynamic_graph.sot.core import Substract_of_vector
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
 dt = robot.timeStep
+robot.device.setControlInputType('noInteg') # No integration for torque control
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 # TMP: overwrite halfSitting configuration to use SoT joint order
@@ -41,15 +42,10 @@ robot.waist_traj_gen.x.recompute(0)
 
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_simple_inverse_dyn_controller(robot, conf.balance_ctrl, dt)
-robot.inv_dyn.setControlOutputType("velocity")
+robot.inv_dyn.setControlOutputType("torque")
 
 # --- Connect control manager
-plug(robot.device.currents,   robot.ctrl_manager.i_measured)
-plug(robot.device.ptorque,    robot.ctrl_manager.tau)
-robot.ctrl_manager.addCtrlMode("vel")
-plug(robot.inv_dyn.v_des, robot.device.control)
-robot.ctrl_manager.setCtrlMode("all", "vel")
-plug(robot.ctrl_manager.joints_ctrl_mode_vel, robot.inv_dyn.active_joints)
+connect_ctrl_manager(robot)
 
 # --- Error on the CoM task
 robot.errorComTSID = Substract_of_vector('error_com')
