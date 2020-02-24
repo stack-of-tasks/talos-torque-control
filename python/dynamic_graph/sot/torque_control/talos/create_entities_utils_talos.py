@@ -24,6 +24,47 @@ from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
 #from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
+def get_default_conf():
+    import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
+    import dynamic_graph.sot.torque_control.talos.base_estimator_conf as base_estimator_conf
+    import dynamic_graph.sot.torque_control.talos.control_manager_conf as control_manager_conf
+    import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
+    import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
+    import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains as pos_ctrl_gains
+    import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
+    import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
+    conf = Bunch()
+    conf.balance_ctrl              = balance_ctrl_conf
+    conf.adm_ctrl                  = admittance_ctrl_conf
+    conf.base_estimator            = base_estimator_conf
+    conf.control_manager           = control_manager_conf
+    conf.current_ctrl              = current_controller_conf
+    conf.force_torque_estimator    = force_torque_estimator_conf
+    conf.joint_torque_controller   = joint_torque_controller_conf
+    conf.pos_ctrl_gains            = pos_ctrl_gains
+    conf.motor_params              = motor_params
+    return conf
+
+def get_sim_conf():
+    import dynamic_graph.sot.torque_control.talos.balance_ctrl_sim_conf as balance_ctrl_conf
+    import dynamic_graph.sot.torque_control.talos.base_estimator_sim_conf as base_estimator_conf
+    import dynamic_graph.sot.torque_control.talos.control_manager_sim_conf as control_manager_conf
+    import dynamic_graph.sot.torque_control.talos.current_controller_sim_conf as current_controller_conf
+    import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
+    import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
+    import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains_sim as pos_ctrl_gains
+    import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
+    conf = Bunch()
+    conf.balance_ctrl              = balance_ctrl_conf
+    conf.base_estimator            = base_estimator_conf
+    conf.control_manager           = control_manager_conf
+    conf.current_ctrl              = current_controller_conf
+    conf.force_torque_estimator    = force_torque_estimator_conf
+    conf.joint_torque_controller   = joint_torque_controller_conf
+    conf.pos_ctrl_gains            = pos_ctrl_gains
+    conf.motor_params              = motor_params
+    return conf
+    
 def create_encoders(robot):
     encoders = Selec_of_vector('qn')
     plug(robot.device.robotState,     encoders.sin);
@@ -256,15 +297,15 @@ def create_trajectory_generator(robot, dt=0.001, robot_name="robot"):
 def create_filters(robot, conf, motor_params, dt):
     filters = Bunch()
 
-    # create low-pass filter for motor currents	
+    # create low-pass filter for motor currents 
     filters.current_filter = create_butter_lp_filter_Wn_05_N_3('current_filter', dt, NJ)
-	
+    
     #filters.current_filter = NumericalDifference("current_filter");
     filters.ft_RF_filter = NumericalDifference("ft_RF_filter");
     filters.ft_LF_filter = NumericalDifference("ft_LF_filter");
     filters.ft_RH_filter = NumericalDifference("ft_RH_filter");
     filters.ft_LH_filter = NumericalDifference("ft_LH_filter");
-    filters.acc_filter   = NumericalDifference("dv_filter");	
+    filters.acc_filter   = NumericalDifference("dv_filter");    
     filters.gyro_filter  = NumericalDifference("w_filter");
 
     filters.estimator_kin = NumericalDifference("estimator_kin");
@@ -488,7 +529,7 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     ctrl = SimpleInverseDyn("invDynCtrl")
     q = Mix_of_vector('selecJointConf')
     q.setSignalNumber(2);
-    plug(robot.device.robotState,     q.default)
+    plug(robot.device.robotState, q.default)
     q.sin1.value = robot.halfSitting
     q.addSelec(1, 0, 6)
     plug(q.sout, ctrl.q)
@@ -700,16 +741,12 @@ def connect_ctrl_manager(robot):
     # connect to device    
     plug(robot.device.currents,   robot.ctrl_manager.i_measured)
     plug(robot.device.ptorque,    robot.ctrl_manager.tau)
-    robot.ctrl_manager.addCtrlMode("pos")
     robot.ctrl_manager.addCtrlMode("torque")    
-    plug(robot.inv_dyn.u,                               robot.ctrl_manager.ctrl_torque)
-    plug(robot.pos_ctrl.pwmDes,                         robot.ctrl_manager.ctrl_pos)
+    plug(robot.inv_dyn.u, robot.ctrl_manager.ctrl_torque)
 
-    robot.ctrl_manager.setCtrlMode("rh-lh-lwy-lwp-lwr-rwy-rwp-rwr", "pos")
-    robot.ctrl_manager.setCtrlMode("hp-hy-ty-tp-lhy-lhr-lhp-rhy-rhr-rhp-lk-lap-lar-rk-rap-rar-lsy-lsr-lay-le-rsy-rsr-ray-re", "torque") #
-
-    robot.inv_dyn.active_joints.value = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
-    plug(robot.ctrl_manager.u_safe,                     robot.device.control)
+    robot.ctrl_manager.setCtrlMode("all", "torque")
+    plug(robot.ctrl_manager.joints_ctrl_mode_torque, robot.inv_dyn.active_joints) 
+    plug(robot.ctrl_manager.u_safe, robot.device.control)
     return
     
 def create_current_controller(robot, conf, motor_params, dt, robot_name='robot'):
@@ -768,13 +805,23 @@ def create_admittance_ctrl(robot, conf, dt=0.001, robot_name='robot'):
     admit_ctrl.init(dt, robot_name);
     return admit_ctrl;
 
-def create_topic(ros_import, signal, name, robot=None, entity=None, data_type='vector', sleep_time=0.1):
-    ros_import.add(data_type, name+'_ros', name);
-    plug(signal, ros_import.signal(name+'_ros'));
-    if(entity is not None and robot is not None):
-        robot.device.before.addDownsampledSignal(entity.name+'.'+signal.name.split('::')[-1], 1);
-    from time import sleep
-    sleep(sleep_time);
+def create_rospublish(robot, name):
+    from dynamic_graph.ros import RosPublish
+    rospub = RosPublish(name)
+    robot.device.after.addSignal(rospub.name+'.trigger')
+    return rospub
+
+def create_topic(rospub, entity, signalName, renameSignal, robot=None, data_type='vector'):
+    # check needed to prevent creation of broken topic
+    if not entity.hasSignal(signalName):
+        raise AttributeError('Entity %s does not have signal %s' %
+                             (entity.name, signalName))
+    rospub_signalName = '{0}_{1}'.format(entity.name, renameSignal)
+    topicname = '/ddp/{0}'.format(renameSignal)
+    rospub.add(data_type, rospub_signalName, topicname)
+    plug(entity.signal(signalName), rospub.signal(rospub_signalName))
+    if robot is not None:
+        robot.device.after.addSignal('{0}.{1}'.format(entity.name, signalName))
     
 
 def create_ros_topics(robot):

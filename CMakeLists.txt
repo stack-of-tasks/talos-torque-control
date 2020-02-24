@@ -142,7 +142,7 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
               python/dynamic_graph/sot/torque_control/talos/ddp_controller_conf.py
               python/dynamic_graph/sot/torque_control/talos/main_ddp_talos.py
-              python/dynamic_graph/sot/torque_control/talos/main_sim_com.py
+              python/dynamic_graph/sot/torque_control/talos/main_sim_com_torque.py
               python/dynamic_graph/sot/torque_control/talos/main_sim_com_vel.py
               script/run_test_utils.py
               script/test_ddp_sinu_effort.py
