@@ -11,10 +11,10 @@ except NameError:
 
 if len(argv) == 2 and argv[1] == "torque":
     print("Starting script in torque control")
-    run_test('../python/dynamic_graph/sot/torque_control/talos/main_sim_com_torque.py')    
+    run_test('../python/dynamic_graph/sot/torque_control/talos/main_sim_com_torque.py')
 else:
     print("Starting script in position control")
-    run_test('../python/dynamic_graph/sot/torque_control/talos/main_sim_com_vel.py')    
+    run_test('../python/dynamic_graph/sot/torque_control/talos/main_sim_com_vel.py')
 
 input("Waiting before writing the graph")
 runCommandClient("from dynamic_graph import writeGraph")
@@ -25,7 +25,7 @@ print("Convert graph to PDF in /tmp/sot_talos_tsid_com.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_com.dot", "-o", "/tmp/sot_talos_tsid_com.pdf"])
 
 input("Wait before going to halfSitting")
-runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")    
+runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
 
 input("Waiting before going to sinusoid pose")
 print("Go to sinusoid pose")

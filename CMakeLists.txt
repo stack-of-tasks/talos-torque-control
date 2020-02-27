@@ -119,12 +119,7 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains.py
               python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains_sim.py
               python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_conf.py
-              #python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_sim_conf.py
-              python/dynamic_graph/sot/torque_control/talos/main_talos.py
-              python/dynamic_graph/sot/torque_control/talos/main_talos_sinusoid.py
-              python/dynamic_graph/sot/torque_control/talos/main_sim_talos.py
-              python/dynamic_graph/sot/torque_control/talos/main_sim_ddp_talos.py
-              python/dynamic_graph/sot/torque_control/talos/main_sim_talos_sinusoid.py
+              python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters_sim.py
               python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
@@ -134,7 +129,6 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/main_sim_com_vel.py
               script/run_test_utils.py
               script/test_ddp_sinu_effort.py
-              script/sim_ddp_sinu_effort.py
               script/sim_com.py
 DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
