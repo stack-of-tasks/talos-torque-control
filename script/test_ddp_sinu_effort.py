@@ -1,57 +1,42 @@
 #!/usr/bin/python
-import sys
-import subprocess, time
-from std_srvs.srv import *
-from dynamic_graph_bridge.srv import *
-from dynamic_graph_bridge_msgs.srv import *
-from run_test_utils import *
+import time, subprocess
+from sys import argv
+from run_test_utils import runCommandClient, run_test
 
-# Waiting for services
 try:
-    rospy.loginfo("Waiting for run_command")
-    rospy.wait_for_service('/run_command')
-    rospy.loginfo("...ok")
+    # Python 2
+    input = raw_input  # noqa
+except NameError:
+    pass
 
-    rospy.loginfo("Waiting for start_dynamic_graph")
-    rospy.wait_for_service('/start_dynamic_graph')
-    rospy.loginfo("...ok")
+if len(argv) == 2 and argv[1] == "robot":
+    print("Starting script for real experiment on the robot")
+    runCommandClient('conf_default = True')
+else:
+    print("Starting script for simulation")
+    runCommandClient('conf_default = False')
 
-    runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
-    runCommandStartDynamicGraph = rospy.ServiceProxy('start_dynamic_graph', Empty)
+run_test('../python/dynamic_graph/sot/torque_control/talos/main_ddp_talos.py')
 
-    raw_input("Waiting before launching the graph")
-    runCommandClient("from dynamic_graph import *")
-    runCommandClient("from dynamic_graph.sot.torque_control.talos.main_ddp_talos import *")
+input("Waiting before writing the graph")
+runCommandClient("from dynamic_graph import writeGraph")
 
-    print("Initialize DDP sinusoid simulation (Dynamic Graph)")
-    runCommandClient("ddp_actuator(robot, startSoT=False)")
+print("WriteGraph in /tmp/sot_ddp_talos_effort.dot")
+runCommandClient("writeGraph('/tmp/sot_ddp_talos_effort.dot')")
+print("Convert graph to PDF in /tmp/sot_ddp_talos_effort.pdf")
+proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_ddp_talos_effort.dot", "-o", "/tmp/sot_ddp_talos_effort.pdf"])
 
-    # print("WriteGraph in /tmp/sot_ddp_talos_tsid_effort.dot")
-    # runCommandClient("writeGraph('/tmp/sot_ddp_talos_tsid_effort.dot')")
-    # print("Convert graph to PDF in /tmp/sot_ddp_talos_tsid_effort.pdf")
-    # proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_ddp_talos_tsid_effort.dot", "-o", "/tmp/sot_ddp_talos_tsid_effort.pdf"])
+input("Waiting before going to sinusoid pose")
+print("Go to sinusoid pose")
+runCommandClient("go_to_position_sinusoid(robot)")
 
-    raw_input("Wait before starting the dynamic graph (SoT)")
-    runCommandClient("start_sot()")
+input("Waiting before starting sinusoid move")
+print("Start Sinusoid move")
+runCommandClient("robot.traj_gen.startSinusoid('re', -1.9, 1.5)") 
 
-    raw_input("Waiting before going to sinusoid pose")
-    print("Go to sinusoid pose")
-    runCommandClient("go_to_position_sinusoid(robot)")
+input("Waiting before stopping sinusoid move")
+print("Stop Sinusoid move")
+runCommandClient("robot.traj_gen.stop('re')")
 
-    raw_input("Waiting before starting sinusoid move")
-    print("Start Sinusoid move")
-    runCommandClient("start_movement_sinusoid(robot)") 
-
-    raw_input("Waiting before stopping sinusoid move")
-    print("Stop Sinusoid move")
-    runCommandClient("stop_movement_sinusoid(robot)")
-
-    print("Go back to HalfSitting")
-    runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0)")
-    
-
-
-except rospy.ServiceException, e:
-    rospy.logerr("Service call failed: %s" % e)
-
-
+print("Go back to HalfSitting")
+runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 10.0)")

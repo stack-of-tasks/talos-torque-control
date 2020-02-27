@@ -28,6 +28,7 @@ def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
     import dynamic_graph.sot.torque_control.talos.base_estimator_conf as base_estimator_conf
     import dynamic_graph.sot.torque_control.talos.control_manager_conf as control_manager_conf
+    import dynamic_graph.sot.torque_control.talos.current_controller_conf as current_controller_conf
     import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains as pos_ctrl_gains
@@ -35,7 +36,6 @@ def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
     conf = Bunch()
     conf.balance_ctrl              = balance_ctrl_conf
-    conf.adm_ctrl                  = admittance_ctrl_conf
     conf.base_estimator            = base_estimator_conf
     conf.control_manager           = control_manager_conf
     conf.current_ctrl              = current_controller_conf
@@ -43,6 +43,7 @@ def get_default_conf():
     conf.joint_torque_controller   = joint_torque_controller_conf
     conf.pos_ctrl_gains            = pos_ctrl_gains
     conf.motor_params              = motor_params
+    conf.ddp_controller            = ddp_controller_conf
     return conf
 
 def get_sim_conf():
@@ -54,6 +55,7 @@ def get_sim_conf():
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains_sim as pos_ctrl_gains
     import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
+    import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
     conf = Bunch()
     conf.balance_ctrl              = balance_ctrl_conf
     conf.base_estimator            = base_estimator_conf
@@ -63,6 +65,7 @@ def get_sim_conf():
     conf.joint_torque_controller   = joint_torque_controller_conf
     conf.pos_ctrl_gains            = pos_ctrl_gains
     conf.motor_params              = motor_params
+    conf.ddp_controller            = ddp_controller_conf
     return conf
     
 def create_encoders(robot):
