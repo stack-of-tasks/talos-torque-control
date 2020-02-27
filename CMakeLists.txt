@@ -16,6 +16,8 @@ SET(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
 
 SET(CUSTOM_HEADER_DIR "sot/torque-control")
 
+SET(DOXYGEN_USE_MATHJAX YES)
+
 # Disable -Werror on Unix for now.
 SET(CXX_DISABLE_WERROR True)
 #add_compile_options(-std=c++11) # CMake 2.8.12 or newer
@@ -105,30 +107,32 @@ INSTALL(FILES python/dynamic_graph/sot/torque_control/talos/__init__.py
               python/dynamic_graph/sot/torque_control/talos/admittance_ctrl_conf.py
               python/dynamic_graph/sot/torque_control/talos/balance_ctrl_conf.py
               python/dynamic_graph/sot/torque_control/talos/balance_ctrl_sim_conf.py
-	      python/dynamic_graph/sot/torque_control/talos/base_estimator_conf.py
-	      python/dynamic_graph/sot/torque_control/talos/base_estimator_sim_conf.py
+              python/dynamic_graph/sot/torque_control/talos/base_estimator_conf.py
+              python/dynamic_graph/sot/torque_control/talos/base_estimator_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/control_manager_conf.py
               python/dynamic_graph/sot/torque_control/talos/control_manager_sim_conf.py
-	      python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos.py
-	      python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos_sinusoid.py
-              #python/dynamic_graph/sot/torque_control/talos/current_controller_conf.py
-              #python/dynamic_graph/sot/torque_control/talos/current_controller_sim_conf.py
+              python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos.py
+              python/dynamic_graph/sot/torque_control/talos/create_entities_utils_talos_sinusoid.py
+              python/dynamic_graph/sot/torque_control/talos/current_controller_conf.py
+              python/dynamic_graph/sot/torque_control/talos/current_controller_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/force_torque_estimator_conf.py
-	      python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains.py
+              python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains.py
               python/dynamic_graph/sot/torque_control/talos/joint_pos_ctrl_gains_sim.py
               python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_conf.py
-              #python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_sim_conf.py
-	      python/dynamic_graph/sot/torque_control/talos/main_talos.py
-	      python/dynamic_graph/sot/torque_control/talos/main_talos_sinusoid.py
-	      python/dynamic_graph/sot/torque_control/talos/main_sim_talos.py
-	      python/dynamic_graph/sot/torque_control/talos/main_sim_talos_sinusoid.py
+              python/dynamic_graph/sot/torque_control/talos/joint_torque_controller_sim_conf.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters.py
               python/dynamic_graph/sot/torque_control/talos/motors_parameters_sim.py
-	      python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
-         DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
+              python/dynamic_graph/sot/torque_control/talos/sot_utils_talos.py
+              python/dynamic_graph/sot/torque_control/talos/ddp_controller_conf.py
+              python/dynamic_graph/sot/torque_control/talos/main_ddp_talos.py
+              python/dynamic_graph/sot/torque_control/talos/main_sim_com_torque.py
+              python/dynamic_graph/sot/torque_control/talos/main_sim_com_vel.py
+              script/run_test_utils.py
+              script/test_ddp_sinu_effort.py
+              script/sim_com.py
+DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/torque_control/talos)
 
-
-
+ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(src)
 
 SETUP_PROJECT_FINALIZE()

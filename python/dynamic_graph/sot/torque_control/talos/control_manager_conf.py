@@ -108,6 +108,11 @@ footFrameNames= {
     "Right": "leg_right_6_joint",
     "Left" : "leg_left_6_joint"
 }
+
+handFrameNames= {
+    "Right": "gripper_right_joint",
+    "Left" : "gripper_left_joint"
+}
       
 rightFootSensorXYZ = (0.0,0.0,-0.085)
 rightFootSoleXYZ   = (0.0,0.0,-0.105)

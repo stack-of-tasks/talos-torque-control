@@ -7,26 +7,29 @@ COM_DES = (0.00, 0.0, 0.81);
 
 # CONTROLLER GAINS
 NJ = 32;
-kp_posture  = NJ*(100.0,);   # proportional gain of postural task
+kp_posture  = (500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 200, 1000, 200, 200, 200, 200, 50, 50, 50, 0, 200, 200, 200, 200, 50, 50, 50, 0, 0, 0);   # proportional gain of postural task
 kd_posture  = NJ*(0*sqrt(kp_posture[0]),);
 kp_pos      = NJ*(0.0,);   # proportional gain of position controller
 kd_pos      = NJ*(0*sqrt(kp_pos[0]),);
 kp_constr   = .0*1.0;   # constraint proportional feedback gain
 kd_constr   = 0*sqrt(kp_constr);   # constraint derivative feedback gain
-kp_com      = .0*30.0;
+kp_com      = 30.0;
 kd_com      = 0.0;
 kp_feet     = .0*30.0;
 kd_feet     = 0.0;
+kp_hands    = 400.0;
+kd_hands    = 0.0;
 kp_admittance     = (0,0,0,.0*1,.0*1,0.);
 ki_admittance     = 6*(0.0,);
 constraint_mask = np.array([True, True, True, True, True, True]).T;
 ee_mask         = np.array([True, True, True, True, True, True]).T;
 
 # CONTROLLER WEIGTHS
-w_com               = .0*1.0;
-w_feet              = .0*1.0;
-w_posture           = 1e-3;  # weight of postural task
-w_forces            = .0*1e-6;
+w_com               = 1e-1;
+w_feet              = 1e-3;
+w_hands             = 1e-3;
+w_posture           = 1e-5;  # weight of postural task
+w_forces            = 1e-3;
 w_base_orientation  = 0.0;
 w_torques           = 0.0;
 

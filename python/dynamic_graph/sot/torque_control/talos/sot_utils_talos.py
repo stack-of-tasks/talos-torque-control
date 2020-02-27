@@ -146,8 +146,10 @@ def go_to_position_sinusoid(robot):
          # Chest
          0.0 ,  0.006761,
          # arms
-         0.25847 ,  0.173046, -0.4, -1.3, 1.6, -0.0,  0.1, -0.005,
-         -0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,
+         0.25847 ,  0.173046, -0.0002, -0.525366, 0.0, -0.0,  0.1, -0.005,
+         -0.25847 , -0.173046, 0.4  ,  -1.3,      -1.6,  0.0,  0.1, -0.005,
+         #0.25847 ,  0.173046, -0.4, -1.3, 1.6, -0.0,  0.1, -0.005,
+         #-0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,
          # Head
          0.0,0.0);
 
@@ -156,9 +158,61 @@ def go_to_position_sinusoid(robot):
 
 def start_movement_sinusoid(robot):
 
-    robot.traj_gen.startSinusoid('le',-1.9,3);
+    robot.traj_gen.startSinusoid('re',-1.9,3);
     return robot;
 
 def stop_movement_sinusoid(robot):
-    robot.traj_gen.stop('le');
+    robot.traj_gen.stop('re');
     return robot;
+
+def go_to_SE3_position_fixed_orientation(traj_gen, pos, T=10.0):
+    traj_gen.move(0, pos[0], T)
+    traj_gen.move(1, pos[1], T)
+    traj_gen.move(2, pos[2], T)
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, 0, T)
+    traj_gen.move(5, 1, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 1, T)
+    traj_gen.move(8, 0, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_front_orientation(traj_gen, T=10):
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, 0, T)
+    traj_gen.move(5, 1, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 1, T)
+    traj_gen.move(8, 0, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_right_orientation(traj_gen, T=10):
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, 1, T)
+    traj_gen.move(5, 0, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 0, T)
+    traj_gen.move(8, -1, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_left_orientation(traj_gen, T=10):
+    traj_gen.move(3, 0, T)
+    traj_gen.move(4, -1, T)
+    traj_gen.move(5, 0, T)
+    traj_gen.move(6, 0, T)
+    traj_gen.move(7, 0, T)
+    traj_gen.move(8, 1, T)
+    traj_gen.move(9, -1, T)
+    traj_gen.move(10, 0, T)
+    traj_gen.move(11, 0, T)
+
+def go_to_SE3_position(traj_gen, pos, T=10):
+    traj_gen.move(0, pos[0], T)
+    traj_gen.move(1, pos[1], T)
+    traj_gen.move(2, pos[2], T)
