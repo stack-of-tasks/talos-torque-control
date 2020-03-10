@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Mon Feb  9 13:55:16 2015
@@ -7,41 +6,29 @@ Created on Mon Feb  9 13:55:16 2015
 """
 from numpy import zeros as zeros
 
-NJ = 32;
+NJ = 32
 
-
-GEAR_RATIOS = (150.0, 101.0, 100.0, 144.0, 100.0, 101.0,
-               150.0, 101.0, 100.0, 144.0, 100.0, 101.0,
-               100.0, 100.0,
-               100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-               100.0,
-               100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-               100.0,
-               100.0,200.0);
-ROTOR_INERTIAS = (8.6e-6, 34e-6, 34e-5, 61e-5, 34e-6, 21e-6,
-                  8.6e-6, 34e-6, 34e-5, 61e-5, 34e-6, 21e-6,,
-                  34e-6, 34e-6,
-                  34e-6, 34e-6, 21e-6, 21e-6, 5.8e-6, 1.3e-6, 1.3e-07,
-                  1.3,
-                  34e-6, 34e-6, 21e-6, 21e-6, 5.8e-6, 1.3e-6, 1.3e-07,
-                  1.3,
-                  1.3,1.3);
-
+GEAR_RATIOS = (150.0, 101.0, 100.0, 144.0, 100.0, 101.0, 150.0, 101.0, 100.0, 144.0, 100.0, 101.0, 100.0, 100.0, 100.0,
+               100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
+               100.0, 200.0)
+ROTOR_INERTIAS = (8.6e-6, 34e-6, 34e-5, 61e-5, 34e-6, 21e-6, 8.6e-6, 34e-6, 34e-5, 61e-5, 34e-6, 21e-6, 34e-6, 34e-6,
+                  34e-6, 34e-6, 21e-6, 21e-6, 5.8e-6, 1.3e-6, 1.3e-07, 1.3, 34e-6, 34e-6, 21e-6, 21e-6, 5.8e-6, 1.3e-6,
+                  1.3e-07, 1.3, 1.3, 1.3)
 
 ### New motor parameters with current measurment (used by ForceTorqueEstimator and JointTorqueController) ###
-Kt_p=zeros(NJ)+1.0;
-Kt_n=zeros(NJ)+1.0;
-Kf_p=zeros(NJ);
-Kf_n=zeros(NJ);
-Kv_p=zeros(NJ);
-Kv_n=zeros(NJ);
-Ka_p=zeros(NJ);
-Ka_n=zeros(NJ);
+Kt_p = zeros(NJ) + 1.0
+Kt_n = zeros(NJ) + 1.0
+Kf_p = zeros(NJ)
+Kf_n = zeros(NJ)
+Kv_p = zeros(NJ)
+Kv_n = zeros(NJ)
+Ka_p = zeros(NJ)
+Ka_n = zeros(NJ)
 
-deadzone=zeros(NJ);
-K_bemf=zeros(NJ);                 # used by ControlManager to compensate back-EMF
-cur_sens_gains = zeros(NJ)+1.0;
-
+deadzone = zeros(NJ)
+K_bemf = zeros(NJ)
+# used by ControlManager to compensate back-EMF
+cur_sens_gains = zeros(NJ) + 1.0
 """
 cur_sens_gains[0] = 1.256534 #Using 20161114_135332_rhy_static
 deadzone[0]      = 0.588671 #Using 20161114_135332_rhy_static
@@ -179,11 +166,11 @@ for i in range(NJ):
     Kt_av = (Kt_n[i] + Kt_p[i])/2
     Kt_n[i]=Kt_av
     Kt_p[i]=Kt_av
-    
+
     Kv_av = (Kv_n[i] + Kv_p[i])/2
     Kv_n[i]=Kv_av
     Kv_p[i]=Kv_av
-    
+
     Kf_av = (Kf_n[i] + Kf_p[i])/2
     Kf_n[i]=Kf_av
     Kf_p[i]=Kf_av
