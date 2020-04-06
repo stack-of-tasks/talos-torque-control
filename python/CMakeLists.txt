@@ -23,6 +23,7 @@ SET(${PROJECT_NAME}_PYTHON
   main_ddp_talos.py
   main_sim_com_torque.py
   main_sim_com_vel.py
+  main_sim_inverse_dyn_balance_controller.py
   )
 
 FOREACH(file ${${PROJECT_NAME}_PYTHON})
