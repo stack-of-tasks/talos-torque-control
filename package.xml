@@ -1,0 +1,15 @@
+<package format="2">
+  <name>talos-torque-control</name>
+  <version>1.0.0</version>
+  <description>
+    Collection of dynamic-graph entities aiming at the implementation of torque control on TALOS.
+  </description>
+  <url>https://github.com/pyrene-dev/talos-torque-control</url>
+  <license>BSD</license>
+  <author>Florent Forget</author>
+  <author>Paul Dandignac</author>
+  <author>Olivier Stasse</author>
+  <maintainer email="guilhem.saurel@laas.fr">Guilhem Saurel</maintainer>
+
+  <depend>sot-torque-control</depend>
+</package>
