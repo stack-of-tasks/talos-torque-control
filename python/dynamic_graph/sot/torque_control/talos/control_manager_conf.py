@@ -11,7 +11,7 @@ TAU_MAX                     = 1.*1e2;   # max joint torques (security check of C
 CURRENT_MAX                 = 20.0;   # max motor current (security check of ControlManager)
 CTRL_MAX                    = 20.0;   # max desired current (security check of ControlManager)
 model_path                  = ["/opt/openrobots/share"];
-urdfFileName                = model_path[0] + "/talos_data/robots/talos_reduced.urdf";
+urdfFileName                = model_path[0] + "/talos_data/urdf/talos_reduced_v2.urdf";
 ImuJointName                = "imu_joint";
 
 mapJointNameToID={
