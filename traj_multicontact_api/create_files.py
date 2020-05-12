@@ -6,12 +6,14 @@ import math
 import curves
 from multicontact_api import ContactSequence
 from curves import SE3Curve, piecewise_SE3
+from wrench6D_from_f3D import contacts_from_footrect_center, contact_force_to_wrench
+
 pin.switchToNumpyArray()
 
 cs_wb = ContactSequence()
-cs_wb.loadFromBinary("mc_api_2_trajs/walk_20cm_WB.cs") #step_in_place
+cs_wb.loadFromBinary("mc_api_2_trajs/step_in_place_WB.cs") # #step_in_place
 cs_ref = ContactSequence()
-cs_ref.loadFromBinary("mc_api_2_trajs/walk_20cm_REF.cs") #step_in_place
+cs_ref.loadFromBinary("mc_api_2_trajs/step_in_place_REF.cs")#" #step_in_place
 
 t_init = cs_ref.contactPhases[0].timeInitial
 t_end = cs_ref.contactPhases[-1].timeFinal
@@ -82,17 +84,21 @@ np.savetxt("dat/rightFoot.dat", right_foot)
 
 
 # Feet contact force
-traj_left = cs_wb.concatenateContactForceTrajectories('leg_left_sole_fix_joint')
-traj_right = cs_wb.concatenateContactForceTrajectories('leg_right_sole_fix_joint')
+contacts = contacts_from_footrect_center()
 
-left_foot = np.zeros((int(t_end/0.001) +1, 6))
-right_foot = np.zeros((int(t_end/0.001)+1, 6))
+traj_left_f = cs_wb.concatenateContactForceTrajectories('leg_left_sole_fix_joint')
+traj_right_f = cs_wb.concatenateContactForceTrajectories('leg_right_sole_fix_joint')
+
+left_foot_f = np.zeros((int(t_end/0.001) +1, 6))
+right_foot_f = np.zeros((int(t_end/0.001)+1, 6))
 for i in t:
-    left_foot[int(i/0.001)] = np.reshape(traj_left(i), 12)[:6]
-    right_foot[int(i/0.001)] = np.reshape(traj_right(i), 12)[:6]
+    wrench6D_foot_left = contact_force_to_wrench(contacts, np.reshape(traj_left_f(i), 12))
+    wrench6D_foot_right = contact_force_to_wrench(contacts, np.reshape(traj_right_f(i), 12))
+    left_foot_f[int(i/0.001)] = wrench6D_foot_left
+    right_foot_f[int(i/0.001)] = wrench6D_foot_right
 
 # repeat_left_foot = np.repeat(left_foot, 3, axis=0)
 # repeat_right_foot = np.repeat(right_foot, 3, axis=0)
-np.savetxt("dat/leftForceFoot.dat", left_foot)
-np.savetxt("dat/rightForceFoot.dat", right_foot)
+np.savetxt("dat/leftForceFoot.dat", left_foot_f)
+np.savetxt("dat/rightForceFoot.dat", right_foot_f)
 

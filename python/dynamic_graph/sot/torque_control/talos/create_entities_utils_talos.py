@@ -57,7 +57,7 @@ def get_sim_conf():
     import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains_sim as pos_ctrl_gains
-    import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
+    import sot_talos_balance.motor_parameters as motor_params
     import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
     conf = Bunch()
     conf.balance_ctrl              = balance_ctrl_conf
@@ -229,9 +229,9 @@ def create_foot_traj_gen(signal_name, robot, dt):
     foot_traj_gen = SE3TrajectoryGenerator(signal_name + "_traj_gen")
     M = np.array(robot.dynamic.signal(signal_name).value)
     trans = M[:3, 3]
-    rot = rot = M[:3, :3].reshape(9)
+    rot = M[:3, :3].reshape(9)
     initial_value = np.concatenate((trans,rot))
-    foot_traj_gen.initial_value.value = initial_value
+    foot_traj_gen.initial_value.value = tuple(initial_value)
     foot_traj_gen.trigger.value = 1.0
     foot_traj_gen.init(dt)
     return foot_traj_gen 
@@ -428,7 +428,7 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     torque_ctrl.init(dt, robot_name);
     return torque_ctrl;
 
-def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot'):
+def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot', simu=True):
     from dynamic_graph.sot.torque_control.inverse_dynamics_balance_controller import InverseDynamicsBalanceController
     ctrl = InverseDynamicsBalanceController("invDynBalCtrl")
 
@@ -457,45 +457,45 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     plug(robot.dynamic.com, ctrl.com_measured)
     #plug(robot.estimator_ft.contactWrenchRightSole, ctrl.wrench_right_foot);
     #plug(robot.estimator_ft.contactWrenchLeftSole,  ctrl.wrench_left_foot);
-    # plug(robot.device.forceRLEG, ctrl.wrench_right_foot) # New
-    # plug(robot.device.forceLLEG, ctrl.wrench_left_foot) # New
+    plug(robot.device.forceRLEG, ctrl.wrench_right_foot) # New
+    plug(robot.device.forceLLEG, ctrl.wrench_left_foot) # New
     # plug(ctrl.tau_des,                              robot.torque_ctrl.jointsTorquesDesired);
     #plug(ctrl.dq_admittance,                        robot.torque_ctrl.dq_des);
     # robot.torque_ctrl.dq_des.value = NJ*(0.0,);
     #plug(ctrl.tau_des,                              robot.estimator_ft.tauDes);
 
 
-    # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
+    plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
     # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
     # ctrl.rf_ref_vel.value =           12*(0.0,)
     # ctrl.rf_ref_acc.value =           12*(0.0,)
-    # plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
-    # plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
-    # plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
+    plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
+    plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
+    plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
 
-    # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
+    plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
     # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
     # ctrl.lf_ref_vel.value =           12*(0.0,)
     # ctrl.lf_ref_acc.value =           12*(0.0,)
-    # plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
-    # plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
-    # plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
+    plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
+    plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
+    plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
 
-    # plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
+    plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
     # ctrl.rh_ref_pos.value =           robot.rh_traj_gen.initial_value.value
     # ctrl.rh_ref_vel.value =           12*(0.0,)
     # ctrl.rh_ref_acc.value =           12*(0.0,)
-    # plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos)
-    # plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel)
-    # plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc)
+    plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos)
+    plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel)
+    plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc)
 
-    # plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
+    plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
     # ctrl.lh_ref_pos.value =           robot.lh_traj_gen.initial_value.value
     # ctrl.lh_ref_vel.value =           12*(0.0,)
     # ctrl.lh_ref_acc.value =           12*(0.0,)
-    # plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos)
-    # plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel)
-    # plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc)
+    plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos)
+    plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel)
+    plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc)
 
     # ctrl.posture_ref_pos.value = robot.halfSitting[7:]
     # ctrl.posture_ref_vel.value = 32*(0.0,)
@@ -528,9 +528,11 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     # to the C++ entity, because otherwise we get a loss of precision
 #    ctrl.rotor_inertias.value = conf.ROTOR_INERTIAS;
 #    ctrl.gear_ratios.value = conf.GEAR_RATIOS;
-    ctrl.rotor_inertias.value = tuple([g*g*r for (g,r) in
+    if not simu:
+        ctrl.rotor_inertias.value = tuple([g*g*r for (g,r) in
                                        zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)])
-    ctrl.gear_ratios.value = NJ*(1.0,)
+        ctrl.gear_ratios.value = NJ*(1.0,)
+    
     ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
     ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS
     ctrl.f_min.value = conf.fMin

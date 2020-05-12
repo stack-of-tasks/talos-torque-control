@@ -11,7 +11,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import a
 from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.operator import Substract_of_vector, MatrixHomoToPoseQuaternion
+from dynamic_graph.sot.core.operator import Substract_of_vector
 
 from numpy import genfromtxt
 
@@ -31,12 +31,6 @@ q += [-0.25847, -0.173046, 0.0002, -0.525366, 0.0, 0.0, 0.1, -0.005] # arms
 q += [0., 0.] # Head
 
 robot.halfSitting = q
-
-# --- CREATE Operational Points ------------------------------------------------
-# robot.dynamic.createOpPoint('LF', robot.OperationalPointsMap['left-ankle'])
-# robot.dynamic.createOpPoint('RF', robot.OperationalPointsMap['right-ankle'])
-# robot.dynamic.LF.recompute(0)
-# robot.dynamic.RF.recompute(0)
 
 # --- CREATE ENTITIES ----------------------------------------------------------
 
@@ -71,21 +65,21 @@ robot.am_traj_gen.x.recompute(0)
 # robot.rf_traj_gen.x.recompute(0)
 # robot.lf_traj_gen = create_foot_traj_gen("LF", robot, dt)
 # robot.lf_traj_gen.x.recompute(0)
-# robot.rf_traj_gen = NdTrajectoryGenerator("tg_rf")
-# robot.lf_traj_gen = NdTrajectoryGenerator("tg_lf")
-# robot.rf_traj_gen.init(dt, 12)
-# robot.lf_traj_gen.init(dt, 12)
+robot.rf_traj_gen = NdTrajectoryGenerator("tg_rf")
+robot.lf_traj_gen = NdTrajectoryGenerator("tg_lf")
+robot.rf_traj_gen.init(dt, 12)
+robot.lf_traj_gen.init(dt, 12)
 
 # --- Hands trajectories
-# robot.rh_traj_gen = SE3TrajectoryGenerator("tg_rh")
-# robot.lh_traj_gen = SE3TrajectoryGenerator("tg_lh")
-# robot.rh_traj_gen.init(dt)
-# robot.lh_traj_gen.init(dt)
+robot.rh_traj_gen = SE3TrajectoryGenerator("tg_rh")
+robot.lh_traj_gen = SE3TrajectoryGenerator("tg_lh")
+robot.rh_traj_gen.init(dt)
+robot.lh_traj_gen.init(dt)
 
 # --- Switch which synchronizes trajectories
 robot.traj_sync = create_trajectory_switch()
-trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen]#, robot.rf_force_traj_gen, robot.lf_force_traj_gen]
-# trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
+trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen] # robot.rf_force_traj_gen, robot.lf_force_traj_gen]
+trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
 connect_synchronous_trajectories(robot.traj_sync, trajs)
 
 # --- Base Estimator
@@ -94,44 +88,41 @@ robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
 plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
-# robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
-# plug(robot.dynamic.LF, robot.m2qLF.sin)
-# plug(robot.m2qLF.sout, robot.device_filters.LF_filter.x) 
-# plug(robot.device_filters.LF_filter.x_filtered, robot.base_estimator.lf_ref_xyzquat)
-
-# robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
-# plug(robot.dynamic.RF, robot.m2qRF.sin)
-# plug(robot.m2qRF.sout, robot.device_filters.RF_filter.x) 
-# plug(robot.device_filters.RF_filter.x_filtered, robot.base_estimator.rf_ref_xyzquat)
-
 robot.base_estimator.q.recompute(0)
 robot.base_estimator.v.recompute(0)
 
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt)
+robot.inv_dyn.active_joints.value = 32*(1.0,)
+
+# --- Reference position of the feet for base estimator
+robot.inv_dyn.left_foot_pos_quat.recompute(0)
+robot.inv_dyn.right_foot_pos_quat.recompute(0)
+plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
+plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
+robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
+robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
 
 # --- High gains position controller
 from dynamic_graph.sot.torque_control.position_controller import PositionController
 posCtrl = PositionController('pos_ctrl')
-posCtrl.Kp.value = tuple(conf.pos_ctrl_gains.kp_pos);
-posCtrl.Kd.value = tuple(conf.pos_ctrl_gains.kd_pos);
-posCtrl.Ki.value = tuple(conf.pos_ctrl_gains.ki_pos);
+posCtrl.Kp.value = tuple(conf.pos_ctrl_gains.kp_pos[round(dt,3)]);
+posCtrl.Kd.value = tuple(conf.pos_ctrl_gains.kd_pos[round(dt,3)]);
+posCtrl.Ki.value = tuple(conf.pos_ctrl_gains.ki_pos[round(dt,3)]);
 plug(robot.device.robotState, posCtrl.base6d_encoders);
-# plug(robot.encoders_velocity.sout, posCtrl.jointsVelocities);
 plug(robot.device_filters.vel_filter.x_filtered, posCtrl.jointsVelocities);
-# plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities);
 plug(robot.traj_gen.q, posCtrl.qRef);
 plug(robot.traj_gen.dq, posCtrl.dqRef);
 posCtrl.init(dt, "robot");
 robot.pos_ctrl = posCtrl
 
 # --- Play trajectories
-# robot.com_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/com.dat")
-# robot.am_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/am.dat")
-# robot.rf_force_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/rightForceFoot.dat")
-# robot.lf_force_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/leftForceFoot.dat")
-# robot.rf_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/rightFoot.dat")
-# robot.lf_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot/leftFoot.dat")
+# robot.com_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/com.dat")
+# robot.am_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/am.dat")
+# robot.rf_force_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/rightForceFoot.dat")
+# robot.lf_force_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/leftForceFoot.dat")
+# robot.rf_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/rightFoot.dat")
+# robot.lf_traj_gen.playTrajectoryFile(folder + "/../traj_multicontact_api/dat/on_spot_repeat/leftFoot.dat")
 
 # --- Connect control manager
 plug(robot.device.currents, robot.ctrl_manager.i_measured)
@@ -144,7 +135,7 @@ plug(robot.device.ptorque, robot.ctrl_manager.tau)
 robot.ctrl_manager.addCtrlMode("torque")
 plug(robot.inv_dyn.tau_pd_des, robot.ctrl_manager.ctrl_torque)
 robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
-robot.inv_dyn.active_joints.value = 32*(1.0,)
+
 robot.ctrl_manager.addCtrlMode("pos")
 plug(robot.pos_ctrl.pwmDes, robot.ctrl_manager.ctrl_pos)
 # plug(robot.inv_dyn.q_des, robot.ctrl_manager.ctrl_pos)
@@ -163,7 +154,7 @@ plug(robot.ctrl_manager.u_safe, robot.device.control)
 # --- Error on the CoM task
 robot.errorComTSID = Substract_of_vector('error_com')
 plug(robot.inv_dyn.com_ref_pos, robot.errorComTSID.sin2)
-plug(robot.dynamic.com, robot.errorComTSID.sin1)
+plug(robot.inv_dyn.com, robot.errorComTSID.sin1)
 
 # --- Error on the Posture task
 robot.errorPoseTSID = Substract_of_vector('error_pose')
@@ -176,7 +167,7 @@ plug(robot.encoders.sout, robot.errorPoseTSID.sin1)
 robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
 create_topic(robot.publisher, robot.errorComTSID, 'sout', 'errorComTSID', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.dynamic, 'com', 'dynCom', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'com', 'inv_dyn_com', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'v_des', 'v_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'dv_des', 'dv_des', robot=robot, data_type='vector')
@@ -186,11 +177,11 @@ create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos', 'left_foot_pos', r
 create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos', 'right_foot_pos', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.lf_force_traj_gen, 'x', 'lf_force_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.rf_force_traj_gen, 'x', 'rf_force_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.lf_force_traj_gen, 'x', 'lf_force_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.rf_force_traj_gen, 'x', 'rf_force_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
 
