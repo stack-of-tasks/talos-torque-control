@@ -520,14 +520,15 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     plug(robot.waist_traj_gen.x,                  ctrl.base_orientation_ref_pos)
     plug(robot.waist_traj_gen.dx,                 ctrl.base_orientation_ref_vel)
     plug(robot.waist_traj_gen.ddx,                ctrl.base_orientation_ref_acc)
-    # plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
-    # plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
+    try:
+        plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
+        plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
+    except:
+        print("WARNING: Could not connect rf/lf_force_traj_gen to f_ref_right/left_foot")
 
     # rather than giving to the controller the values of gear ratios and rotor inertias
     # it is better to compute directly their product in python and pass the result
     # to the C++ entity, because otherwise we get a loss of precision
-#    ctrl.rotor_inertias.value = conf.ROTOR_INERTIAS;
-#    ctrl.gear_ratios.value = conf.GEAR_RATIOS;
     if not simu:
         ctrl.rotor_inertias.value = tuple([g*g*r for (g,r) in
                                        zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)])

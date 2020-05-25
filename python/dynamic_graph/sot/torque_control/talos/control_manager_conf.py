@@ -5,13 +5,16 @@ Created on Mon Feb  9 13:55:16 2015
 @author: adelpret
 """
 import numpy as np
+from rospkg import RosPack
+
+rospack = RosPack()
 
 NJ = 32;
 TAU_MAX                     = 1.*1e2;   # max joint torques (security check of ControlManager)
 CURRENT_MAX                 = 20.0;   # max motor current (security check of ControlManager)
 CTRL_MAX                    = 20.0;   # max desired current (security check of ControlManager)
-model_path                  = ["/opt/openrobots/share"];
-urdfFileName                = model_path[0] + "/talos_data/urdf/talos_reduced_v2.urdf";
+model_path = [rospack.get_path('talos_data') + "/../"]
+urdfFileName = rospack.get_path('talos_data') + "/urdf/talos_reduced_v2.urdf"
 ImuJointName                = "imu_joint";
 
 mapJointNameToID={
