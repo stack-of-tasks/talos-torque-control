@@ -1,4 +1,4 @@
-# Running a test
+# Pyrene CoM sinusoid in position or torque control
 
 In the following, we quickly demonstrate how to run a test with  <a href="https://github.com/stack-of-tasks/sot-torque-control">sot-torque-control</a> and talos-torque-control.
 
