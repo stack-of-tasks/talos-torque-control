@@ -20,7 +20,7 @@
 \section OverviewIntro Introduction to talos-torque-control
 
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
-[![Pipeline status](https://gepgitlab.laas.fr/pyrene-dev/talos-torque-control/badges/master/pipeline.svg)](https://gepgitlab.laas.fr/pyrene-dev/talos-torque-control/commits/master)
+[![Pipeline status](https://gitlab.laas.fr/pyrene-dev/talos-torque-control/badges/master/pipeline.svg)](https://gitlab.laas.fr/pyrene-dev/talos-torque-control/commits/master)
 
 This repository contains a set of dynamic-graph entities for the implementation of sensor-feedback control of the robot Talos.
 You can find a description of the main entities in the following <a href="https://github.com/stack-of-tasks/sot-torque-control/wiki">wiki</a>.
