@@ -14,8 +14,8 @@ kp_posture  = (10., 5., 5., 1., 1., 10., 10., 5., 5., 1., 1., 10., 500., 500., 5
 kd_posture = tuple(2 * np.sqrt(kp_posture))
 
 kp_pos = np.array(
-(1300.,  1300.,  1300.,  1300.,  0., 0.,
- 1300.,  1300.,  1300.,  1300.,  0., 0.,
+(1300.,  1300.,  1300.,  1300.,  50., 50.,
+ 1300.,  1300.,  1300.,  1300.,  50., 50.,
  100., 100.,
  500.,  500.,  500.,  500.,  500.,  500., 500.,
  10.,
@@ -34,8 +34,8 @@ kd_pos = np.array(
   0.1, 0.1))
 
 kp_tau = 0.1 * np.array(
-(5.0, 5.0,  5.0,  5.0,  8.0,  8.0,
- 5.0, 5.0,  5.0,  5.0,  8.0,  8.0,
+(5.0, 5.0,  5.0,  5.0,  7.0,  7.0,
+ 5.0, 5.0,  5.0,  5.0,  7.0,  7.0,
  5.0, 5.0,
  5.0, 5.0,  5.0,  5.0,  5.0,  0.0, 0.0,
  0.0,
@@ -43,15 +43,15 @@ kp_tau = 0.1 * np.array(
  0.0,
  0.0, 0.0))
 
-kp_contact  = 30.0  # constraint proportional feedback gain
-kd_contact  = 2*sqrt(kp_contact)   # constraint derivative feedback gain
-kp_com      = 100.0
-kd_com      = 2*sqrt(kp_com)
+kp_contact  = 30.0 # constraint proportional feedback gain
+kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
+kp_com      = 100.0 #10
+kd_com      = 2.0*sqrt(kp_com) #5
 kp_waist    = 500.0
 kd_waist    = 2.0*sqrt(kp_waist)
 kp_am       = 10.0
 kd_am       = 2.0*sqrt(kp_am)
-kp_feet     = 100.0;
+kp_feet     = 100.0
 kd_feet     = 2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
