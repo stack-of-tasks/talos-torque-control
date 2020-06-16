@@ -482,7 +482,7 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         # vel_lfootSE3 = MatrixHomoToSE3Vector("vel_lfootSE3")
         # plug(robot.pg.dotleftfootref, vel_lfootSE3.sin)
         # plug(vel_lfootSE3.sout, ctrl.lf_ref_vel)
-        ctrl.rf_ref_vel.value = 12*(0.0,)
+        ctrl.lf_ref_vel.value = 12*(0.0,)
         ctrl.lf_ref_acc.value = 12*(0.0,)
 
         plug(ctrl.right_hand_pos,   robot.rh_traj_gen.initial_value);

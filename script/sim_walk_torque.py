@@ -60,7 +60,7 @@ if pattern_generator:
     input("Waiting before setting gains")
     print("Setting gains")
     runCommandClient("robot.inv_dyn.kp_feet.value = 6*(250,)")
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(250,)")
+    runCommandClient("robot.inv_dyn.kp_com.value = 3*(400,)")
     runCommandClient("robot.inv_dyn.kd_feet.value = 6*(12,)")
     runCommandClient("robot.inv_dyn.kd_com.value = 3*(12,)")
     input("Waiting before playing trajectories")

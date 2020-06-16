@@ -15,6 +15,7 @@ from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_ve
 from sot_talos_balance.boolean_identity import BooleanIdentity
 from dynamic_graph.sot.pattern_generator import PatternGenerator
 from sot_talos_balance.delay import DelayVector
+from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
@@ -82,8 +83,8 @@ robot.pg.parseCmd(":samplingperiod 0.005")
 robot.pg.parseCmd(":previewcontroltime 1.6")
 robot.pg.parseCmd(":omega 0.0")
 robot.pg.parseCmd(':stepheight 0.05')
-robot.pg.parseCmd(':doublesupporttime 0.3')
-robot.pg.parseCmd(':singlesupporttime 1.5')
+robot.pg.parseCmd(':doublesupporttime 0.2')
+robot.pg.parseCmd(':singlesupporttime 1.0')
 robot.pg.parseCmd(":armparameters 0.5")
 robot.pg.parseCmd(":LimitsFeasibility 0.0")
 robot.pg.parseCmd(":ZMPShiftParameters 0.015 0.015 0.015 0.015")
@@ -94,8 +95,8 @@ robot.pg.parseCmd(":setVelReference  0.1 0.0 0.0")
 
 robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
 
-# plug(robot.dynamic.position, robot.pg.position)
-plug(robot.base_estimator.q, robot.pg.position)
+plug(robot.dynamic.position, robot.pg.position)
+# plug(robot.base_estimator.q, robot.pg.position)
 plug(robot.dynamic.com, robot.pg.com)
 #plug(robot.dynamic.com, robot.pg.comStateSIN)
 # plug(robot.dynamic.LF, robot.pg.leftfootcurrentpos)
@@ -134,19 +135,45 @@ robot.inv_dyn.setControlOutputType("torque")
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
-# robot.inv_dyn.left_foot_pos_quat.recompute(0)
-# robot.inv_dyn.right_foot_pos_quat.recompute(0)
-# # robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
-# # robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
-# plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
-# plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
+robot.inv_dyn.left_foot_pos_quat.recompute(0)
+robot.inv_dyn.right_foot_pos_quat.recompute(0)
+# robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
+# robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
+plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
+plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
 
-# --- Delay
-robot.delay_com = DelayVector("delay_com")
-robot.delay_com.setMemory(robot.dynamic.com.value)
-robot.device.before.addSignal(robot.delay_com.name + '.current')
-plug(robot.inv_dyn.com, robot.delay_com.sin)
-plug(robot.delay_com.previous, robot.pg.com)
+# --- Delay COM
+# robot.delay_com = DelayVector("delay_com")
+# robot.delay_com.setMemory(robot.dynamic.com.value)
+# robot.device.before.addSignal(robot.delay_com.name + '.current')
+# plug(robot.inv_dyn.com, robot.delay_com.sin)
+# plug(robot.delay_com.previous, robot.pg.com)
+
+# --- Delay position q
+robot.delay_pos = DelayVector("delay_pos")
+robot.delay_pos.setMemory(robot.base_estimator.q.value)
+robot.device.before.addSignal(robot.delay_pos.name + '.current')
+plug(robot.inv_dyn.q_des, robot.delay_pos.sin)
+plug(robot.delay_pos.previous, robot.pg.position)
+
+# --- Delay velocity dq
+robot.delay_vel = DelayVector("delay_vel")
+robot.delay_vel.setMemory(robotDim * [0.])
+robot.device.before.addSignal(robot.delay_vel.name + '.current')
+plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
+
+# --- Plug inverse_dynamic instead of device
+# plug(robot.delay_pos.previous, robot.pselec.sin)
+# plug(robot.pselec.sout, robot.base_estimator.joint_positions)
+# plug(robot.delay_vel.previous, robot.vselec.sin)
+
+# --- Fix robot.dynamic inputs
+plug(robot.delay_pos.previous, robot.dynamic.position)
+plug(robot.delay_vel.previous, robot.dynamic.velocity)
+robot.dvdt = Derivator_of_Vector("dv_dt")
+robot.dvdt.dt.value = dt
+plug(robot.delay_vel.previous, robot.dvdt.sin)
+plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
 # --- Change actual position feet for pg
 # robot.Lfoot_Homo = SE3VectorToMatrixHomo("Lfoot_estim")
