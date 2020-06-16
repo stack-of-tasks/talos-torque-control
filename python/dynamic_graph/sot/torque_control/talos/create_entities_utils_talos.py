@@ -9,7 +9,7 @@ from __future__ import print_function
 from dynamic_graph import plug
 import numpy as np
 from dynamic_graph.sot.core.latch import Latch
-from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector
+from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector, MatrixHomoToSE3Vector
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
@@ -428,7 +428,7 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     torque_ctrl.init(dt, robot_name);
     return torque_ctrl;
 
-def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot', simu=True):
+def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot', simu=True, patternGenerator=False):
     from dynamic_graph.sot.torque_control.inverse_dynamics_balance_controller import InverseDynamicsBalanceController
     ctrl = InverseDynamicsBalanceController("invDynBalCtrl")
 
@@ -464,67 +464,125 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     # robot.torque_ctrl.dq_des.value = NJ*(0.0,);
     #plug(ctrl.tau_des,                              robot.estimator_ft.tauDes);
 
+    if (patternGenerator):
+        # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
+        rfootSE3 = MatrixHomoToSE3Vector("rfootSE3")
+        plug(robot.pg.rightfootref, rfootSE3.sin)
+        plug(rfootSE3.sout, ctrl.rf_ref_pos)
+        # vel_rfootSE3 = MatrixHomoToSE3Vector("vel_rfootSE3")
+        # plug(robot.pg.dotrightfootref, vel_rfootSE3.sin)
+        # plug(vel_rfootSE3.sout, ctrl.rf_ref_vel)
+        ctrl.rf_ref_vel.value = 12*(0.0,)
+        ctrl.rf_ref_acc.value = 12*(0.0,)
 
-    plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
-    # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
-    # ctrl.rf_ref_vel.value =           12*(0.0,)
-    # ctrl.rf_ref_acc.value =           12*(0.0,)
-    plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
-    plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
-    plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
+        # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
+        lfootSE3 = MatrixHomoToSE3Vector("lfootSE3")
+        plug(robot.pg.leftfootref, lfootSE3.sin)
+        plug(lfootSE3.sout, ctrl.lf_ref_pos)
+        # vel_lfootSE3 = MatrixHomoToSE3Vector("vel_lfootSE3")
+        # plug(robot.pg.dotleftfootref, vel_lfootSE3.sin)
+        # plug(vel_lfootSE3.sout, ctrl.lf_ref_vel)
+        ctrl.rf_ref_vel.value = 12*(0.0,)
+        ctrl.lf_ref_acc.value = 12*(0.0,)
 
-    plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
-    # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
-    # ctrl.lf_ref_vel.value =           12*(0.0,)
-    # ctrl.lf_ref_acc.value =           12*(0.0,)
-    plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
-    plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
-    plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
+        plug(ctrl.right_hand_pos,   robot.rh_traj_gen.initial_value);
+        plug(robot.rh_traj_gen.x,   ctrl.rh_ref_pos)
+        plug(robot.rh_traj_gen.dx,  ctrl.rh_ref_vel)
+        plug(robot.rh_traj_gen.ddx, ctrl.rh_ref_acc)
 
-    plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
-    # ctrl.rh_ref_pos.value =           robot.rh_traj_gen.initial_value.value
-    # ctrl.rh_ref_vel.value =           12*(0.0,)
-    # ctrl.rh_ref_acc.value =           12*(0.0,)
-    plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos)
-    plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel)
-    plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc)
+        plug(ctrl.left_hand_pos,    robot.lh_traj_gen.initial_value);
+        plug(robot.lh_traj_gen.x,   ctrl.lh_ref_pos)
+        plug(robot.lh_traj_gen.dx,  ctrl.lh_ref_vel)
+        plug(robot.lh_traj_gen.ddx, ctrl.lh_ref_acc)
 
-    plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
-    # ctrl.lh_ref_pos.value =           robot.lh_traj_gen.initial_value.value
-    # ctrl.lh_ref_vel.value =           12*(0.0,)
-    # ctrl.lh_ref_acc.value =           12*(0.0,)
-    plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos)
-    plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel)
-    plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc)
+        plug(robot.traj_gen.q,   ctrl.posture_ref_pos)
+        plug(robot.traj_gen.dq,  ctrl.posture_ref_vel)
+        plug(robot.traj_gen.ddq, ctrl.posture_ref_acc)
 
-    # ctrl.posture_ref_pos.value = robot.halfSitting[7:]
-    # ctrl.posture_ref_vel.value = 32*(0.0,)
-    # ctrl.posture_ref_acc.value = 32*(0.0,)
+        plug(robot.pg.comref, ctrl.com_ref_pos)
+        plug(robot.pg.dcomref, ctrl.com_ref_vel)
+        plug(robot.pg.ddcomref, ctrl.com_ref_acc)
+        ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
+        ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
+        # plug(robot.pg.dcomattitude, ctrl.am_ref_L)
+        # plug(robot.pg.ddcomattitude, ctrl.am_ref_dL)
 
-    # ctrl.com_ref_pos.value = robot.dynamic.com.value
-    # ctrl.com_ref_vel.value = 3*(0.0,)
-    # ctrl.com_ref_acc.value = 3*(0.0,)
+        waistSE3 = MatrixHomoToSE3Vector("waistSE3")
+        plug(robot.pg.waistattitudematrixabsolute, waistSE3.sin)
+        plug(waistSE3.sout, ctrl.base_orientation_ref_pos)
+        ctrl.base_orientation_ref_vel.value = 12*(0.0,)
+        ctrl.base_orientation_ref_acc.value = 12*(0.0,)
+        try:
+            plug(robot.pg.contactphase, ctrl.ref_phase)
+        except:
+            print("WARNING: Could not connect pg contactphase to ref_phase")
 
-    # ctrl.waist_ref_pos.value = robot.waist_traj_gen.initial_value.value
-    # ctrl.waist_ref_vel.value = 12*(0.0,)
-    # ctrl.waist_ref_acc.value = 12*(0.0,)
+    else:
+        plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
+        # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
+        # ctrl.rf_ref_vel.value =           12*(0.0,)
+        # ctrl.rf_ref_acc.value =           12*(0.0,)
+        plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
+        plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
+        plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
 
-    plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
-    plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
-    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)
-    plug(robot.com_traj_gen.x,                    ctrl.com_ref_pos)
-    plug(robot.com_traj_gen.dx,                   ctrl.com_ref_vel)
-    plug(robot.com_traj_gen.ddx,                  ctrl.com_ref_acc)
-    plug(robot.am_traj_gen.x,                     ctrl.am_ref_L)
-    plug(robot.am_traj_gen.dx,                    ctrl.am_ref_dL)
-    plug(robot.waist_traj_gen.x,                  ctrl.base_orientation_ref_pos)
-    plug(robot.waist_traj_gen.dx,                 ctrl.base_orientation_ref_vel)
-    plug(robot.waist_traj_gen.ddx,                ctrl.base_orientation_ref_acc)
-    try:
-        plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
-        plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
-    except:
-        print("WARNING: Could not connect rf/lf_force_traj_gen to f_ref_right/left_foot")
+        plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
+        # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
+        # ctrl.lf_ref_vel.value =           12*(0.0,)
+        # ctrl.lf_ref_acc.value =           12*(0.0,)
+        plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
+        plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
+        plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
+
+        plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
+        # ctrl.rh_ref_pos.value =           robot.rh_traj_gen.initial_value.value
+        # ctrl.rh_ref_vel.value =           12*(0.0,)
+        # ctrl.rh_ref_acc.value =           12*(0.0,)
+        plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos)
+        plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel)
+        plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc)
+
+        plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
+        # ctrl.lh_ref_pos.value =           robot.lh_traj_gen.initial_value.value
+        # ctrl.lh_ref_vel.value =           12*(0.0,)
+        # ctrl.lh_ref_acc.value =           12*(0.0,)
+        plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos)
+        plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel)
+        plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc)
+
+        # ctrl.posture_ref_pos.value = robot.halfSitting[7:]
+        # ctrl.posture_ref_vel.value = 32*(0.0,)
+        # ctrl.posture_ref_acc.value = 32*(0.0,)
+
+        # ctrl.com_ref_pos.value = robot.dynamic.com.value
+        # ctrl.com_ref_vel.value = 3*(0.0,)
+        # ctrl.com_ref_acc.value = 3*(0.0,)
+
+        # ctrl.waist_ref_pos.value = robot.waist_traj_gen.initial_value.value
+        # ctrl.waist_ref_vel.value = 12*(0.0,)
+        # ctrl.waist_ref_acc.value = 12*(0.0,)
+
+        plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
+        plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
+        plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)
+        plug(robot.com_traj_gen.x,                    ctrl.com_ref_pos)
+        plug(robot.com_traj_gen.dx,                   ctrl.com_ref_vel)
+        plug(robot.com_traj_gen.ddx,                  ctrl.com_ref_acc)
+        plug(robot.am_traj_gen.x,                     ctrl.am_ref_L)
+        plug(robot.am_traj_gen.dx,                    ctrl.am_ref_dL)
+        plug(robot.waist_traj_gen.x,                  ctrl.base_orientation_ref_pos)
+        plug(robot.waist_traj_gen.dx,                 ctrl.base_orientation_ref_vel)
+        plug(robot.waist_traj_gen.ddx,                ctrl.base_orientation_ref_acc)
+        try:
+            plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
+            plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
+        except:
+            print("WARNING: Could not connect rf/lf_force_traj_gen to f_ref_right/left_foot")
+
+        try:
+            plug(robot.phaseInt.sout, ctrl.ref_phase)
+        except:
+            print("WARNING: Could not connect phases_traj_gen to ref_phase")
 
     # rather than giving to the controller the values of gear ratios and rotor inertias
     # it is better to compute directly their product in python and pass the result

@@ -1,3 +1,4 @@
+from rospkg import RosPack
 from dynamic_graph import plug
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
@@ -10,8 +11,10 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import a
 from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector
-from sot_talos_balance.round_double_to_int import RoundDoubleToInt
+from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, PoseQuatToMatrixHomo, SE3VectorToMatrixHomo
+from sot_talos_balance.boolean_identity import BooleanIdentity
+from dynamic_graph.sot.pattern_generator import PatternGenerator
+from sot_talos_balance.delay import DelayVector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
@@ -40,75 +43,119 @@ robot.encoders_velocity = create_encoders_velocity(robot)
 robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
-# --- CoM trajectory
-robot.com_traj_gen = create_com_traj_gen(robot, dt)
-robot.com_traj_gen.x.recompute(0)
-
-# --- Base orientation (SE3 on the waist) trajectory
-robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
-robot.waist_traj_gen.x.recompute(0)
-
-# --- Angular momentum trajectory
-robot.am_traj_gen = create_am_traj_gen(robot, dt)
-robot.am_traj_gen.x.recompute(0)
-
-# --- Feet force trajectories
-# robot.rf_force_traj_gen  = create_force_traj_gen("rf_force_ref", conf.balance_ctrl.RF_FORCE_DES, dt)
-# robot.rf_force_traj_gen.x.recompute(0)
-# robot.lf_force_traj_gen  = create_force_traj_gen("lf_force_ref", conf.balance_ctrl.LF_FORCE_DES, dt)
-# robot.lf_force_traj_gen.x.recompute(0)
-
-# --- Contact phases trajectories
-robot.phases_traj_gen = NdTrajectoryGenerator("tg_phases")
-robot.phases_traj_gen.initial_value.value = [0]
-robot.phases_traj_gen.init(dt, 1)
-# Set phase to int
-robot.phaseScalar = Component_of_vector("phase_scalar")
-robot.phaseScalar.setIndex(0)
-plug(robot.phases_traj_gen.x, robot.phaseScalar.sin)
-robot.phaseInt = RoundDoubleToInt("phase_int")
-plug(robot.phaseScalar.sout, robot.phaseInt.sin)
-
-# --- Feet trajectories
-robot.rf_traj_gen = NdTrajectoryGenerator("tg_rf")
-robot.lf_traj_gen = NdTrajectoryGenerator("tg_lf")
-robot.rf_traj_gen.init(dt, 12)
-robot.lf_traj_gen.init(dt, 12)
-
 # --- Hands trajectories
 robot.rh_traj_gen = SE3TrajectoryGenerator("tg_rh")
 robot.lh_traj_gen = SE3TrajectoryGenerator("tg_lh")
 robot.rh_traj_gen.init(dt)
 robot.lh_traj_gen.init(dt)
 
-# --- Switch which synchronizes trajectories
-robot.traj_sync = create_trajectory_switch()
-trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen, robot.phases_traj_gen] # robot.rf_force_traj_gen, robot.lf_force_traj_gen]
-trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
-connect_synchronous_trajectories(robot.traj_sync, trajs)
-
 # --- Base Estimator
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-# plug(robot.encoders_velocity.sout, robot.base_estimator.joint_velocities)
 plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.base_estimator.q.recompute(0)
 robot.base_estimator.v.recompute(0)
 
+robot.quat2mHLF = PoseQuatToMatrixHomo('quat2mHLF')
+plug(robot.base_estimator.lf_xyzquat, robot.quat2mHLF.sin)
+robot.quat2mHRF = PoseQuatToMatrixHomo('quat2mHRF')
+plug(robot.base_estimator.rf_xyzquat, robot.quat2mHRF.sin)
+
+# -------------------------- DESIRED TRAJECTORY --------------------------
+
+rospack = RosPack()  
+
+# -------------------------- PATTERN GENERATOR --------------------------
+
+robot.pg = PatternGenerator('pg')
+
+# URDF PATH 
+talos_data_folder = rospack.get_path('talos_data')
+robot.pg.setURDFpath(talos_data_folder + '/urdf/talos_reduced_wpg.urdf')
+robot.pg.setSRDFpath(talos_data_folder + '/srdf/talos_wpg.srdf')
+
+robot.pg.buildModel()
+
+robot.pg.parseCmd(":samplingperiod 0.005")
+robot.pg.parseCmd(":previewcontroltime 1.6")
+robot.pg.parseCmd(":omega 0.0")
+robot.pg.parseCmd(':stepheight 0.05')
+robot.pg.parseCmd(':doublesupporttime 0.3')
+robot.pg.parseCmd(':singlesupporttime 1.5')
+robot.pg.parseCmd(":armparameters 0.5")
+robot.pg.parseCmd(":LimitsFeasibility 0.0")
+robot.pg.parseCmd(":ZMPShiftParameters 0.015 0.015 0.015 0.015")
+robot.pg.parseCmd(":TimeDistributeParameters 2.0 3.5 1.7 3.0")
+robot.pg.parseCmd(":UpperBodyMotionParameters -0.1 -1.0 0.0")
+robot.pg.parseCmd(":comheight 0.876681")
+robot.pg.parseCmd(":setVelReference  0.1 0.0 0.0")
+
+robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
+
+# plug(robot.dynamic.position, robot.pg.position)
+plug(robot.base_estimator.q, robot.pg.position)
+plug(robot.dynamic.com, robot.pg.com)
+#plug(robot.dynamic.com, robot.pg.comStateSIN)
+# plug(robot.dynamic.LF, robot.pg.leftfootcurrentpos)
+# plug(robot.dynamic.RF, robot.pg.rightfootcurrentpos)
+plug(robot.quat2mHLF.sout, robot.pg.leftfootcurrentpos)
+plug(robot.quat2mHRF.sout, robot.pg.rightfootcurrentpos)
+robotDim = len(robot.base_estimator.v.value)
+robot.pg.motorcontrol.value = robotDim * (0, )
+robot.pg.zmppreviouscontroller.value = (0, 0, 0)
+
+robot.pg.initState()
+
+robot.pg.parseCmd(':setDSFeetDistance 0.162')
+
+robot.pg.parseCmd(':NaveauOnline')
+robot.pg.parseCmd(':numberstepsbeforestop 2')
+robot.pg.parseCmd(':setfeetconstraint XY 0.091 0.0489')
+
+robot.pg.parseCmd(':deleteallobstacles')
+robot.pg.parseCmd(':feedBackControl false')
+robot.pg.parseCmd(':useDynamicFilter true')
+
+robot.pg.velocitydes.value = (0.1, 0.0, 0.0)  # DEFAULT VALUE (0.1,0.0,0.0)
+
+# -------------------------- TRIGGER --------------------------
+
+robot.triggerPG = BooleanIdentity('triggerPG')
+robot.triggerPG.sin.value = 0
+plug(robot.triggerPG.sout, robot.pg.trigger)
+plug(robot.triggerPG.sout, robot.rh_traj_gen.trigger)
+plug(robot.triggerPG.sout, robot.lh_traj_gen.trigger)
+
 # --- Inverse dynamic controller
-robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt)
+robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, patternGenerator=True)
 robot.inv_dyn.setControlOutputType("torque")
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
-robot.inv_dyn.left_foot_pos_quat.recompute(0)
-robot.inv_dyn.right_foot_pos_quat.recompute(0)
-# robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
-# robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
-plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
-plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
+# robot.inv_dyn.left_foot_pos_quat.recompute(0)
+# robot.inv_dyn.right_foot_pos_quat.recompute(0)
+# # robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
+# # robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
+# plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
+# plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
+
+# --- Delay
+robot.delay_com = DelayVector("delay_com")
+robot.delay_com.setMemory(robot.dynamic.com.value)
+robot.device.before.addSignal(robot.delay_com.name + '.current')
+plug(robot.inv_dyn.com, robot.delay_com.sin)
+plug(robot.delay_com.previous, robot.pg.com)
+
+# --- Change actual position feet for pg
+# robot.Lfoot_Homo = SE3VectorToMatrixHomo("Lfoot_estim")
+# plug(robot.inv_dyn.left_foot_pos, robot.Lfoot_Homo.sin)
+# plug(robot.Lfoot_Homo.sout, robot.pg.leftfootcurrentpos)
+# robot.Rfoot_Homo = SE3VectorToMatrixHomo("Rfoot_Homo")
+# plug(robot.inv_dyn.right_foot_pos, robot.Rfoot_Homo.sin)
+# plug(robot.Rfoot_Homo.sout, robot.pg.rightfootcurrentpos)
+
 
 # --- High gains position controller
 from dynamic_graph.sot.torque_control.position_controller import PositionController
@@ -122,15 +169,6 @@ plug(robot.traj_gen.q, posCtrl.qRef);
 plug(robot.traj_gen.dq, posCtrl.dqRef);
 posCtrl.init(dt, "robot");
 robot.pos_ctrl = posCtrl
-
-# --- Play trajectories
-robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")
-robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")
-robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")
-# robot.rf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/rightForceFoot.dat")
-# robot.lf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/leftForceFoot.dat")
-robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")
-robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")
 
 # --- Connect control manager
 plug(robot.device.currents, robot.ctrl_manager.i_measured)
@@ -162,6 +200,7 @@ robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
 create_topic(robot.publisher, robot.errorComTSID, 'sout', 'errorComTSID', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'com', 'inv_dyn_com', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.dynamic, 'com', 'dyn_com', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'v_des', 'v_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'dv_des', 'dv_des', robot=robot, data_type='vector')
@@ -169,14 +208,14 @@ create_topic(robot.publisher, robot.inv_dyn, 'tau_des', 'tau_des', robot=robot, 
 create_topic(robot.publisher, robot.inv_dyn, 'tau_pd_des', 'tau_pd_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos', 'left_foot_pos', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos', 'right_foot_pos', robot=robot, data_type='vector')
+# create_topic(robot.publisher, robot.Lfoot_Homo, 'sout', 'left_foot_homo', robot=robot, data_type='matrixHomo')
+# create_topic(robot.publisher, robot.Rfoot_Homo, 'sout', 'right_foot_homo', robot=robot, data_type='matrixHomo')
 create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.lf_force_traj_gen, 'x', 'lf_force_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.rf_force_traj_gen, 'x', 'rf_force_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.phaseInt, 'sout', 'contactphase', robot=robot, data_type='int')
-create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.pg, 'comref', 'com_pg', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.pg, 'contactphase', 'contactphase', robot=robot, data_type='int')
+create_topic(robot.publisher, robot.pg, 'leftfootref', 'lf_pg', robot=robot, data_type='matrixHomo')
+create_topic(robot.publisher, robot.pg, 'rightfootref', 'rf_pg', robot=robot, data_type='matrixHomo')
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
 
