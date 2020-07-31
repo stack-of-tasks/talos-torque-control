@@ -1,5 +1,5 @@
 from dynamic_graph import plug
-from dynamic_graph.sot.core import Selec_of_vector
+from dynamic_graph.sot.core.operator import Selec_of_vector, Substract_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf, create_encoders_velocity
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen, create_encoders
@@ -8,7 +8,6 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import a
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core import Substract_of_vector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
@@ -52,7 +51,6 @@ connect_synchronous_trajectories(robot.traj_sync, trajs)
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.base_estimator.q.recompute(0)
 robot.base_estimator.v.recompute(0)
@@ -60,6 +58,7 @@ robot.base_estimator.v.recompute(0)
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_simple_inverse_dyn_controller(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
+robot.inv_dyn.kd_com.value = 3*(5.0,)
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
