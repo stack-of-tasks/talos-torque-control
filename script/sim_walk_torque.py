@@ -18,13 +18,13 @@ if len(argv) == 2 and argv[1] == "on_spot":
     print("Starting script with folder " + folder + " walking on spot.")
 elif len(argv) == 2 and argv[1] == "walk_20":
     print("Starting script with folder " + folder + " walking with 20cm step.")
-    walk_type = "walk_20_test"
+    walk_type = "walk_20"
 elif len(argv) == 3 and argv[1] == "on_spot" and argv[2] == "pattern_generator":
     pattern_generator = True
     print("Starting script with pattern_generator walking on spot.")
 elif len(argv) == 3 and argv[1] == "walk_20" and argv[2] == "pattern_generator":
     pattern_generator = True
-    walk_type = "walk_20_test"
+    walk_type = "walk_20"
     print("Starting script with pattern_generator walking with 20cm step.")
 elif len(argv) == 3 and argv[1] == "on_spot":
     folder = argv[2]
@@ -80,13 +80,6 @@ else:
     input("Waiting before stopping the trajectories")
     print("Stop trajectories")
     runCommandClient("robot.traj_sync.turnOff()")
-
-# input("Waiting before reading trajectories")
-# runCommandClient('robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")')
-# runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
-# runCommandClient('robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")')
-# runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
-# runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
 
 time.sleep(2.0)
 input("Wait before going to halfSitting")
