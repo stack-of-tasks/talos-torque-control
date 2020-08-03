@@ -20,12 +20,19 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_bellStep.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_bellStep.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_bellStep.dot", "-o", "/tmp/sot_talos_tsid_bellStep.pdf"])
 
+input("Waiting before setting gains")
+print("Setting gains")
+runCommandClient("robot.inv_dyn.kp_feet.value = 6*(200,)")
+runCommandClient("robot.inv_dyn.kp_com.value = 3*(250,)")
+runCommandClient("robot.inv_dyn.kd_feet.value = 6*(12,)")
+runCommandClient("robot.inv_dyn.kd_com.value = 3*(12,)")
+
 input("Wait before going to halfSitting")
 runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
 
 input("Waiting before going to raise foot pose")
 print("Go to raise foot pose")
-runCommandClient("robot.com_traj_gen.move(1,-0.05,5.0)")
+runCommandClient("robot.com_traj_gen.move(1,-0.06,6.0)")
 
 input("Waiting before raising the foot")
 print("Raise foot")

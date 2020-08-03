@@ -52,12 +52,6 @@ robot.waist_traj_gen.x.recompute(0)
 robot.am_traj_gen = create_am_traj_gen(robot, dt)
 robot.am_traj_gen.x.recompute(0)
 
-# --- Feet force trajectories
-# robot.rf_force_traj_gen  = create_force_traj_gen("rf_force_ref", conf.balance_ctrl.RF_FORCE_DES, dt)
-# robot.rf_force_traj_gen.x.recompute(0)
-# robot.lf_force_traj_gen  = create_force_traj_gen("lf_force_ref", conf.balance_ctrl.LF_FORCE_DES, dt)
-# robot.lf_force_traj_gen.x.recompute(0)
-
 # --- Contact phases trajectories
 robot.phases_traj_gen = NdTrajectoryGenerator("tg_phases")
 robot.phases_traj_gen.initial_value.value = [0]
@@ -83,7 +77,7 @@ robot.lh_traj_gen.init(dt)
 
 # --- Switch which synchronizes trajectories
 robot.traj_sync = create_trajectory_switch()
-trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen, robot.phases_traj_gen] # robot.rf_force_traj_gen, robot.lf_force_traj_gen]
+trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen, robot.phases_traj_gen]
 trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
 connect_synchronous_trajectories(robot.traj_sync, trajs)
 
@@ -91,7 +85,6 @@ connect_synchronous_trajectories(robot.traj_sync, trajs)
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-# plug(robot.encoders_velocity.sout, robot.base_estimator.joint_velocities)
 plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.base_estimator.q.recompute(0)
@@ -105,8 +98,6 @@ robot.inv_dyn.active_joints.value = 32*(1.0,)
 # --- Reference position of the feet for base estimator
 robot.inv_dyn.left_foot_pos_quat.recompute(0)
 robot.inv_dyn.right_foot_pos_quat.recompute(0)
-# robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
-# robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
 plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
 plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
 
@@ -127,8 +118,6 @@ robot.pos_ctrl = posCtrl
 robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")
 robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")
 robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")
-# robot.rf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/rightForceFoot.dat")
-# robot.lf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/leftForceFoot.dat")
 robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")
 robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")
 
@@ -156,7 +145,7 @@ plug(robot.inv_dyn.posture_ref_pos, robot.errorPoseTSID.sin2)
 plug(robot.encoders.sout, robot.errorPoseTSID.sin1)
 
 
-# # # --- ROS PUBLISHER ----------------------------------------------------------
+# --- ROS PUBLISHER ----------------------------------------------------------
 
 robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
@@ -171,8 +160,6 @@ create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos', 'left_foot_pos', r
 create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos', 'right_foot_pos', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.lf_force_traj_gen, 'x', 'lf_force_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.rf_force_traj_gen, 'x', 'rf_force_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.phaseInt, 'sout', 'contactphase', robot=robot, data_type='int')
 create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
@@ -180,7 +167,7 @@ create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
 
-# # # --- TRACER ----------------------------------------------------------
+# --- TRACER ----------------------------------------------------------
 robot.tracer = TracerRealTime("inv_dyn_tracer")
 robot.tracer.setBufferSize(80*(2**20))
 robot.tracer.open('/tmp','dg_','.dat')

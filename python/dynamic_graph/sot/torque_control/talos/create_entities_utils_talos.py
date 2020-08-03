@@ -9,7 +9,7 @@ from __future__ import print_function
 from dynamic_graph import plug
 import numpy as np
 from dynamic_graph.sot.core.latch import Latch
-from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector, MatrixHomoToSE3Vector
+from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
@@ -24,7 +24,6 @@ from dynamic_graph.sot.torque_control.talos.motors_parameters import NJ
 from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
-#from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
 def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
@@ -353,39 +352,6 @@ def create_filters(robot, conf, motor_params, dt):
     plug(robot.device.forceLARM,                          filters.ft_LH_filter.x);
     plug(robot.device.currents,                           filters.current_filter.x);
 
-    '''plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
-    plug(filters.gyro_filter.x_filtered,                  estimator_ft.gyro);
-    plug(filters.gyro_filter.dx,                          estimator_ft.dgyro);
-    plug(filters.ft_RF_filter.x_filtered,                 estimator_ft.ftSensRightFoot);
-    plug(filters.ft_LF_filter.x_filtered,                 estimator_ft.ftSensLeftFoot);
-    plug(filters.ft_RH_filter.x_filtered,                 estimator_ft.ftSensRightHand);
-    plug(filters.ft_LH_filter.x_filtered,                 estimator_ft.ftSensLeftHand);
-    plug(filters.current_filter.x_filtered,               estimator_ft.current);'''
-
-    '''plug(filters.estimator_kin.x_filtered, estimator_ft.q_filtered);
-    plug(filters.estimator_kin.dx,         estimator_ft.dq_filtered);
-    plug(filters.estimator_kin.ddx,        estimator_ft.ddq_filtered);
-    try:
-        plug(robot.traj_gen.dq,       estimator_ft.dqRef);
-        plug(robot.traj_gen.ddq,      estimator_ft.ddqRef);
-    except:
-        pass;
-    estimator_ft.wCurrentTrust.value     = tuple(NJ*[conf.CURRENT_TORQUE_ESTIMATION_TRUST,])
-    estimator_ft.saturationCurrent.value = tuple(NJ*[conf.SATURATION_CURRENT,])
-
-    estimator_ft.motorParameterKt_p.value  = tuple(motor_params.Kt_p)
-    estimator_ft.motorParameterKt_n.value  = tuple(motor_params.Kt_n)
-    estimator_ft.motorParameterKf_p.value  = tuple(motor_params.Kf_p)
-    estimator_ft.motorParameterKf_n.value  = tuple(motor_params.Kf_n)
-    estimator_ft.motorParameterKv_p.value  = tuple(motor_params.Kv_p)
-    estimator_ft.motorParameterKv_n.value  = tuple(motor_params.Kv_n)
-    estimator_ft.motorParameterKa_p.value  = tuple(motor_params.Ka_p)
-    estimator_ft.motorParameterKa_n.value  = tuple(motor_params.Ka_n)
-
-    estimator_ft.rotor_inertias.value = motor_params.ROTOR_INERTIAS;
-    estimator_ft.gear_ratios.value    = motor_params.GEAR_RATIOS;
-
-    estimator_ft.init(True);'''
     #filters.current_filter.init(dt,NJ, conf.DELAY_CURRENT*dt,1)
     filters.ft_RF_filter.init(dt, 6, conf.DELAY_FORCE*dt,1)
     filters.ft_LF_filter.init(dt, 6, conf.DELAY_FORCE*dt,1)
@@ -449,39 +415,25 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         robot.ddq_des = Selec_of_vector('ddq_des')
         plug(ctrl.dv_des, robot.ddq_des.sin)
         robot.ddq_des.selec(6,NJ+6)
-        #plug(robot.ddq_des.sout, robot.estimator_ft.ddqRef)
     except:
         print("WARNING: Could not connect dv_des from BalanceController to ForceTorqueEstimator")
 
     plug(robot.device.ptorque, ctrl.tau_measured)
     plug(robot.dynamic.com, ctrl.com_measured)
-    #plug(robot.estimator_ft.contactWrenchRightSole, ctrl.wrench_right_foot);
-    #plug(robot.estimator_ft.contactWrenchLeftSole,  ctrl.wrench_left_foot);
     plug(robot.device.forceRLEG, ctrl.wrench_right_foot) # New
     plug(robot.device.forceLLEG, ctrl.wrench_left_foot) # New
-    # plug(ctrl.tau_des,                              robot.torque_ctrl.jointsTorquesDesired);
-    #plug(ctrl.dq_admittance,                        robot.torque_ctrl.dq_des);
-    # robot.torque_ctrl.dq_des.value = NJ*(0.0,);
-    #plug(ctrl.tau_des,                              robot.estimator_ft.tauDes);
 
     if (patternGenerator):
-        # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
+        from dynamic_graph.sot.core.operator import MatrixHomoToSE3Vector
         rfootSE3 = MatrixHomoToSE3Vector("rfootSE3")
         plug(robot.pg.rightfootref, rfootSE3.sin)
         plug(rfootSE3.sout, ctrl.rf_ref_pos)
-        # vel_rfootSE3 = MatrixHomoToSE3Vector("vel_rfootSE3")
-        # plug(robot.pg.dotrightfootref, vel_rfootSE3.sin)
-        # plug(vel_rfootSE3.sout, ctrl.rf_ref_vel)
         ctrl.rf_ref_vel.value = 12*(0.0,)
         ctrl.rf_ref_acc.value = 12*(0.0,)
 
-        # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
         lfootSE3 = MatrixHomoToSE3Vector("lfootSE3")
         plug(robot.pg.leftfootref, lfootSE3.sin)
         plug(lfootSE3.sout, ctrl.lf_ref_pos)
-        # vel_lfootSE3 = MatrixHomoToSE3Vector("vel_lfootSE3")
-        # plug(robot.pg.dotleftfootref, vel_lfootSE3.sin)
-        # plug(vel_lfootSE3.sout, ctrl.lf_ref_vel)
         ctrl.lf_ref_vel.value = 12*(0.0,)
         ctrl.lf_ref_acc.value = 12*(0.0,)
 
@@ -504,8 +456,6 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         plug(robot.pg.ddcomref, ctrl.com_ref_acc)
         ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
         ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
-        # plug(robot.pg.dcomattitude, ctrl.am_ref_L)
-        # plug(robot.pg.ddcomattitude, ctrl.am_ref_dL)
 
         waistSE3 = MatrixHomoToSE3Vector("waistSE3")
         plug(robot.pg.waistattitudematrixabsolute, waistSE3.sin)
@@ -519,48 +469,24 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
 
     else:
         plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
-        # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
-        # ctrl.rf_ref_vel.value =           12*(0.0,)
-        # ctrl.rf_ref_acc.value =           12*(0.0,)
         plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
         plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
         plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
 
         plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
-        # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
-        # ctrl.lf_ref_vel.value =           12*(0.0,)
-        # ctrl.lf_ref_acc.value =           12*(0.0,)
         plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
         plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
         plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
 
-        plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value);
-        # ctrl.rh_ref_pos.value =           robot.rh_traj_gen.initial_value.value
-        # ctrl.rh_ref_vel.value =           12*(0.0,)
-        # ctrl.rh_ref_acc.value =           12*(0.0,)
+        plug(ctrl.right_hand_pos,         robot.rh_traj_gen.initial_value)
         plug(robot.rh_traj_gen.x,         ctrl.rh_ref_pos)
         plug(robot.rh_traj_gen.dx,        ctrl.rh_ref_vel)
         plug(robot.rh_traj_gen.ddx,       ctrl.rh_ref_acc)
 
-        plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value);
-        # ctrl.lh_ref_pos.value =           robot.lh_traj_gen.initial_value.value
-        # ctrl.lh_ref_vel.value =           12*(0.0,)
-        # ctrl.lh_ref_acc.value =           12*(0.0,)
+        plug(ctrl.left_hand_pos,          robot.lh_traj_gen.initial_value)
         plug(robot.lh_traj_gen.x,         ctrl.lh_ref_pos)
         plug(robot.lh_traj_gen.dx,        ctrl.lh_ref_vel)
         plug(robot.lh_traj_gen.ddx,       ctrl.lh_ref_acc)
-
-        # ctrl.posture_ref_pos.value = robot.halfSitting[7:]
-        # ctrl.posture_ref_vel.value = 32*(0.0,)
-        # ctrl.posture_ref_acc.value = 32*(0.0,)
-
-        # ctrl.com_ref_pos.value = robot.dynamic.com.value
-        # ctrl.com_ref_vel.value = 3*(0.0,)
-        # ctrl.com_ref_acc.value = 3*(0.0,)
-
-        # ctrl.waist_ref_pos.value = robot.waist_traj_gen.initial_value.value
-        # ctrl.waist_ref_vel.value = 12*(0.0,)
-        # ctrl.waist_ref_acc.value = 12*(0.0,)
 
         plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
         plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
@@ -647,42 +573,6 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
         
     plug(robot.device.ptorque, ctrl.tau_measured)
     plug(robot.dynamic.com, ctrl.com_measured)
-    # plug(robot.base_estimator.q, ctrl.q)
-    # plug(robot.base_estimator.v, ctrl.v)
-    # plug(robot.device.robotState, ctrl.q)
-    # plug(robot.device.robotVelocity, ctrl.v)
-    # ctrl.q.value = robot.halfSitting
-    # ctrl.v.value = 38 * (0.0,)
-    # except:
-    #     plug(robot.ff_locator.base6dFromFoot_encoders, ctrl.q)
-    #     plug(robot.ff_locator.v, ctrl.v)
-    # plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
-    # ctrl.rf_ref_pos.value =           robot.rf_traj_gen.initial_value.value
-    # ctrl.rf_ref_vel.value =           12*(0.0,)
-    # ctrl.rf_ref_acc.value =           12*(0.0,)
-    # plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
-    # plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
-    # plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
-
-    # plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
-    # ctrl.lf_ref_pos.value =           robot.lf_traj_gen.initial_value.value
-    # ctrl.lf_ref_vel.value =           12*(0.0,)
-    # ctrl.lf_ref_acc.value =           12*(0.0,)
-    # plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
-    # plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
-    # plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
-
-    # ctrl.posture_ref_pos.value = robot.halfSitting[6:]
-    # ctrl.posture_ref_vel.value = 32*(0.0,)
-    # ctrl.posture_ref_acc.value = 32*(0.0,)
-
-    # ctrl.com_ref_pos.value = robot.dynamic.com.value
-    # ctrl.com_ref_vel.value = 3*(0.0,)
-    # ctrl.com_ref_acc.value = 3*(0.0,)
-
-    # ctrl.waist_ref_pos.value = robot.waist_traj_gen.initial_value.value
-    # ctrl.waist_ref_vel.value = 6*(0.0,)
-    # ctrl.waist_ref_acc.value = 6*(0.0,)
 
     plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
     plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
@@ -693,8 +583,6 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     plug(robot.waist_traj_gen.x,                  ctrl.waist_ref_pos)
     plug(robot.waist_traj_gen.dx,                 ctrl.waist_ref_vel)
     plug(robot.waist_traj_gen.ddx,                ctrl.waist_ref_acc)
-#    plug(robot.rf_force_traj_gen.x,               ctrl.f_ref_right_foot)
-#    plug(robot.lf_force_traj_gen.x,               ctrl.f_ref_left_foot)
 
 
     ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
@@ -719,7 +607,6 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     ctrl.w_forces.value = conf.w_forces
     ctrl.w_posture.value = conf.w_posture
     ctrl.w_waist.value = conf.w_waist
-    # ctrl.w_torques.value = conf.w_torques
 
     ctrl.init(dt, robot_name)
     return ctrl
@@ -755,22 +642,6 @@ def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     inv_dyn_ctrl.controlledJoints.value = NJ*(1.0,);
     inv_dyn_ctrl.init(dt);
     return inv_dyn_ctrl;
-
-'''def create_ddp_controller(robot, conf, dt):
-    from dynamic_graph.sot.torque_control.ddp_actuator_solver import DdpActuatorSolver
-    ddp_controller = DdpActuatorSolver("ddp_ctrl");
-    plug(robot.encoders.sout,              ddp_controller.pos_joint_measure);
-    plug(robot.encoders_velocity.sout,     ddp_controller.dx_measure);
-    plug(robot.traj_gen.q,                 ddp_controller.pos_des);
-    plug(robot.device.ptorque,             ddp_controller.tau_measure);
-    plug(robot.device.motor_angles,        ddp_controller.pos_motor_measure);
-
-    ddp_controller.temp_measure.value = conf.temp_const;
-
-    #plug(ddp_controller.tau,            robot.torque_ctrl.jointsTorquesDesired);
-
-    ddp_controller.init(dt, conf.T, conf.nb_init, conf.stop_criteria)
-    return ddp_controller;'''
 
 def create_ddp_controller(robot, conf, dt):
     from dynamic_graph.sot.torque_control.ddp_actuator_solver import DdpActuatorSolver

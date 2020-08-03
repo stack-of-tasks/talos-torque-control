@@ -1,5 +1,4 @@
 from dynamic_graph import plug
-from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
@@ -11,7 +10,6 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import a
 from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.operator import Substract_of_vector
 
 from numpy import genfromtxt
 
@@ -83,6 +81,8 @@ robot.base_estimator.v.recompute(0)
 
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt)
+robot.inv_dyn.setControlOutputType("torque")
+robot.inv_dyn.w_am.value = 5e-2
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
