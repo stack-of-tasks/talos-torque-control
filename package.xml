@@ -11,6 +11,5 @@
   <author>Olivier Stasse</author>
   <maintainer email="guilhem.saurel@laas.fr">Guilhem Saurel</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
   <depend>sot-torque-control</depend>
 </package>
