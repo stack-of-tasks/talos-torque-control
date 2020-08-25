@@ -5,7 +5,7 @@ This module contains utilities for running the tests
 """
 from __future__ import print_function
 
-import rospy
+import rospy, time
 
 from std_srvs.srv import *
 from dynamic_graph_bridge_msgs.srv import *
@@ -26,7 +26,8 @@ def evalCommandClient(code):
     return eval(runCommandClient(code).result)
 
 def launch_script(code,title,description = ""):
-    raw_input(title+':   '+description)
+    #raw_input(title+':   '+description)
+    time.sleep(3)
     rospy.loginfo(title)
     rospy.loginfo(code)
     for line in code:
@@ -52,7 +53,8 @@ def run_test(appli):
         rospy.loginfo("Stack of Tasks launched")
 
         launch_script(initCode,'initialize SoT')
-        raw_input("Wait before starting the dynamic graph")
+        #raw_input("Wait before starting the dynamic graph")
+        rospy.sleep(6)
         runCommandStartDynamicGraph()
         print()
     except rospy.ServiceException, e:
