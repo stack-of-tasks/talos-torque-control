@@ -80,3 +80,26 @@ PKG_CONFIG_APPEND_LIBS(${PROJECT_NAME})
 IF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
   INSTALL(FILES package.xml DESTINATION share/${PROJECT_NAME})
 ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
+
+# Install scripts
+find_package(catkin REQUIRED)
+
+catkin_package()
+catkin_install_python(PROGRAMS
+                      script/sim_walk_torque.py
+                      script/run_test_utils.py
+                      script/sim_walk_vel.py
+                      script/test_ddp_sinu_effort.py
+                      script/integ_sim_walk_torque.py
+                      script/integ_run_test_utils.py
+                      script/integ_sim_walk_vel.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_torque.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_torque_online.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel_online.py
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+FOREACH(dir python traj_multicontact_api)
+  INSTALL(DIRECTORY ${dir}
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+ENDFOREACH(dir)
