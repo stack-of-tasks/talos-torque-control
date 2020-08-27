@@ -12,6 +12,8 @@ from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_positio
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt
+from sot_talos_balance.delay import DelayVector
+from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
@@ -133,6 +135,28 @@ robot.ctrl_manager.addCtrlMode("pos")
 plug(robot.pos_ctrl.pwmDes, robot.ctrl_manager.ctrl_pos)
 robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
 plug(robot.ctrl_manager.u_safe, robot.device.control)
+
+# --- Delay position q
+robot.delay_pos = DelayVector("delay_pos")
+robot.delay_pos.setMemory(robot.base_estimator.q.value)
+robot.device.before.addSignal(robot.delay_pos.name + '.current')
+plug(robot.inv_dyn.q_des, robot.delay_pos.sin)
+
+# --- Delay velocity dq
+robotDim = len(robot.base_estimator.v.value)
+robot.delay_vel = DelayVector("delay_vel")
+robot.delay_vel.setMemory(robotDim * [0.])
+robot.device.before.addSignal(robot.delay_vel.name + '.current')
+plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
+
+# --- Fix robot.dynamic inputs
+plug(robot.delay_pos.previous, robot.dynamic.position)
+plug(robot.delay_vel.previous, robot.dynamic.velocity)
+# plug(robot.delay_vel.previous, robot.vselec.sin)
+robot.dvdt = Derivator_of_Vector("dv_dt")
+robot.dvdt.dt.value = dt
+plug(robot.delay_vel.previous, robot.dvdt.sin)
+plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
 # --- Error on the CoM task
 robot.errorComTSID = Substract_of_vector('error_com')

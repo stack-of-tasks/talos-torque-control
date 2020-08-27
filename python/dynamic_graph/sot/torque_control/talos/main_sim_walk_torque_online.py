@@ -11,7 +11,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import a
 from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, PoseQuatToMatrixHomo, SE3VectorToMatrixHomo
+from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, PoseQuatToMatrixHomo#, SE3VectorToMatrixHomo
 from sot_talos_balance.boolean_identity import BooleanIdentity
 from dynamic_graph.sot.pattern_generator import PatternGenerator
 from sot_talos_balance.delay import DelayVector
@@ -28,8 +28,10 @@ q = [0., 0., 1.018213, 0., 0., 0.] # Free flyer
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.006761] # Chest
-q += [0.25847, 0.173046, -0.0002, -0.525366, 0.0, -0.0, 0.1, -0.005] # arms
-q += [-0.25847, -0.173046, 0.0002, -0.525366, 0.0, 0.0, 0.1, -0.005] # arms
+q += [0.35, 0.173046, -0.0002, -0.8, 0.0, -0.0, 0.1, -0.005] # arms
+q += [-0.35, -0.173046, 0.0002, -0.8, 0.0, 0.0, 0.1, -0.005] # arms
+# q += [0.25847, 0.173046, -0.0002, -0.525366, 0.0, -0.0, 0.1, -0.005] # arms
+# q += [-0.25847, -0.173046, 0.0002, -0.525366, 0.0, 0.0, 0.1, -0.005] # arms
 q += [0., 0.] # Head
 
 robot.halfSitting = q
@@ -93,7 +95,7 @@ robot.pg.parseCmd(":UpperBodyMotionParameters -0.1 -1.0 0.0")
 robot.pg.parseCmd(":comheight 0.876681")
 robot.pg.parseCmd(":setVelReference  0.1 0.0 0.0")
 
-robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
+# robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
 
 plug(robot.dynamic.position, robot.pg.position)
 # plug(robot.base_estimator.q, robot.pg.position)
@@ -109,17 +111,22 @@ robot.pg.zmppreviouscontroller.value = (0, 0, 0)
 
 robot.pg.initState()
 
-robot.pg.parseCmd(':setDSFeetDistance 0.162')
+# robot.pg.parseCmd(':setDSFeetDistance 0.162')
 
-robot.pg.parseCmd(':NaveauOnline')
-robot.pg.parseCmd(':numberstepsbeforestop 2')
-robot.pg.parseCmd(':setfeetconstraint XY 0.091 0.0489')
+# robot.pg.parseCmd(':NaveauOnline')
+# robot.pg.parseCmd(':numberstepsbeforestop 2')
+# robot.pg.parseCmd(':setfeetconstraint XY 0.091 0.0489')
 
-robot.pg.parseCmd(':deleteallobstacles')
-robot.pg.parseCmd(':feedBackControl false')
+# robot.pg.parseCmd(':deleteallobstacles')
+# robot.pg.parseCmd(':feedBackControl false')
+robot.pg.parseCmd(':doublesupporttime 0.115')
+robot.pg.parseCmd(':singlesupporttime 0.9')
+robot.pg.parseCmd(":SetAlgoForZmpTrajectory Kajita")
+robot.pg.parseCmd(":StartOnLineStepSequencing 0.0 -0.085 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.0 0.17 0.0 0.0")
+robot.pg.parseCmd(":StopOnLineStepSequencing")
 robot.pg.parseCmd(':useDynamicFilter true')
 
-robot.pg.velocitydes.value = (0.1, 0.0, 0.0)  # DEFAULT VALUE (0.1,0.0,0.0)
+# robot.pg.velocitydes.value = (0.1, 0.0, 0.0)  # DEFAULT VALUE (0.1,0.0,0.0)
 
 # -------------------------- TRIGGER --------------------------
 
@@ -128,10 +135,9 @@ robot.triggerPG.sin.value = 0
 plug(robot.triggerPG.sout, robot.pg.trigger)
 plug(robot.triggerPG.sout, robot.rh_traj_gen.trigger)
 plug(robot.triggerPG.sout, robot.lh_traj_gen.trigger)
-
+plug(robot.pg.jointpositionfrompg, robot.traj_gen.base6d_encoders)
 # --- Inverse dynamic controller
-robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, patternGenerator=True)
-robot.inv_dyn.setControlOutputType("torque")
+robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque", patternGenerator=True)
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
@@ -162,6 +168,12 @@ robot.delay_vel.setMemory(robotDim * [0.])
 robot.device.before.addSignal(robot.delay_vel.name + '.current')
 plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
 
+# --- Delay velocity ddq
+robot.delay_acc = DelayVector("delay_acc")
+robot.delay_acc.setMemory(robotDim * [0.])
+robot.device.before.addSignal(robot.delay_acc.name + '.current')
+plug(robot.inv_dyn.dv_des, robot.delay_acc.sin)
+
 # --- Plug inverse_dynamic instead of device
 # plug(robot.delay_pos.previous, robot.pselec.sin)
 # plug(robot.pselec.sout, robot.base_estimator.joint_positions)
@@ -170,10 +182,11 @@ plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
 # --- Fix robot.dynamic inputs
 plug(robot.delay_pos.previous, robot.dynamic.position)
 plug(robot.delay_vel.previous, robot.dynamic.velocity)
-robot.dvdt = Derivator_of_Vector("dv_dt")
-robot.dvdt.dt.value = dt
-plug(robot.delay_vel.previous, robot.dvdt.sin)
-plug(robot.dvdt.sout, robot.dynamic.acceleration)
+plug(robot.delay_acc.previous, robot.dynamic.acceleration)
+# robot.dvdt = Derivator_of_Vector("dv_dt")
+# robot.dvdt.dt.value = dt
+# plug(robot.delay_vel.previous, robot.dvdt.sin)
+# plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
 # --- Change actual position feet for pg
 # robot.Lfoot_Homo = SE3VectorToMatrixHomo("Lfoot_estim")
@@ -240,11 +253,21 @@ create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos', 'right_foot_pos',
 create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.pg, 'comref', 'com_pg', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.pg, 'dcomref', 'dcom_pg', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.pg, 'amref', 'am_pg', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.pg, 'damref', 'dam_pg', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.pg, 'contactphase', 'contactphase', robot=robot, data_type='int')
 create_topic(robot.publisher, robot.pg, 'leftfootref', 'lf_pg', robot=robot, data_type='matrixHomo')
 create_topic(robot.publisher, robot.pg, 'rightfootref', 'rf_pg', robot=robot, data_type='matrixHomo')
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
+
+create_topic(robot.publisher, robot.pg, 'zmpref', 'zmp_pg', robot=robot, data_type='vector')  # desired ZMP
+create_topic(robot.publisher, robot.dynamic, 'zmp', 'zmp_dyn', robot=robot, data_type='vector')  # SOT ZMP
+create_topic(robot.publisher, robot.inv_dyn, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
+create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated DCM
+create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
+create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 
 # # # --- TRACER ----------------------------------------------------------
 robot.tracer = TracerRealTime("inv_dyn_tracer")

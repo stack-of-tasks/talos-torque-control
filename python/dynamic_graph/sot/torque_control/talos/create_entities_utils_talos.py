@@ -322,6 +322,7 @@ def create_joint_trajectory_generator(robot, dt):
 
 def create_trajectory_generator(robot, dt=0.001, robot_name="robot"):
     jtg = JointTrajectoryGenerator("jtg");
+    # jtg.base6d_encoders.value = robot.halfSitting
     plug(robot.device.robotState, jtg.base6d_encoders);
     jtg.init(dt, robot_name);
     return jtg;
@@ -394,10 +395,10 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     torque_ctrl.init(dt, robot_name);
     return torque_ctrl;
 
-def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot', simu=True, patternGenerator=False):
+def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot', controlType="torque", simu=True, patternGenerator=False):
     from dynamic_graph.sot.torque_control.inverse_dynamics_balance_controller import InverseDynamicsBalanceController
     ctrl = InverseDynamicsBalanceController("invDynBalCtrl")
-
+    ctrl.setControlOutputType(controlType)
     try:
         plug(robot.base_estimator.q, ctrl.q)
         plug(robot.base_estimator.v, ctrl.v)
@@ -428,13 +429,17 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         rfootSE3 = MatrixHomoToSE3Vector("rfootSE3")
         plug(robot.pg.rightfootref, rfootSE3.sin)
         plug(rfootSE3.sout, ctrl.rf_ref_pos)
-        ctrl.rf_ref_vel.value = 12*(0.0,)
+        rfootSE3_dot = MatrixHomoToSE3Vector("rfootSE3_dot")
+        plug(robot.pg.dotrightfootref, rfootSE3_dot.sin)
+        plug(rfootSE3_dot.sout, ctrl.rf_ref_vel)
         ctrl.rf_ref_acc.value = 12*(0.0,)
 
         lfootSE3 = MatrixHomoToSE3Vector("lfootSE3")
         plug(robot.pg.leftfootref, lfootSE3.sin)
         plug(lfootSE3.sout, ctrl.lf_ref_pos)
-        ctrl.lf_ref_vel.value = 12*(0.0,)
+        lfootSE3_dot = MatrixHomoToSE3Vector("lfootSE3_dot")
+        plug(robot.pg.dotleftfootref, lfootSE3_dot.sin)
+        plug(lfootSE3_dot.sout, ctrl.lf_ref_vel)
         ctrl.lf_ref_acc.value = 12*(0.0,)
 
         plug(ctrl.right_hand_pos,   robot.rh_traj_gen.initial_value);
@@ -452,10 +457,15 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         plug(robot.traj_gen.ddq, ctrl.posture_ref_acc)
 
         plug(robot.pg.comref, ctrl.com_ref_pos)
+        # ctrl.com_ref_vel.value = (0.0, 0.0, 0.0)
+        # ctrl.com_ref_acc.value = (0.0, 0.0, 0.0)
         plug(robot.pg.dcomref, ctrl.com_ref_vel)
         plug(robot.pg.ddcomref, ctrl.com_ref_acc)
-        ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
-        ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
+        
+        plug(robot.pg.amref, ctrl.am_ref_L)
+        plug(robot.pg.damref, ctrl.am_ref_dL)
+        # ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
+        # ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
 
         waistSE3 = MatrixHomoToSE3Vector("waistSE3")
         plug(robot.pg.waistattitudematrixabsolute, waistSE3.sin)
@@ -518,6 +528,17 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
                                        zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)])
         ctrl.gear_ratios.value = NJ*(1.0,)
     
+    if (controlType=="velocity"):
+        plug(robot.com_admittance_control.comRef, ctrl.com_adm_ref_pos)
+        plug(robot.com_admittance_control.dcomRef, ctrl.com_adm_ref_vel)
+        ctrl.kp_com.value = 3*(conf.kp_com_vel,)
+        ctrl.kd_com.value = 3*(conf.kd_com_vel,)
+        ctrl.w_com.value = conf.w_com_vel
+    else:
+        ctrl.kp_com.value = 3*(conf.kp_com,)
+        ctrl.kd_com.value = 3*(conf.kd_com,)
+        ctrl.w_com.value = conf.w_com
+
     ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
     ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS
     ctrl.f_min.value = conf.fMin
@@ -525,8 +546,6 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     ctrl.f_max_left_foot.value =  conf.fMax
     ctrl.mu.value = conf.mu[0]
     ctrl.weight_contact_forces.value = (1e2, 1e2, 1e0, 1e3, 1e3, 1e3)
-    ctrl.kp_com.value = 3*(conf.kp_com,)
-    ctrl.kd_com.value = 3*(conf.kd_com,)
     ctrl.kp_am.value = 3*(conf.kp_am,)
     ctrl.kd_am.value = 3*(conf.kd_am,)
     ctrl.kp_constraints.value = 6*(conf.kp_contact,)
@@ -543,7 +562,6 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     ctrl.kp_base_orientation.value = 6*(conf.kp_waist,)
     ctrl.kd_base_orientation.value = 6*(conf.kd_waist,)
 
-    ctrl.w_com.value = conf.w_com
     ctrl.w_am.value = conf.w_am
     ctrl.w_feet.value = conf.w_feet
     ctrl.w_hands.value = conf.w_hands

@@ -34,12 +34,12 @@ kd_pos = np.array(
   0.1, 0.1))
 
 kp_tau = 0.1 * np.array(
-(5.0, 5.0,  5.0,  5.0,  8.5,  8.5,
- 5.0, 5.0,  5.0,  5.0,  8.5,  8.5,
- 5.0, 5.0,
- 5.0, 5.0,  5.0,  5.0,  5.0,  0.0, 0.0,
+(2.5, 2.5,  2.5,  2.5,  8.5,  8.5,
+ 2.5, 2.5,  2.5,  2.5,  8.5,  8.5,
+ 2.5, 2.5,
+ 2.5, 2.5,  2.5,  2.5,  2.5,  0.0, 0.0,
  0.0,
- 5.0, 5.0,  5.0,  5.0,  5.0,  0.0, 0.0,
+ 2.5, 2.5,  2.5,  2.5,  2.5,  0.0, 0.0,
  0.0,
  0.0, 0.0))
 
@@ -47,15 +47,18 @@ kp_contact  = 30.0 # constraint proportional feedback gain
 kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
 kp_com      = 100.0
 kd_com      = 2.0*sqrt(kp_com)
+kp_com_vel  = 15000.0 
+kd_com_vel  = 1500
 kp_waist    = 500.0
 kd_waist    = 2.0*sqrt(kp_waist)
-kp_am       = 10.0
+kp_am       = 1.0
 kd_am       = 2.0*sqrt(kp_am)
 kp_feet     = 100.0
 kd_feet     = 2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
 w_com = 1.0
+w_com_vel  = 1e4
 w_posture = 1e-1 # weight of postural task
 w_forces = 1e-3
 w_waist = 1.0
