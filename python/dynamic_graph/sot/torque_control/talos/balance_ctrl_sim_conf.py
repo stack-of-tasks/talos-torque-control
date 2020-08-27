@@ -47,8 +47,8 @@ kp_contact  = 30.0 # constraint proportional feedback gain
 kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
 kp_com      = 100.0
 kd_com      = 2.0*sqrt(kp_com)
-kp_com_vel  = 15000.0 
-kd_com_vel  = 1500
+kp_com_vel  = 100.0#1000.0 
+kd_com_vel  = 2.0*sqrt(kp_com)#500
 kp_waist    = 500.0
 kd_waist    = 2.0*sqrt(kp_waist)
 kp_am       = 1.0
@@ -58,7 +58,7 @@ kd_feet     = 2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
 w_com = 1.0
-w_com_vel  = 1e4
+w_com_vel  = 1e10
 w_posture = 1e-1 # weight of postural task
 w_forces = 1e-3
 w_waist = 1.0

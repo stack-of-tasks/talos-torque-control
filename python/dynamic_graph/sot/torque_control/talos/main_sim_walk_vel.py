@@ -1,23 +1,50 @@
+from math import sqrt
 from rospkg import RosPack
 from dynamic_graph import plug
-from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector, MatrixHomoToSE3Vector
-from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
-from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf 
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_filters, create_encoders, create_am_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller, create_ctrl_manager
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer, create_encoders_velocity
-from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
-from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.operator import Substract_of_vector, Selec_of_vector, MatrixHomoToPoseQuaternion, Component_of_vector
-from sot_talos_balance.round_double_to_int import RoundDoubleToInt
+from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector, MatrixHomoToSE3Vector
+from dynamic_graph.sot.core.operator import Selec_of_vector, MatrixHomoToPoseQuaternion
+from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, PoseQuatToMatrixHomo, SE3VectorToMatrixHomo
+from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector
+from dynamic_graph.sot.dynamic_pinocchio import DynamicPinocchio
+
+from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_generator
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_encoders, create_encoders_velocity
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer
+from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
+
+from dynamic_graph.sot.pattern_generator import PatternGenerator
+
+from sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator, create_ft_calibrator
+from sot_talos_balance.create_entities_utils import create_parameter_server, create_ctrl_manager
+from sot_talos_balance.boolean_identity import BooleanIdentity
+from sot_talos_balance.euler_to_quat import EulerToQuat
+from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
+from sot_talos_balance.delay import DelayVector
+from sot_talos_balance.dcm_estimator import DcmEstimator
+from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
+from sot_talos_balance.dcm_controller import DcmController
+from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
+from sot_talos_balance.com_admittance_controller import ComAdmittanceController
+import sot_talos_balance.talos.ft_calibration_conf as ft_conf
+import sot_talos_balance.talos.parameter_server_conf as param_server_conf
+import sot_talos_balance.talos.control_manager_conf as cm_conf
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 conf = get_sim_conf()
 dt = robot.timeStep
+
+# --- Pendulum parameters
+robot_name = 'robot'
+robot.dynamic.com.recompute(0)
+robotDim = robot.dynamic.getDimension()
+mass = robot.dynamic.data.mass[0]
+h = robot.dynamic.com.value[2]
+g = 9.81
+omega = sqrt(g / h)
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 # TMP: overwrite halfSitting configuration to use SoT joint order
@@ -33,7 +60,9 @@ robot.halfSitting = q
 
 # --- CREATE ENTITIES ----------------------------------------------------------
 
-robot.ctrl_manager = create_ctrl_manager(conf.control_manager, conf.motor_params, dt)
+cm_conf.CTRL_MAX = 1000.0  # temporary hack
+create_parameter_server(param_server_conf, dt)
+# robot.ctrl_manager = create_ctrl_manager(conf.control_manager, conf.motor_params, dt)
 robot.encoders = create_encoders(robot)
 robot.encoders_velocity = create_encoders_velocity(robot)
 

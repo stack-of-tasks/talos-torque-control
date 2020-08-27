@@ -2,6 +2,7 @@
 import time, subprocess, os
 from sys import argv
 from run_test_utils import runCommandClient, run_test
+from sot_talos_balance.utils.run_test_utils import run_ft_calibration
 
 try:
     # Python 2
@@ -48,6 +49,8 @@ else:
     print("Starting script whith inverse_dyn_balance_controller")
     run_test('../python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel_online.py')
 
+run_ft_calibration('robot.ftc')
+
 input("Waiting before writing the graph")
 runCommandClient("from dynamic_graph import writeGraph")
 
@@ -56,20 +59,31 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_walk.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk.pdf"])
 
-input("Waiting before setting gains")
+input("Waiting before setting gains and raising the arms")
+runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
 print("Setting gains")
-# runCommandClient("robot.inv_dyn.kp_feet.value = 6*(500,)")
-# runCommandClient("robot.inv_dyn.kp_com.value = 3*(100,)")
-# runCommandClient("robot.inv_dyn.kd_feet.value = 6*(12,)")
-# runCommandClient("robot.inv_dyn.kd_com.value = 3*(7,)")
+runCommandClient("robot.inv_dyn.kp_feet.value = 6*(1400,)") #5000
+runCommandClient("robot.inv_dyn.kp_com.value = 3*(1000,)")
+runCommandClient("robot.inv_dyn.kd_feet.value = 6*(20,)")
+runCommandClient("robot.inv_dyn.kd_com.value = 3*(400,)")
+
+# Connect ZMP reference and reset controllers
+input("Waiting before connecting the ZMP reference")
+print('Connect ZMP reference')
+runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.ctrl_manager.emergencyStop_zmp)')
+# runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
+runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])')
+runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
+runCommandClient('robot.dcm_control.resetDcmIntegralError()')
+runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+runCommandClient('robot.dcm_control.Kz.value = Kz_dcm')
+time.sleep(2.0)
 
 if pattern_generator:
     input("Waiting before playing trajectories")
     runCommandClient('robot.triggerPG.sin.value = 1')
-    runCommandClient('plug(robot.pg.leftfootref, robot.m2qLF.sin)')
-    runCommandClient('plug(robot.pg.rightfootref, robot.m2qLF.sin)')
-    input("Wait before stopping the trajectory")
-    runCommandClient('robot.pg.velocitydes.value=(0.0,0.0,0.0)')
+    # input("Wait before stopping the trajectory")
+    # runCommandClient('robot.pg.velocitydes.value=(0.0,0.0,0.0)')
 else:
     input("Waiting before playing trajectories")
     print("Playing trajectories")
@@ -85,9 +99,12 @@ else:
 # runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
 
 time.sleep(2.0)
-input("Wait before going to halfSitting")
-runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
-time.sleep(5.0)
-print("The robot is back in position!")
+# input("Wait before going to halfSitting")
+# runCommandClient("robot.halfSitting[20] = 0.25847")
+# runCommandClient("robot.halfSitting[28] = -0.25847")
+# runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
+# time.sleep(8.0)
+# print("The robot is back in position!")
+input("Wait before dumping the data")
 runCommandClient('dump_tracer(robot.tracer)')
 
