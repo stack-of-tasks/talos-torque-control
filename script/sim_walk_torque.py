@@ -19,6 +19,12 @@ if len(argv) == 2 and argv[1] == "on_spot":
 elif len(argv) == 2 and argv[1] == "walk_20":
     print("Starting script with folder " + folder + " walking with 20cm step.")
     walk_type = "walk_20"
+elif len(argv) == 2 and argv[1] == "plateforms":
+    print("Starting script with folder " + folder + " walking on the plateforms.")
+    walk_type = "plateforms"
+elif len(argv) == 2 and argv[1] == "stairs":
+    print("Starting script with folder " + folder + " climbing stairs.")
+    walk_type = "stairs"
 elif len(argv) == 3 and argv[1] == "on_spot" and argv[2] == "pattern_generator":
     pattern_generator = True
     print("Starting script with pattern_generator walking on spot.")
@@ -74,12 +80,18 @@ if pattern_generator:
     time.sleep(3.0)
     runCommandClient("robot.inv_dyn.kp_com.value = 3*(20,)")
 else:
-    # input("Waiting before setting gains")
+    input("Waiting before setting gains")
     print("Setting gains")
-    runCommandClient("robot.inv_dyn.kp_feet.value = 6*(200,)")
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(200,)")
-    runCommandClient("robot.inv_dyn.kd_feet.value = 6*(12,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = 3*(12,)")
+    runCommandClient("robot.inv_dyn.kp_feet.value = 12*(1200,)")
+    runCommandClient("robot.inv_dyn.kp_com.value = 3*(15,)")
+    runCommandClient("robot.inv_dyn.kd_feet.value = 12*(30,)")
+    runCommandClient("robot.inv_dyn.kd_com.value = (1, 1, 4)")
+    input("Waiting before setting trajectories")
+    runCommandClient('robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")')
+    runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
+    runCommandClient('robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")')
+    runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
+    runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
     input("Waiting before playing trajectories")
     print("Playing trajectories")
     runCommandClient("robot.traj_sync.turnOn()")

@@ -1,4 +1,5 @@
 from dynamic_graph import plug
+import numpy as np
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
@@ -43,7 +44,8 @@ robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
 # --- CoM trajectory
-robot.com_traj_gen = create_com_traj_gen(robot, dt)
+init_value_com = np.loadtxt(folder + walk_type + "/com.dat", usecols=(0,1,2))[0]
+robot.com_traj_gen = create_com_traj_gen(robot, dt, init_value_com)
 robot.com_traj_gen.x.recompute(0)
 
 # --- Base orientation (SE3 on the waist) trajectory
@@ -51,7 +53,8 @@ robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
 robot.waist_traj_gen.x.recompute(0)
 
 # --- Angular momentum trajectory
-robot.am_traj_gen = create_am_traj_gen(robot, dt)
+init_value_am = np.loadtxt(folder + walk_type + "/am.dat", usecols=(0,1,2))[0]
+robot.am_traj_gen = create_am_traj_gen(robot, dt, init_value_am)
 robot.am_traj_gen.x.recompute(0)
 
 # --- Contact phases trajectories
@@ -66,8 +69,12 @@ robot.phaseInt = RoundDoubleToInt("phase_int")
 plug(robot.phaseScalar.sout, robot.phaseInt.sin)
 
 # --- Feet trajectories
+init_value_rf = np.loadtxt(folder + walk_type + "/rightFoot.dat")[0]
+init_value_lf = np.loadtxt(folder + walk_type + "/leftFoot.dat")[0]
 robot.rf_traj_gen = NdTrajectoryGenerator("tg_rf")
+robot.rf_traj_gen.initial_value.value = init_value_rf
 robot.lf_traj_gen = NdTrajectoryGenerator("tg_lf")
+robot.lf_traj_gen.initial_value.value = init_value_lf
 robot.rf_traj_gen.init(dt, 12)
 robot.lf_traj_gen.init(dt, 12)
 
@@ -93,8 +100,7 @@ robot.base_estimator.q.recompute(0)
 robot.base_estimator.v.recompute(0)
 
 # --- Inverse dynamic controller
-robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt)
-robot.inv_dyn.setControlOutputType("torque")
+robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque")
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Reference position of the feet for base estimator
@@ -116,19 +122,12 @@ plug(robot.traj_gen.dq, posCtrl.dqRef);
 posCtrl.init(dt, "robot");
 robot.pos_ctrl = posCtrl
 
-# --- Play trajectories
-robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")
-robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")
-robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")
-robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")
-robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")
-
 # --- Connect control manager
 plug(robot.device.currents, robot.ctrl_manager.i_measured)
 plug(robot.device.ptorque, robot.ctrl_manager.tau)
 
 robot.ctrl_manager.addCtrlMode("torque")
-plug(robot.inv_dyn.tau_pd_des, robot.ctrl_manager.ctrl_torque)
+plug(robot.inv_dyn.tau_des, robot.ctrl_manager.ctrl_torque)
 robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
 
 robot.ctrl_manager.addCtrlMode("pos")
@@ -158,23 +157,13 @@ robot.dvdt.dt.value = dt
 plug(robot.delay_vel.previous, robot.dvdt.sin)
 plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
-# --- Error on the CoM task
-robot.errorComTSID = Substract_of_vector('error_com')
-plug(robot.inv_dyn.com_ref_pos, robot.errorComTSID.sin2)
-plug(robot.inv_dyn.com, robot.errorComTSID.sin1)
-
-# --- Error on the Posture task
-robot.errorPoseTSID = Substract_of_vector('error_pose')
-plug(robot.inv_dyn.posture_ref_pos, robot.errorPoseTSID.sin2)
-plug(robot.encoders.sout, robot.errorPoseTSID.sin1)
-
 
 # --- ROS PUBLISHER ----------------------------------------------------------
 
 robot.publisher = create_rospublish(robot, 'robot_publisher')
-create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
-create_topic(robot.publisher, robot.errorComTSID, 'sout', 'errorComTSID', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'com', 'inv_dyn_com', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'com', 'inv_dyn_com', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'v_des', 'v_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'dv_des', 'dv_des', robot=robot, data_type='vector')
@@ -188,8 +177,15 @@ create_topic(robot.publisher, robot.phaseInt, 'sout', 'contactphase', robot=robo
 create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.am_traj_gen, 'x', 'am_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.am_traj_gen, 'dx', 'dam_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
+create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated DCM
+create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
+create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
 
 # --- TRACER ----------------------------------------------------------
 robot.tracer = TracerRealTime("inv_dyn_tracer")
@@ -202,8 +198,6 @@ addTrace(robot.tracer, robot.inv_dyn, 'tau_pd_des')
 addTrace(robot.tracer, robot.inv_dyn, 'q_des')
 addTrace(robot.tracer, robot.inv_dyn, 'v_des')
 addTrace(robot.tracer, robot.inv_dyn, 'dv_des')
-addTrace(robot.tracer, robot.errorPoseTSID, 'sout')
-addTrace(robot.tracer, robot.errorComTSID, 'sout')
 addTrace(robot.tracer, robot.device, 'robotState')
 addTrace(robot.tracer, robot.device, 'motorcontrol')
 
