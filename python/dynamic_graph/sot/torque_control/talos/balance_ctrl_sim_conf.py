@@ -10,7 +10,7 @@ NJ = 32
 # kp_posture  = (10., 5., 5., 1., 1., 10., 10., 5., 5., 1., 1., 10., 5000., 5000., 50., 100., 10., 10., 10., 10., 100., 50., 50., 100., 10., 10., 10., 10., 100., 50., 100., 100.)  # proportional gain of postural task
 # kp_posture  = (50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 500., 500., 50., 50., 50., 50., 50., 50., 50., 10., 50., 50., 50., 50., 50., 50., 50., 10., 100., 100.)  # proportional gain of postural task
 
-kp_posture  = (10., 5., 5., 1., 1., 10., 10., 5., 5., 1., 1., 10., 500., 500., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 100., 100.)  # proportional gain of postural task
+kp_posture  = (10., 5., 5., 1., 10., 10., 10., 5., 5., 1., 10., 10., 100., 100., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 100., 100.)  # proportional gain of postural task
 kd_posture = tuple(2 * np.sqrt(kp_posture))
 
 kp_pos = np.array(
@@ -63,20 +63,21 @@ kff_dq = np.array(
  0.0,
  0.0, 0.0))
 
+kp_contact  = 30 # constraint proportional feedback gain
 kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
 kp_com      = 100.0
 kd_com      = 2.0*sqrt(kp_com)
 kp_com_vel  = 100.0
 kd_com_vel  = 2.0*sqrt(kp_com)
-kp_waist    = 500.0
+kp_waist    = 100.0
 kd_waist    = 2.0*sqrt(kp_waist)
-kp_am       = 1.0
+kp_am       = 10.0
 kd_am       = 2.0*sqrt(kp_am)
 kp_feet     = 100.0
 kd_feet     = 2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
-w_com = 1.0
+w_com = 1e6
 w_com_vel  = 1e10
 w_posture = 1e-1 # weight of postural task
 w_forces = 1e-3
