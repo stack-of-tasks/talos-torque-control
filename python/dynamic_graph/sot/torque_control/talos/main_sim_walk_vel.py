@@ -1,19 +1,21 @@
 from math import sqrt
+import numpy as np
 from rospkg import RosPack
 from dynamic_graph import plug
 from dynamic_graph.tracer_real_time import TracerRealTime
-from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector, MatrixHomoToSE3Vector
-from dynamic_graph.sot.core.operator import Selec_of_vector, MatrixHomoToPoseQuaternion
-from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, PoseQuatToMatrixHomo, SE3VectorToMatrixHomo
+from dynamic_graph.sot.core.operator import Selec_of_vector, MatrixHomoToPoseQuaternion, PoseQuatToMatrixHomo
+from dynamic_graph.sot.core.operator import Substract_of_vector, Component_of_vector, SE3VectorToMatrixHomo
 from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector
+from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
+from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 from dynamic_graph.sot.dynamic_pinocchio import DynamicPinocchio
-
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_generator
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_encoders, create_encoders_velocity
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_generator, create_com_traj_gen, create_am_traj_gen
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_encoders, create_encoders_velocity, create_waist_traj_gen
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 
 from dynamic_graph.sot.pattern_generator import PatternGenerator
@@ -71,7 +73,8 @@ robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
 # --- CoM trajectory
-robot.com_traj_gen = create_com_traj_gen(robot, dt)
+init_value_com = np.loadtxt(folder + walk_type + "/com.dat", usecols=(0,1,2))[0]
+robot.com_traj_gen = create_com_traj_gen(robot, dt, init_value_com)
 robot.com_traj_gen.x.recompute(0)
 
 # --- Base orientation (SE3 on the waist) trajectory
@@ -79,7 +82,8 @@ robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
 robot.waist_traj_gen.x.recompute(0)
 
 # --- Angular momentum trajectory
-robot.am_traj_gen = create_am_traj_gen(robot, dt)
+init_value_am = np.loadtxt(folder + walk_type + "/am.dat", usecols=(0,1,2))[0]
+robot.am_traj_gen = create_am_traj_gen(robot, dt, init_value_am)
 robot.am_traj_gen.x.recompute(0)
 
 # --- Feet force trajectories
@@ -100,8 +104,12 @@ robot.phaseInt = RoundDoubleToInt("phase_int")
 plug(robot.phaseScalar.sout, robot.phaseInt.sin)
 
 # --- Feet trajectories
+init_value_rf = np.loadtxt(folder + walk_type + "/rightFoot.dat")[0]
+init_value_lf = np.loadtxt(folder + walk_type + "/leftFoot.dat")[0]
 robot.rf_traj_gen = NdTrajectoryGenerator("tg_rf")
+robot.rf_traj_gen.initial_value.value = init_value_rf
 robot.lf_traj_gen = NdTrajectoryGenerator("tg_lf")
+robot.lf_traj_gen.initial_value.value = init_value_lf
 robot.rf_traj_gen.init(dt, 12)
 robot.lf_traj_gen.init(dt, 12)
 
@@ -117,15 +125,6 @@ trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen, robot.phas
 trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
 connect_synchronous_trajectories(robot.traj_sync, trajs)
 
-# --- Play trajectories
-robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")
-robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")
-robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")
-# robot.rf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/rightForceFoot.dat")
-# robot.lf_force_traj_gen.playTrajectoryFile(folder + walk_type + "/leftForceFoot.dat")
-robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")
-robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")
-
 # --- CREATE Operational Points ------------------------------------------------
 robot.dynamic.createOpPoint('LF', robot.OperationalPointsMap['left-ankle'])
 robot.dynamic.createOpPoint('RF', robot.OperationalPointsMap['right-ankle'])
@@ -136,8 +135,6 @@ robot.dynamic.RF.recompute(0)
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-# plug(robot.encoders_velocity.sout, robot.base_estimator.joint_velocities)
-# plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
 plug(robot.dynamic.LF, robot.m2qLF.sin)
@@ -146,36 +143,160 @@ robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
 plug(robot.dynamic.RF, robot.m2qRF.sin)
 plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
 
-# robot.base_estimator.q.recompute(0)
-# robot.base_estimator.v.recompute(0)
+# --- Interface with controller entities
+
+rfootHomo = SE3VectorToMatrixHomo("rfootHomo")
+plug(robot.rf_traj_gen.x, rfootHomo.sin)
+rfootHomo.sout.recompute(0)
+lfootHomo = SE3VectorToMatrixHomo("lfootHomo")
+plug(robot.lf_traj_gen.x, lfootHomo.sin)
+lfootHomo.sout.recompute(0)
+
+waistToMatrixHomo = SE3VectorToMatrixHomo("waistHomo")
+plug(robot.waist_traj_gen.x, waistToMatrixHomo.sin)
+waistToMatrixHomo.sout.recompute(0)
+
+dyn_com = robot.dynamic.com.value
+diff_translation_com = init_value_com - dyn_com
+rotation_identity = np.identity(3).flatten()
+refFrame = np.concatenate((diff_translation_com, rotation_identity))
+refFrameToMatrixHomo = SE3VectorToMatrixHomo("refFrameHomo")
+refFrameToMatrixHomo.sin.value = refFrame
+refFrameToMatrixHomo.sout.recompute(0)
+
+dyn_foot = np.array(robot.dynamic.LF.value)[:3, 3]
+diff_translation_foot = init_value_lf[:3] - dyn_foot
+refFrameFeet = np.concatenate((diff_translation_foot, rotation_identity))
+refFrameFeetToMatrixHomo = SE3VectorToMatrixHomo("refFrameFeetHomo")
+refFrameFeetToMatrixHomo.sin.value = refFrameFeet
+refFrameFeetToMatrixHomo.sout.recompute(0)
+
+wp = DummyWalkingPatternGenerator('dummy_wp')
+wp.init()
+wp.referenceFrame.value = refFrameToMatrixHomo.sout.value
+wp.referenceFrameFeet.value = refFrameFeetToMatrixHomo.sout.value
+wp.omega.value = omega
+plug(waistToMatrixHomo.sout, wp.waist)
+plug(lfootHomo.sout, wp.footLeft)
+plug(rfootHomo.sout, wp.footRight)
+plug(robot.com_traj_gen.x, wp.com)
+plug(robot.com_traj_gen.dx, wp.vcom)
+plug(robot.com_traj_gen.ddx, wp.acom)
+
+robot.wp = wp
+
+# --- Compute the values to use them in initialization
+robot.wp.comDes.recompute(0)
+robot.wp.dcmDes.recompute(0)
+robot.wp.zmpDes.recompute(0)
+
+# --- Conversion
+e2q = EulerToQuat('e2q')
+plug(robot.base_estimator.q, e2q.euler)
+robot.e2q = e2q
+
+# --- Kinematic computations
+robot.rdynamic = DynamicPinocchio("real_dynamics")
+robot.rdynamic.setModel(robot.dynamic.model)
+robot.rdynamic.setData(robot.rdynamic.model.createData())
+plug(robot.base_estimator.q, robot.rdynamic.position)
+robot.rdynamic.velocity.value = [0.0] * robotDim
+robot.rdynamic.acceleration.value = [0.0] * robotDim
+
+# --- CoM Estimation
+cdc_estimator = DcmEstimator('cdc_estimator')
+cdc_estimator.init(dt, robot_name)
+plug(robot.e2q.quaternion, cdc_estimator.q)
+plug(robot.base_estimator.v, cdc_estimator.v)
+robot.cdc_estimator = cdc_estimator
+
+# --- DCM Estimation
+estimator = DummyDcmEstimator("dummy")
+plug(robot.wp.omegaDes, estimator.omega)
+estimator.mass.value = 1.0
+plug(robot.cdc_estimator.c, estimator.com)
+plug(robot.cdc_estimator.dc, estimator.momenta)
+estimator.init()
+robot.estimator = estimator
+
+# --- Force calibration
+robot.ftc = create_ft_calibrator(robot, ft_conf)
+
+# --- ZMP estimation
+zmp_estimator = SimpleZmpEstimator("zmpEst")
+robot.rdynamic.createOpPoint('sole_LF', 'left_sole_link')
+robot.rdynamic.createOpPoint('sole_RF', 'right_sole_link')
+plug(robot.rdynamic.sole_LF, zmp_estimator.poseLeft)
+plug(robot.rdynamic.sole_RF, zmp_estimator.poseRight)
+plug(robot.ftc.left_foot_force_out, zmp_estimator.wrenchLeft)
+plug(robot.ftc.right_foot_force_out, zmp_estimator.wrenchRight)
+zmp_estimator.init()
+robot.zmp_estimator = zmp_estimator
+
+# -------------------------- ADMITTANCE CONTROL --------------------------
+
+# --- DCM controller
+Kp_dcm = [8.0]*3
+Ki_dcm = [0.0, 0.0, 0.0]  # zero (to be set later)
+Kz_dcm = [0.] * 3
+gamma_dcm = 0.2
+
+dcm_controller = DcmController("dcmCtrl")
+
+dcm_controller.Kp.value = Kp_dcm
+dcm_controller.Ki.value = Ki_dcm
+dcm_controller.Kz.value = Kz_dcm
+dcm_controller.decayFactor.value = gamma_dcm
+dcm_controller.mass.value = mass
+plug(robot.wp.omegaDes, dcm_controller.omega)
+
+plug(robot.cdc_estimator.c, dcm_controller.com)
+plug(robot.estimator.dcm, dcm_controller.dcm)
+
+plug(robot.wp.zmpDes, dcm_controller.zmpDes)
+plug(robot.wp.dcmDes, dcm_controller.dcmDes)
+
+plug(robot.zmp_estimator.zmp, dcm_controller.zmp)
+
+dcm_controller.init(dt)
+
+robot.dcm_control = dcm_controller
+
+Ki_dcm = [0.0, 0.0, 0.0]  # this value is employed later
+
+Kz_dcm = [-1.0, -1.0, -1.0]  # this value is employed later
+
+# --- CoM admittance controller
+Kp_adm = [0.0, 0.0, 0.0]  # zero (to be set later)
+
+com_admittance_control = ComAdmittanceController("comAdmCtrl")
+com_admittance_control.Kp.value = Kp_adm
+plug(robot.zmp_estimator.zmp, com_admittance_control.zmp)
+com_admittance_control.zmpDes.value = robot.wp.zmpDes.value  # should be plugged to robot.dcm_control.zmpRef
+plug(robot.wp.acomDes, com_admittance_control.ddcomDes)
+
+com_admittance_control.init(dt)
+com_admittance_control.setState(robot.wp.comDes.value, [0.0, 0.0, 0.0])
+
+robot.com_admittance_control = com_admittance_control
+
+Kp_adm = [12.0, 12.0, 0.0]  # this value is employed later
 
 # --- Inverse dynamic controller
-robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt)
-robot.inv_dyn.setControlOutputType("velocity")
-# robot.inv_dyn.active_joints.value = 32*(1.0,)
-
-# # --- Reference position of the feet for base estimator
-# robot.inv_dyn.left_foot_pos_quat.recompute(0)
-# robot.inv_dyn.right_foot_pos_quat.recompute(0)
-# # robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
-# # robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
-# plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
-# plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
+robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="velocity")
+robot.inv_dyn.active_joints.value = 32*(1.0,)
 
 # --- Connect control manager
-plug(robot.device.currents,   robot.ctrl_manager.i_measured)
-plug(robot.device.ptorque,    robot.ctrl_manager.tau)
+robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
 robot.ctrl_manager.addCtrlMode("vel")
-selec_vel = Selec_of_vector('v_des_selec')
-# plug(robot.inv_dyn.v_des, selec_vel.sin)
-# selec_vel.selec(6,NJ+6)
-plug(robot.inv_dyn.v_des, robot.device.control)
 robot.ctrl_manager.setCtrlMode("all", "vel")
-plug(robot.ctrl_manager.joints_ctrl_mode_vel, robot.inv_dyn.active_joints)
-# plug(robot.ctrl_manager.u_safe, robot.device.control)
+robot.ctrl_manager.addEmergencyStopSIN('zmp')
+plug(robot.inv_dyn.v_des, robot.ctrl_manager.ctrl_vel)
+plug(robot.ctrl_manager.u_safe, robot.device.control)
 
 # --- Fix robot.dynamic inputs
 plug(robot.device.velocity, robot.dynamic.velocity)
+plug(robot.device.velocity, robot.vselec.sin)
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
 plug(robot.device.velocity, robot.dvdt.sin)
@@ -212,12 +333,28 @@ create_topic(robot.publisher, robot.inv_dyn, 'lf_est', 'lf_estim', robot=robot, 
 create_topic(robot.publisher, robot.inv_dyn, 'rf_est', 'rf_estim', robot=robot, data_type='vector')
 # create_topic(robot.publisher, robot.lf_force_traj_gen, 'x', 'lf_force_traj_gen', robot=robot, data_type='vector')
 # create_topic(robot.publisher, robot.rf_force_traj_gen, 'x', 'rf_force_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.pg, 'comref', 'com_pg', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.pg, 'contactphase', 'contactphase', robot=robot, data_type='int')
-create_topic(robot.publisher, robot.pg, 'leftfootref', 'lf_pg', robot=robot, data_type='matrixHomo')
-create_topic(robot.publisher, robot.pg, 'rightfootref', 'rf_pg', robot=robot, data_type='matrixHomo')
+create_topic(robot.publisher, robot.phaseInt, 'sout', 'contactphase', robot=robot, data_type='int')
+create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.wp, 'comDes', 'wp_com', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.wp, 'zmpDes', 'wp_zmp', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.com_admittance_control, 'comRef', 'com_adm', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.com_admittance_control, 'dcomRef', 'dcom_adm', robot=robot, data_type='vector')
+
+create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated DCM
+create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
+create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.am_traj_gen, 'x', 'am_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.am_traj_gen, 'dx', 'dam_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.dcm_control, 'zmpRef', 'zmp_ref', robot=robot, data_type='vector')  # reference ZMP
+create_topic(robot.publisher, robot.dcm_control, 'dcmDes', 'dcm_des', robot=robot, data_type='vector')  # desired DCM
+create_topic(robot.publisher, robot.zmp_estimator, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
 
 # # # --- TRACER ----------------------------------------------------------
 robot.tracer = TracerRealTime("inv_dyn_tracer")

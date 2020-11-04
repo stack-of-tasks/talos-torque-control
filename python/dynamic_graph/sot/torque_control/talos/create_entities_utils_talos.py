@@ -203,17 +203,21 @@ def create_imu_filter(robot, dt):
     plug(robot.imu_offset_compensation.gyrometer_out,     imu_filter.gyroscope);
     return imu_filter;
 
-def create_com_traj_gen(robot, dt):
+def create_com_traj_gen(robot, dt, init_value=None):
     com_traj_gen = NdTrajectoryGenerator("com_traj_gen")
-    com_traj_gen.initial_value.value = robot.dynamic.com.value
+    if init_value is None:
+        init_value = robot.dynamic.com.value
+    com_traj_gen.initial_value.value = init_value
     com_traj_gen.trigger.value = 1.0
     com_traj_gen.init(dt,3)
     return com_traj_gen
 
-def create_am_traj_gen(robot, dt):
+def create_am_traj_gen(robot, dt, init_value=None):
     am_traj_gen = NdTrajectoryGenerator("am_traj_gen")
     robot.dynamic.angularmomentum.recompute(0)
-    am_traj_gen.initial_value.value = robot.dynamic.angularmomentum.value
+    if init_value is None:
+        init_value = robot.dynamic.angularmomentum.value
+    am_traj_gen.initial_value.value = init_value
     am_traj_gen.trigger.value = 1.0
     am_traj_gen.init(dt,3)
     return am_traj_gen
