@@ -84,11 +84,11 @@ robot.dynamic.createOpPoint('RF', robot.OperationalPointsMap['right-ankle'])
 robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
 
+# -------------------------- ESTIMATION --------------------------
 # --- Base Estimator
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-# plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
 plug(robot.dynamic.LF, robot.m2qLF.sin)
@@ -97,20 +97,8 @@ robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
 plug(robot.dynamic.RF, robot.m2qRF.sin)
 plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
 
-# robot.base_estimator.q.recompute(0)
-# robot.base_estimator.v.recompute(0)
-
-# robot.quat2mHLF = PoseQuatToMatrixHomo('quat2mHLF')
-# plug(robot.base_estimator.lf_xyzquat, robot.quat2mHLF.sin)
-# robot.quat2mHRF = PoseQuatToMatrixHomo('quat2mHRF')
-# plug(robot.base_estimator.rf_xyzquat, robot.quat2mHRF.sin)
-
-# -------------------------- DESIRED TRAJECTORY --------------------------
-
-rospack = RosPack()  
-
-# -------------------------- PATTERN GENERATOR --------------------------
-
+# -------------------------- DESIRED TRAJECTORY & PATTERN GENERATOR --------------------------
+rospack = RosPack()
 robot.pg = PatternGenerator('pg')
 
 # URDF PATH 
@@ -136,37 +124,23 @@ robot.pg.parseCmd(":setVelReference  0.1 0.0 0.0")
 
 plug(robot.dynamic.position, robot.pg.position)
 plug(robot.dynamic.com, robot.pg.com)
-#plug(robot.dynamic.com, robot.pg.comStateSIN)
 plug(robot.dynamic.LF, robot.pg.leftfootcurrentpos)
 plug(robot.dynamic.RF, robot.pg.rightfootcurrentpos)
 robotDim = len(robot.dynamic.velocity.value)
 
-# plug(robot.quat2mHLF.sout, robot.pg.leftfootcurrentpos)
-# plug(robot.quat2mHRF.sout, robot.pg.rightfootcurrentpos)
-# robotDim = len(robot.base_estimator.v.value)
 robot.pg.motorcontrol.value = robotDim * (0, )
 robot.pg.zmppreviouscontroller.value = (0, 0, 0)
-
 robot.pg.initState()
 
-# robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
 robot.pg.parseCmd(":doublesupporttime 0.115")
 robot.pg.parseCmd(":singlesupporttime 0.900")
 robot.pg.parseCmd(":SetAlgoForZmpTrajectory Kajita")
-robot.pg.parseCmd(":StartOnLineStepSequencing 0.0 -0.085 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.0 0.17 0.0 0.0")
+steps_20 = "0.0 -0.085 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.2 0.17 0.0 0.0 0.2 -0.17 0.0 0.0 0.0 0.17 0.0 0.0"
+steps_on_spot = "0.0 -0.085 0.0 0.0 0.0 0.17 0.0 0.0 0.0 -0.17 0.0 0.0 0.0 0.17 0.0 0.0 0.0 -0.17 0.0 0.0 0.0 0.17 0.0 0.0 0.0 -0.17 0.0 0.0 0.0 0.17 0.0 0.0"
+steps = steps_20 if walk_type == "walk_20" else steps_on_spot
+robot.pg.parseCmd(":StartOnLineStepSequencing " + steps)
 robot.pg.parseCmd(":StopOnLineStepSequencing")
-
-# robot.pg.parseCmd(':setDSFeetDistance 0.162')
-
-# robot.pg.parseCmd(':NaveauOnline')
-# robot.pg.parseCmd(':numberstepsbeforestop 2')
-# robot.pg.parseCmd(':setfeetconstraint XY 0.091 0.0489')
-
-# robot.pg.parseCmd(':deleteallobstacles')
-# robot.pg.parseCmd(':feedBackControl false')
 robot.pg.parseCmd(':useDynamicFilter true')
-
-# robot.pg.velocitydes.value = (0.1, 0.0, 0.0)  # DEFAULT VALUE (0.1,0.0,0.0)
 
 # -------------------------- TRIGGER --------------------------
 
@@ -195,20 +169,6 @@ robot.wp = wp
 robot.wp.comDes.recompute(0)
 robot.wp.dcmDes.recompute(0)
 robot.wp.zmpDes.recompute(0)
-
-# -------------------------- ESTIMATION --------------------------
-
-# --- Base Estimation
-# robot.device_filters = create_device_filters(robot, dt)
-# robot.imu_filters = create_imu_filters(robot, dt)
-# robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-
-# robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
-# plug(robot.dynamic.LF, robot.m2qLF.sin)
-# plug(robot.m2qLF.sout, robot.base_estimator.lf_ref_xyzquat)
-# robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
-# plug(robot.dynamic.RF, robot.m2qRF.sin)
-# plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
 
 # --- Conversion
 e2q = EulerToQuat('e2q')
@@ -292,7 +252,7 @@ Kp_adm = [0.0, 0.0, 0.0]  # zero (to be set later)
 com_admittance_control = ComAdmittanceController("comAdmCtrl")
 com_admittance_control.Kp.value = Kp_adm
 plug(robot.zmp_estimator.zmp, com_admittance_control.zmp)
-com_admittance_control.zmpDes.value = robot.wp.zmpDes.value  # should be plugged to robot.dcm_control.zmpRef
+com_admittance_control.zmpDes.value = robot.wp.zmpDes.value  # is plugged to robot.dcm_control.zmpRef later
 plug(robot.wp.acomDes, com_admittance_control.ddcomDes)
 
 com_admittance_control.init(dt)
@@ -300,61 +260,18 @@ com_admittance_control.setState(robot.wp.comDes.value, [0.0, 0.0, 0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [15.0, 15.0, 0.0]  # this value is employed later
-
-# --- Base Estimator
-# robot.device_filters = create_device_filters(robot, dt)
-# robot.imu_filters = create_imu_filters(robot, dt)
-# robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
-# plug(robot.encoders_velocity.sout, robot.base_estimator.joint_velocities)
-# plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
-
-# robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
-# plug(robot.dynamic.LF, robot.m2qLF.sin)
-# # plug(robot.pg.leftfootref, robot.m2qLF.sin)
-# plug(robot.m2qLF.sout, robot.base_estimator.lf_ref_xyzquat)
-# robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
-# plug(robot.dynamic.RF, robot.m2qRF.sin)
-# # plug(robot.pg.rightfootref, robot.m2qLF.sin)
-# plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
-
-# robot.base_estimator.q.recompute(0)
-# robot.base_estimator.v.recompute(0)
+Kp_adm = [12.0, 12.0, 0.0]  # this value is employed later
 
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl, conf.motor_params, dt, controlType="velocity", patternGenerator=True)
 robot.inv_dyn.active_joints.value = 32*(1.0,)
 
-# --- Reference position of the feet for base estimator
-# robot.inv_dyn.left_foot_pos_quat.recompute(0)
-# robot.inv_dyn.right_foot_pos_quat.recompute(0)
-# # robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos_quat.value
-# # robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos_quat.value
-# plug(robot.inv_dyn.left_foot_pos_quat, robot.base_estimator.lf_ref_xyzquat)
-# plug(robot.inv_dyn.right_foot_pos_quat, robot.base_estimator.rf_ref_xyzquat)
-
-# robot.inv_dyn.zmp.recompute(0)
-# plug(robot.inv_dyn.zmp, dcm_controller.zmp)
-# plug(robot.inv_dyn.zmp, com_admittance_control.zmp)
-
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
-# plug(robot.device.currents,   robot.ctrl_manager.i_measured)
-# plug(robot.device.ptorque,    robot.ctrl_manager.tau)
-# robot.ctrl_manager.addCtrlMode("vel")
-# selec_vel = Selec_of_vector('v_des_selec')
-# plug(robot.inv_dyn.v_des, selec_vel.sin)
-# selec_vel.selec(6,NJ+6)
-# robot.ctrl_manager.setCtrlMode("all", "vel")
-# selec_vel = Selec_of_vector('pos_des_selec')
-# plug(robot.inv_dyn.v_des, selec_vel.sin)
-# selec_vel.selec(6,NJ+6)
-# plug(selec_vel.sout, robot.ctrl_manager.ctrl_vel)
 robot.ctrl_manager.addCtrlMode("vel")
 robot.ctrl_manager.setCtrlMode("all", "vel")
 robot.ctrl_manager.addEmergencyStopSIN('zmp')
 plug(robot.inv_dyn.v_des, robot.ctrl_manager.ctrl_vel)
-# plug(robot.ctrl_manager.joints_ctrl_mode_vel, robot.inv_dyn.active_joints)
 plug(robot.ctrl_manager.u_safe, robot.device.control)
 
 
@@ -363,60 +280,25 @@ robot.delay_pos = DelayVector("delay_pos")
 robot.delay_pos.setMemory(robot.base_estimator.q.value)
 robot.device.before.addSignal(robot.delay_pos.name + '.current')
 plug(robot.inv_dyn.q_des, robot.delay_pos.sin)
-# plug(robot.delay_pos.previous, robot.pg.position)
-# plug(robot.ctrl_manager.u_safe, robot.delay_pos.sin)
 
 # --- Delay velocity dq
 robot.delay_vel = DelayVector("delay_vel")
 robot.delay_vel.setMemory(robotDim * [0.])
 robot.device.before.addSignal(robot.delay_vel.name + '.current')
-# plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
 plug(robot.ctrl_manager.u_safe, robot.delay_vel.sin)
 
-
-# # --- Delay velocity ddq
+# --- Delay velocity ddq
 robot.delay_acc = DelayVector("delay_acc")
 robot.delay_acc.setMemory(robotDim * [0.])
 robot.device.before.addSignal(robot.delay_acc.name + '.current')
 plug(robot.inv_dyn.dv_des, robot.delay_acc.sin)
 
-# --- Delay com estimated
-# robot.delay_com = DelayVector("delay_com")
-# robot.delay_com.setMemory(robot.dynamic.com.value)
-# robot.device.before.addSignal(robot.delay_com.name + '.current')
-# plug(robot.inv_dyn.com_est, robot.delay_com.sin)
-# plug(robot.delay_com.previous, robot.pg.com)
-
-# --- Plug inverse_dynamic instead of device
-# plug(robot.delay_pos.previous, robot.pselec.sin)
-# plug(robot.pselec.sout, robot.base_estimator.joint_positions)
-plug(robot.delay_vel.previous, robot.vselec.sin)
-
-# --- Fix robot.dynamic inputs
-# plug(robot.device.state, robot.dynamic.position)
-# plug(robot.device.velocity, robot.dynamic.velocity)
-# # # plug(robot.device.velocity, base_estimator.joint_velocities)
-# robot.dvdt = Derivator_of_Vector("dv_dt")
-# robot.dvdt.dt.value = dt
-# plug(robot.device.velocity, robot.dvdt.sin)
-# plug(robot.dvdt.sout, robot.dynamic.acceleration)
-
 # --- Fix robot.dynamic inputs
 plug(robot.delay_pos.previous, robot.dynamic.position)
 plug(robot.delay_vel.previous, robot.dynamic.velocity)
-# plug(robot.inv_dyn.q_des, robot.dynamic.position)
-# plug(robot.inv_dyn.v_des, robot.dynamic.velocity)
+plug(robot.delay_vel.previous, robot.vselec.sin)
 plug(robot.delay_acc.previous, robot.dynamic.acceleration)
-# robot.dvdt = Derivator_of_Vector("dv_dt")
-# robot.dvdt.dt.value = dt
-# # plug(robot.inv_dyn.v_des, robot.dvdt.sin)
-# plug(robot.delay_vel.previous, robot.dvdt.sin)
-# plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
-# robot.dynamic.zmp.recompute(0)
-# plug(robot.dynamic.zmp, dcm_controller.zmp)
-# plug(robot.dynamic.zmp, com_admittance_control.zmp)
-# 
 # --- Error on the CoM task
 robot.errorComTSID = Substract_of_vector('error_com')
 plug(robot.inv_dyn.com_ref_pos, robot.errorComTSID.sin2)
@@ -428,7 +310,7 @@ plug(robot.inv_dyn.posture_ref_pos, robot.errorPoseTSID.sin2)
 plug(robot.encoders.sout, robot.errorPoseTSID.sin1)
 
 
-# # # --- ROS PUBLISHER ----------------------------------------------------------
+# --- ROS PUBLISHER ----------------------------------------------------------
 
 robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.errorPoseTSID, 'sout', 'errorPoseTSID', robot=robot, data_type='vector')  
@@ -464,8 +346,12 @@ create_topic(robot.publisher, robot.dynamic, 'zmp', 'zmp_dyn', robot=robot, data
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', 'zmp_ref_dcm', robot=robot, data_type='vector')  # reference ZMP
 create_topic(robot.publisher, robot.estimator, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated dcm
+create_topic(robot.publisher, robot.dcm_control, 'dcmDes', 'dcm_des', robot=robot, data_type='vector')  # desired DCM
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'am_dL', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'am_L', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
 
 # # # --- TRACER ----------------------------------------------------------
 robot.tracer = TracerRealTime("inv_dyn_tracer")

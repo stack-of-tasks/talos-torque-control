@@ -24,6 +24,7 @@ from dynamic_graph.sot.torque_control.talos.motors_parameters import NJ
 from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
+from dynamic_graph.sot.core.operator import MatrixHomoToSE3Vector
 
 def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
@@ -425,7 +426,6 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     plug(robot.device.forceLLEG, ctrl.wrench_left_foot) # New
 
     if (patternGenerator):
-        from dynamic_graph.sot.core.operator import MatrixHomoToSE3Vector
         rfootSE3 = MatrixHomoToSE3Vector("rfootSE3")
         plug(robot.pg.rightfootref, rfootSE3.sin)
         plug(rfootSE3.sout, ctrl.rf_ref_pos)
@@ -457,15 +457,13 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         plug(robot.traj_gen.ddq, ctrl.posture_ref_acc)
 
         plug(robot.pg.comref, ctrl.com_ref_pos)
-        # ctrl.com_ref_vel.value = (0.0, 0.0, 0.0)
-        # ctrl.com_ref_acc.value = (0.0, 0.0, 0.0)
         plug(robot.pg.dcomref, ctrl.com_ref_vel)
         plug(robot.pg.ddcomref, ctrl.com_ref_acc)
         
-        plug(robot.pg.amref, ctrl.am_ref_L)
-        plug(robot.pg.damref, ctrl.am_ref_dL)
-        # ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
-        # ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
+        # plug(robot.pg.amref, ctrl.am_ref_L)
+        # plug(robot.pg.damref, ctrl.am_ref_dL)
+        ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
+        ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
 
         waistSE3 = MatrixHomoToSE3Vector("waistSE3")
         plug(robot.pg.waistattitudematrixabsolute, waistSE3.sin)
@@ -478,12 +476,12 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
             print("WARNING: Could not connect pg contactphase to ref_phase")
 
     else:
-        plug(ctrl.right_foot_pos,         robot.rf_traj_gen.initial_value)
+        # plug(ctrl.right_foot_pos, robot.rf_traj_gen.initial_value)
         plug(robot.rf_traj_gen.x,         ctrl.rf_ref_pos)
         plug(robot.rf_traj_gen.dx,        ctrl.rf_ref_vel)
         plug(robot.rf_traj_gen.ddx,       ctrl.rf_ref_acc)
 
-        plug(ctrl.left_foot_pos,          robot.lf_traj_gen.initial_value)
+        # plug(ctrl.right_foot_pos, robot.rf_traj_gen.initial_value)
         plug(robot.lf_traj_gen.x,         ctrl.lf_ref_pos)
         plug(robot.lf_traj_gen.dx,        ctrl.lf_ref_vel)
         plug(robot.lf_traj_gen.ddx,       ctrl.lf_ref_acc)
@@ -529,8 +527,16 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         ctrl.gear_ratios.value = NJ*(1.0,)
     
     if (controlType=="velocity"):
+        rfSE3 = MatrixHomoToSE3Vector("rfSE3")
+        plug(robot.wp.footRightDes, rfSE3.sin)
+        plug(rfSE3.sout, ctrl.rf_ref_pos)
+        lfSE3 = MatrixHomoToSE3Vector("lfSE3")
+        plug(robot.wp.footLeftDes, lfSE3.sin)
+        plug(lfSE3.sout, ctrl.lf_ref_pos)
+        plug(robot.wp.comDes, ctrl.com_ref_pos)
         plug(robot.com_admittance_control.comRef, ctrl.com_adm_ref_pos)
         plug(robot.com_admittance_control.dcomRef, ctrl.com_adm_ref_vel)
+        plug(robot.com_admittance_control.ddcomRef, ctrl.com_adm_ref_acc)
         ctrl.kp_com.value = 3*(conf.kp_com_vel,)
         ctrl.kd_com.value = 3*(conf.kd_com_vel,)
         ctrl.w_com.value = conf.w_com_vel
