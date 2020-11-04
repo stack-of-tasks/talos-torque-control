@@ -43,7 +43,26 @@ kp_tau = 0.1 * np.array(
  0.0,
  0.0, 0.0))
 
-kp_contact  = 30.0 # constraint proportional feedback gain
+kff_tau = np.array(
+(1.0, 1.0,  1.0,  1.0,  1.0,  1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0,
+ 1.0, 1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0, 1.0,
+ 1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0, 1.0,
+ 1.0,
+ 1.0, 1.0))
+
+kff_dq = np.array(
+(0., 0.,  0.,  0.,  0.0,  0.0,
+ 0., 0.,  0.,  0.,  0.0,  0.0,
+ 0., 0.,
+ 0.0, 0.0,  0.0,  0.0,  0.0, 0.0, 0.0,
+ 0.0,
+ 0.0, 0.0,  0.0,  0.0,  0.0, 0.0, 0.0,
+ 0.0,
+ 0.0, 0.0))
+
 kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
 kp_com      = 100.0
 kd_com      = 2.0*sqrt(kp_com)

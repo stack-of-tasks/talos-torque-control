@@ -565,6 +565,8 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     ctrl.kp_pos.value = conf.kp_pos
     ctrl.kd_pos.value = conf.kd_pos
     ctrl.kp_tau.value = conf.kp_tau
+    ctrl.kff_tau.value = conf.kff_tau
+    ctrl.kff_dq.value = conf.kff_dq
     ctrl.kp_base_orientation.value = 6*(conf.kp_waist,)
     ctrl.kd_base_orientation.value = 6*(conf.kd_waist,)
 
