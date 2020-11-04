@@ -229,15 +229,16 @@ def create_force_traj_gen(name, initial_value, dt):
     force_traj_gen.init(dt,6);
     return force_traj_gen ;
 
-def create_foot_traj_gen(signal_name, robot, dt):
-    foot_traj_gen = SE3TrajectoryGenerator(signal_name + "_traj_gen")
-    M = np.array(robot.dynamic.signal(signal_name).value)
-    trans = M[:3, 3]
-    rot = M[:3, :3].reshape(9)
+def create_foot_traj_gen(name, jointId, robot, dt):
+    foot_traj_gen = NdTrajectoryGenerator(name)
+    ref_foot = robot.dynamic.data.oMi[robot.dynamic.model.getJointId(jointId)]
+    trans = ref_foot.translation
+    rot = ref_foot.rotation
+    rot = rot.reshape(9)
     initial_value = np.concatenate((trans,rot))
     foot_traj_gen.initial_value.value = tuple(initial_value)
     foot_traj_gen.trigger.value = 1.0
-    foot_traj_gen.init(dt)
+    foot_traj_gen.init(dt, 12)
     return foot_traj_gen 
 
 
