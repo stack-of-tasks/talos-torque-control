@@ -26,6 +26,10 @@ elif len(argv) == 3 and argv[1] == "walk_20" and argv[2] == "pattern_generator":
     pattern_generator = True
     walk_type = "walk_20"
     print("Starting script with pattern_generator walking with 20cm step.")
+elif len(argv) == 3 and argv[1] == "walk_60" and argv[2] == "pattern_generator":
+    pattern_generator = True
+    walk_type = "walk_60"
+    print("Starting script with pattern_generator walking with 60cm step.")
 elif len(argv) == 3 and argv[1] == "on_spot":
     folder = argv[2]
     print("Starting script with folder " + folder + " walking on spot.")
@@ -34,7 +38,7 @@ elif len(argv) == 3 and argv[1] == "walk_20":
     print("Starting script with folder " + folder + " walking with 20cm step.")
     walk_type = "walk_20"
 else: 
-    print("Usage: python sim_walk_torque.py walk_type:=[on_spot|walk_20] {pattern_generator|path_folder_of_the_reference_trajectories}")
+    print("Usage: python sim_walk_torque.py walk_type:=[on_spot|walk_20|walk_60] {pattern_generator|path_folder_of_the_reference_trajectories}")
     print("By giving only the walk_type the script starts using the default file trajectories")
     raise ValueError("Bad options")
 
@@ -56,21 +60,19 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_walk.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk_torque.pdf"])
 
-input("Waiting before setting gains and raising the arms")
-runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
-
 if pattern_generator:
-    # input("Waiting before setting gains")
+    input("Waiting before going to halfSitting")
+    runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
+    input("Waiting before setting gains")
     print("Setting gains")
-    runCommandClient("robot.inv_dyn.kp_feet.value = 6*(1400,)")
-    # runCommandClient("robot.inv_dyn.kp_com.value = (100, 50, 150)")
+    runCommandClient("robot.inv_dyn.kp_feet.value = 6*(1200,)")
+    runCommandClient("robot.inv_dyn.kp_com.value = (100, 100, 10)")
     runCommandClient("robot.inv_dyn.kd_feet.value = 6*(30,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = 3*(4,)")
+    runCommandClient("robot.inv_dyn.kd_com.value = 3*(3,)")
     input("Waiting before playing trajectories")
-    # runCommandClient('plug(robot.pg.jointpositionfrompg, robot.traj_gen.base6d_encoders)')    
     runCommandClient('robot.triggerPG.sin.value = 1')
-    input("Wait before stopping the trajectory")
-    runCommandClient('robot.pg.velocitydes.value=(0.0,0.0,0.0)')
+    time.sleep(3.0)
+    runCommandClient("robot.inv_dyn.kp_com.value = 3*(20,)")
 else:
     # input("Waiting before setting gains")
     print("Setting gains")
@@ -86,9 +88,5 @@ else:
     runCommandClient("robot.traj_sync.turnOff()")
 
 time.sleep(2.0)
-# input("Wait before going to halfSitting")
-# runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
-# time.sleep(5.0)
-# print("The robot is back in position!")
 input("Wait before dumping the data")
 runCommandClient('dump_tracer(robot.tracer)')
