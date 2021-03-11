@@ -2,7 +2,7 @@
 import time, subprocess, os
 from sys import argv
 from run_test_utils import runCommandClient, run_test
-from sot_talos_balance.utils.run_test_utils import run_ft_calibration
+from dynamic_graph.sot_talos_balance.utils.run_test_utils import run_ft_calibration
 
 try:
     # Python 2
@@ -20,9 +20,9 @@ if len(argv) == 2 and argv[1] == "on_spot":
 elif len(argv) == 2 and argv[1] == "walk_20":
     print("Starting script with folder " + folder + " walking with 20cm step.")
     walk_type = "walk_20"
-elif len(argv) == 2 and argv[1] == "plateforms":
-    print("Starting script with folder " + folder + " walking on the plateforms.")
-    walk_type = "plateforms"
+elif len(argv) == 2 and argv[1] == "platforms":
+    print("Starting script with folder " + folder + " walking on the platforms.")
+    walk_type = "platforms"
 elif len(argv) == 2 and argv[1] == "stairs":
     print("Starting script with folder " + folder + " climbing stairs.")
     walk_type = "stairs"
@@ -65,24 +65,21 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_walk.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk.pdf"])
 
+
 input("Waiting before setting gains and going to initial position")
 runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
 print("Setting gains")
-runCommandClient("robot.inv_dyn.kp_feet.value = 6*(1400,)")
-runCommandClient("robot.inv_dyn.kd_feet.value = 6*(20,)")
-if walk_type == "walk_20" or walk_type == "on_spot":
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(1000,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = 3*(500,)")
-else:
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(3000,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = 3*(1500,)")
+runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1400,))")
+runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(20,))")
+runCommandClient("robot.inv_dyn.kp_com.value = np.array(3*(1000,))")
+runCommandClient("robot.inv_dyn.kd_com.value = np.array(3*(500,))")
 
 # Connect ZMP reference and reset controllers
 input("Waiting before connecting the ZMP reference")
 print('Connect ZMP reference')
-runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.ctrl_manager.emergencyStop_zmp)')
+runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.ctrl_manager.signal("emergencyStop_zmp"))')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
-runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])')
+runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value, np.zeros(3))')
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')

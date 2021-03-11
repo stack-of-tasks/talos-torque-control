@@ -22,10 +22,10 @@ proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_bellStep.dot", "-
 
 input("Waiting before setting gains")
 print("Setting gains")
-runCommandClient("robot.inv_dyn.kp_feet.value = 6*(200,)")
-runCommandClient("robot.inv_dyn.kp_com.value = 3*(20,)")
-runCommandClient("robot.inv_dyn.kd_feet.value = 6*(12,)")
-runCommandClient("robot.inv_dyn.kd_com.value = 3*(3,)")
+runCommandClient("robot.inv_dyn.kp_feet.value = 200*np.ones(6)")
+runCommandClient("robot.inv_dyn.kp_com.value = 20*np.ones(3)")
+runCommandClient("robot.inv_dyn.kd_feet.value = 12*np.ones(6)")
+runCommandClient("robot.inv_dyn.kd_com.value = 6*np.ones(3)")
 
 input("Wait before going to halfSitting")
 runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")

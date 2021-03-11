@@ -19,9 +19,9 @@ if len(argv) == 2 and argv[1] == "on_spot":
 elif len(argv) == 2 and argv[1] == "walk_20":
     print("Starting script with folder " + folder + " walking with 20cm step.")
     walk_type = "walk_20"
-elif len(argv) == 2 and argv[1] == "plateforms":
-    print("Starting script with folder " + folder + " walking on the plateforms.")
-    walk_type = "plateforms"
+elif len(argv) == 2 and argv[1] == "platforms":
+    print("Starting script with folder " + folder + " walking on the platforms.")
+    walk_type = "platforms"
 elif len(argv) == 2 and argv[1] == "stairs":
     print("Starting script with folder " + folder + " climbing stairs.")
     walk_type = "stairs"
@@ -67,38 +67,50 @@ print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk_torque.pdf"])
 
 if pattern_generator:
-    input("Waiting before going to halfSitting")
-    runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
-    input("Waiting before setting gains")
-    print("Setting gains")
-    runCommandClient("robot.inv_dyn.kp_feet.value = 6*(1200,)")
-    runCommandClient("robot.inv_dyn.kp_com.value = (100, 100, 10)")
-    runCommandClient("robot.inv_dyn.kd_feet.value = 6*(30,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = 3*(3,)")
+  input("Waiting before going to halfSitting")
+  runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
+  input("Waiting before setting gains")
+  print("Setting gains")
+  runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
+  runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(30,))")
+  if walk_type != "walk_60":
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((600, 600, 600))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
     input("Waiting before playing trajectories")
     runCommandClient('robot.triggerPG.sin.value = 1')
-    time.sleep(3.0)
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(20,)")
-else:
-    input("Waiting before setting gains")
-    print("Setting gains")
-    runCommandClient("robot.inv_dyn.kp_feet.value = 12*(1200,)")
-    runCommandClient("robot.inv_dyn.kp_com.value = 3*(15,)")
-    runCommandClient("robot.inv_dyn.kd_feet.value = 12*(30,)")
-    runCommandClient("robot.inv_dyn.kd_com.value = (1, 1, 4)")
-    input("Waiting before setting trajectories")
-    runCommandClient('robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")')
-    runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
-    runCommandClient('robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")')
-    runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
-    runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
+  else:
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((100, 100, 40))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array(3*(3,))")
     input("Waiting before playing trajectories")
-    print("Playing trajectories")
-    runCommandClient("robot.traj_sync.turnOn()")
-    input("Waiting before stopping the trajectories")
-    print("Stop trajectories")
-    runCommandClient("robot.traj_sync.turnOff()")
+    runCommandClient('robot.triggerPG.sin.value = 1')  
+    time.sleep(3.0)
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array(3*(12,))")
+else:
+  input("Waiting before setting gains")
+  print("Setting gains")
+  if walk_type == "platforms":
+    runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
+    runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(12,))")
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((250, 250, 600))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((2, 2, 5))")
+    runCommandClient("robot.inv_dyn.kp_constraints.value = np.array(6*(100,))")
+    runCommandClient("robot.inv_dyn.kd_constraints.value = np.array(6*(200,))")
+  else:
+    runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
+    runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(12,))")
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((600, 600, 600))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
 
-time.sleep(2.0)
-input("Wait before dumping the data")
-runCommandClient('dump_tracer(robot.tracer)')
+  input("Waiting before setting trajectories")
+  runCommandClient('robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")')    
+  runCommandClient('robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")')
+  runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
+  runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
+  runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
+  input("Waiting before playing trajectories")
+  print("Playing trajectories")
+  runCommandClient("robot.traj_sync.turnOn()")
+  input("Waiting before stopping the trajectories")
+  print("Stop trajectories")
+  runCommandClient("robot.traj_sync.turnOff()")
+

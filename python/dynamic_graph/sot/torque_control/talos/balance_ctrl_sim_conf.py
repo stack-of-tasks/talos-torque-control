@@ -10,8 +10,10 @@ NJ = 32
 # kp_posture  = (10., 5., 5., 1., 1., 10., 10., 5., 5., 1., 1., 10., 5000., 5000., 50., 100., 10., 10., 10., 10., 100., 50., 50., 100., 10., 10., 10., 10., 100., 50., 100., 100.)  # proportional gain of postural task
 # kp_posture  = (50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 500., 500., 50., 50., 50., 50., 50., 50., 50., 10., 50., 50., 50., 50., 50., 50., 50., 10., 100., 100.)  # proportional gain of postural task
 
-kp_posture  = (10., 5., 5., 1., 10., 10., 10., 5., 5., 1., 10., 10., 100., 100., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 50., 10., 10., 10., 100., 100.)  # proportional gain of postural task
-kd_posture = tuple(2 * np.sqrt(kp_posture))
+# kp_posture  = np.array((30., 30., 30., 10., 30., 30., 30., 30., 30., 10., 30., 30., 1500., 1500., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.)) # proportional gain of postural task
+
+kp_posture  = np.array((10., 5., 5., 1., 10., 10., 10., 5., 5., 1., 10., 10., 100., 100., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.))  # proportional gain of postural task
+kd_posture = np.array(2 * np.sqrt(kp_posture))
 
 kp_pos = np.array(
 (1300.,  1300.,  1300.,  1300.,  50., 50.,
@@ -53,51 +55,51 @@ kff_tau = np.array(
  1.0,
  1.0, 1.0))
 
-kff_dq = np.array(
-(0., 0.,  0.,  0.,  0.0,  0.0,
- 0., 0.,  0.,  0.,  0.0,  0.0,
- 0., 0.,
- 0.0, 0.0,  0.0,  0.0,  0.0, 0.0, 0.0,
- 0.0,
- 0.0, 0.0,  0.0,  0.0,  0.0, 0.0, 0.0,
- 0.0,
- 0.0, 0.0))
+kff_dq = 0. * np.array(
+(1.0, 1.0,  1.0,  1.0,  1.0,  1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0,
+ 1.0, 1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0, 1.0,
+ 1.0,
+ 1.0, 1.0,  1.0,  1.0,  1.0,  1.0, 1.0,
+ 1.0,
+ 1.0, 1.0))
 
 kp_contact  = 30 # constraint proportional feedback gain
 kd_contact  = 2*sqrt(kp_contact) # constraint derivative feedback gain
 kp_com      = 100.0
-kd_com      = 2.0*sqrt(kp_com)
+kd_com      = 5#2.0*sqrt(kp_com)
 kp_com_vel  = 100.0
 kd_com_vel  = 2.0*sqrt(kp_com)
 kp_waist    = 100.0
 kd_waist    = 2.0*sqrt(kp_waist)
-kp_am       = 10.0
+kp_am       = 10
 kd_am       = 2.0*sqrt(kp_am)
 kp_feet     = 100.0
-kd_feet     = 2.0*sqrt(kp_feet)
+kd_feet     = 5#2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
 w_com = 1e6
-w_com_vel  = 1e10
+w_com_vel  = 1e6
 w_posture = 1e-1 # weight of postural task
 w_forces = 1e-3
-w_waist = 1.0
+w_waist = 10.0
 w_am = 2e-2
-w_feet = 1.0
+w_feet = 1e3
 
 # CONTACT PARAMETERS
-RIGHT_FOOT_SIZES  = (0.1,  -0.11,  0.069,  -0.069) # pos x, neg x, pos y, neg y size 
-LEFT_FOOT_SIZES = (0.1, -0.11,  0.069, -0.069) # pos x, neg x, pos y, neg y size 
+RIGHT_FOOT_SIZES  = np.array((0.1,  -0.11,  0.069,  -0.069)) # pos x, neg x, pos y, neg y size 
+LEFT_FOOT_SIZES = np.array((0.1, -0.11,  0.069, -0.069)) # pos x, neg x, pos y, neg y size 
 
-RIGHT_FOOT_CONTACT_POINTS  = ((RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[1], RIGHT_FOOT_SIZES[1]),
+RIGHT_FOOT_CONTACT_POINTS  = np.array(((RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[1], RIGHT_FOOT_SIZES[1]),
                               (RIGHT_FOOT_SIZES[3], RIGHT_FOOT_SIZES[2], RIGHT_FOOT_SIZES[3], RIGHT_FOOT_SIZES[2]),
-                              (-0.107, -0.107, -0.107, -0.107))    # contact points in local reference frame
+                              (-0.107, -0.107, -0.107, -0.107)))    # contact points in local reference frame
 
 LEFT_FOOT_CONTACT_POINTS  = np.matrix([[LEFT_FOOT_SIZES[0], LEFT_FOOT_SIZES[3], -0.107],
                                      [LEFT_FOOT_SIZES[0], LEFT_FOOT_SIZES[2], -0.107],
                                      [LEFT_FOOT_SIZES[1], LEFT_FOOT_SIZES[3], -0.107],
                                      [LEFT_FOOT_SIZES[1], LEFT_FOOT_SIZES[2], -0.107]]).T    # contact points in local reference frame
-FOOT_CONTACT_NORMAL = (0.0, 0.0, 1.0)
+FOOT_CONTACT_NORMAL = np.array((0.0, 0.0, 1.0))
 mu  = np.array([0.3, 0.1])          # force and moment friction coefficient
 fMin = 1.0                       # minimum normal force
 fMax = 1e3                       # maximum normal force

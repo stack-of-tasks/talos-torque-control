@@ -13,11 +13,11 @@ from dynamic_graph.sot.core.operator import Selec_of_vector, Mix_of_vector
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
 from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
-from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
+from dynamic_graph.sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot.torque_control.control_manager import ControlManager
 from dynamic_graph.sot.torque_control.current_controller import CurrentController
-from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
+from dynamic_graph.sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
 from dynamic_graph.sot.torque_control.position_controller import PositionController
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.torque_control.talos.motors_parameters import NJ
@@ -25,9 +25,10 @@ from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
 from dynamic_graph.sot.core.operator import MatrixHomoToSE3Vector
+from dynamic_graph.sot.core.parameter_server import ParameterServer
 
 def get_default_conf():
-    import dynamic_graph.sot.torque_control.talos.balance_ctrl_conf as balance_ctrl_conf
+    import dynamic_graph.sot.torque_control.talos.balance_ctrl_sim_conf as balance_ctrl_conf
     import dynamic_graph.sot.torque_control.talos.base_estimator_conf as base_estimator_conf
     import dynamic_graph.sot.torque_control.talos.control_manager_conf as control_manager_conf
     import dynamic_graph.sot.torque_control.talos.current_controller_conf as current_controller_conf
@@ -51,13 +52,13 @@ def get_default_conf():
 def get_sim_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_sim_conf as balance_ctrl_conf
     # import dynamic_graph.sot.torque_control.talos.base_estimator_sim_conf as base_estimator_conf
-    import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
+    import dynamic_graph.sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
     import dynamic_graph.sot.torque_control.talos.control_manager_sim_conf as control_manager_conf
     import dynamic_graph.sot.torque_control.talos.current_controller_sim_conf as current_controller_conf
     import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains_sim as pos_ctrl_gains
-    import sot_talos_balance.motor_parameters as motor_params
+    import dynamic_graph.sot_talos_balance.motor_parameters as motor_params
     import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
     conf = Bunch()
     conf.balance_ctrl              = balance_ctrl_conf
@@ -208,7 +209,7 @@ def create_com_traj_gen(robot, dt, init_value=None):
     if init_value is None:
         init_value = robot.dynamic.com.value
     com_traj_gen.initial_value.value = init_value
-    com_traj_gen.trigger.value = 1.0
+    com_traj_gen.trigger.value = 1
     com_traj_gen.init(dt,3)
     return com_traj_gen
 
@@ -218,14 +219,14 @@ def create_am_traj_gen(robot, dt, init_value=None):
     if init_value is None:
         init_value = robot.dynamic.angularmomentum.value
     am_traj_gen.initial_value.value = init_value
-    am_traj_gen.trigger.value = 1.0
+    am_traj_gen.trigger.value = 1
     am_traj_gen.init(dt,3)
     return am_traj_gen
 
 def create_force_traj_gen(name, initial_value, dt):
     force_traj_gen = NdTrajectoryGenerator(name)
     force_traj_gen.initial_value.value = initial_value
-    force_traj_gen.trigger.value = 1.0
+    force_traj_gen.trigger.value = 1
     force_traj_gen.init(dt,6);
     return force_traj_gen ;
 
@@ -236,8 +237,8 @@ def create_foot_traj_gen(name, jointId, robot, dt):
     rot = ref_foot.rotation
     rot = rot.reshape(9)
     initial_value = np.concatenate((trans,rot))
-    foot_traj_gen.initial_value.value = tuple(initial_value)
-    foot_traj_gen.trigger.value = 1.0
+    foot_traj_gen.initial_value.value = initial_value
+    foot_traj_gen.trigger.value = 1
     foot_traj_gen.init(dt, 12)
     return foot_traj_gen 
 
@@ -249,8 +250,8 @@ def create_waist_traj_gen(name, robot, dt):
     rot = ref_waist.rotation
     rot = rot.reshape(9)
     initial_value = np.concatenate((trans,rot))
-    waist_traj_gen.initial_value.value = tuple(initial_value)
-    waist_traj_gen.trigger.value = 1.0
+    waist_traj_gen.initial_value.value = initial_value
+    waist_traj_gen.trigger.value = 1
     waist_traj_gen.init(dt);
     return waist_traj_gen;
 
@@ -322,13 +323,13 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
 def create_joint_trajectory_generator(robot, dt):
     jtg = NdTrajectoryGenerator("jtg")
     jtg.initial_value.value = robot.device.robotState.value[6:]
-    jtg.trigger.value = 1.0
+    jtg.trigger.value = 1
     jtg.init(dt, NJ)
     return jtg
 
 def create_trajectory_generator(robot, dt=0.001, robot_name="robot"):
     jtg = JointTrajectoryGenerator("jtg");
-    # jtg.base6d_encoders.value = robot.halfSitting
+    #jtg.base6d_encoders.value = np.array(robot.halfSitting)
     plug(robot.device.robotState, jtg.base6d_encoders);
     jtg.init(dt, robot_name);
     return jtg;
@@ -437,7 +438,7 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         rfootSE3_dot = MatrixHomoToSE3Vector("rfootSE3_dot")
         plug(robot.pg.dotrightfootref, rfootSE3_dot.sin)
         plug(rfootSE3_dot.sout, ctrl.rf_ref_vel)
-        ctrl.rf_ref_acc.value = 12*(0.0,)
+        ctrl.rf_ref_acc.value = np.zeros(12)
 
         lfootSE3 = MatrixHomoToSE3Vector("lfootSE3")
         plug(robot.pg.leftfootref, lfootSE3.sin)
@@ -445,7 +446,7 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         lfootSE3_dot = MatrixHomoToSE3Vector("lfootSE3_dot")
         plug(robot.pg.dotleftfootref, lfootSE3_dot.sin)
         plug(lfootSE3_dot.sout, ctrl.lf_ref_vel)
-        ctrl.lf_ref_acc.value = 12*(0.0,)
+        ctrl.lf_ref_acc.value = np.zeros(12)
 
         plug(ctrl.right_hand_pos,   robot.rh_traj_gen.initial_value);
         plug(robot.rh_traj_gen.x,   ctrl.rh_ref_pos)
@@ -467,14 +468,14 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         
         # plug(robot.pg.amref, ctrl.am_ref_L)
         # plug(robot.pg.damref, ctrl.am_ref_dL)
-        ctrl.am_ref_L.value = (0.0, 0.0, 0.0)
-        ctrl.am_ref_dL.value = (0.0, 0.0, 0.0)
+        ctrl.am_ref_L.value = np.zeros(3)
+        ctrl.am_ref_dL.value = np.zeros(3)
 
         waistSE3 = MatrixHomoToSE3Vector("waistSE3")
         plug(robot.pg.waistattitudematrixabsolute, waistSE3.sin)
         plug(waistSE3.sout, ctrl.base_orientation_ref_pos)
-        ctrl.base_orientation_ref_vel.value = 12*(0.0,)
-        ctrl.base_orientation_ref_acc.value = 12*(0.0,)
+        ctrl.base_orientation_ref_vel.value = np.zeros(12)
+        ctrl.base_orientation_ref_acc.value = np.zeros(12)
         try:
             plug(robot.pg.contactphase, ctrl.ref_phase)
         except:
@@ -527,9 +528,9 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     # it is better to compute directly their product in python and pass the result
     # to the C++ entity, because otherwise we get a loss of precision
     if not simu:
-        ctrl.rotor_inertias.value = tuple([g*g*r for (g,r) in
-                                       zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)])
-        ctrl.gear_ratios.value = NJ*(1.0,)
+        ctrl.rotor_inertias.value = np.array(([g*g*r for (g,r) in
+                                       zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)]))
+        ctrl.gear_ratios.value = np.ones(NJ)
     
     if (controlType=="velocity"):
         rfSE3 = MatrixHomoToSE3Vector("rfSE3")
@@ -542,12 +543,12 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
         plug(robot.com_admittance_control.comRef, ctrl.com_adm_ref_pos)
         plug(robot.com_admittance_control.dcomRef, ctrl.com_adm_ref_vel)
         plug(robot.com_admittance_control.ddcomRef, ctrl.com_adm_ref_acc)
-        ctrl.kp_com.value = 3*(conf.kp_com_vel,)
-        ctrl.kd_com.value = 3*(conf.kd_com_vel,)
+        ctrl.kp_com.value = np.array(3*(conf.kp_com_vel,))
+        ctrl.kd_com.value = np.array(3*(conf.kd_com_vel,))
         ctrl.w_com.value = conf.w_com_vel
     else:
-        ctrl.kp_com.value = 3*(conf.kp_com,)
-        ctrl.kd_com.value = 3*(conf.kd_com,)
+        ctrl.kp_com.value = np.array(3*(conf.kp_com,))
+        ctrl.kd_com.value = np.array(3*(conf.kd_com,))
         ctrl.w_com.value = conf.w_com
 
     ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
@@ -556,15 +557,15 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     ctrl.f_max_right_foot.value = conf.fMax
     ctrl.f_max_left_foot.value =  conf.fMax
     ctrl.mu.value = conf.mu[0]
-    ctrl.weight_contact_forces.value = (1e2, 1e2, 1e0, 1e3, 1e3, 1e3)
-    ctrl.kp_am.value = 3*(conf.kp_am,)
-    ctrl.kd_am.value = 3*(conf.kd_am,)
-    ctrl.kp_constraints.value = 6*(conf.kp_contact,)
-    ctrl.kd_constraints.value = 6*(conf.kp_contact,)
-    ctrl.kp_feet.value = 6*(conf.kp_feet,)
-    ctrl.kd_feet.value = 6*(conf.kd_feet,)
-    ctrl.kp_hands.value = 6*(conf.kp_hands,)
-    ctrl.kd_hands.value = 6*(conf.kd_hands,)
+    ctrl.weight_contact_forces.value = np.array((1e2, 1e2, 1e0, 1e3, 1e3, 1e3))
+    ctrl.kp_am.value = np.array(3*(conf.kp_am,))
+    ctrl.kd_am.value = np.array(3*(conf.kd_am,))
+    ctrl.kp_constraints.value = np.array(6*(conf.kp_contact,))
+    ctrl.kd_constraints.value = np.array(6*(conf.kd_contact,))
+    ctrl.kp_feet.value = np.array(6*(conf.kp_feet,))
+    ctrl.kd_feet.value = np.array(6*(conf.kd_feet,))
+    ctrl.kp_hands.value = np.array(6*(conf.kp_hands,))
+    ctrl.kd_hands.value = np.array(6*(conf.kd_hands,))
     ctrl.kp_posture.value = conf.kp_posture
     ctrl.kd_posture.value = conf.kd_posture
     ctrl.kp_pos.value = conf.kp_pos
@@ -572,8 +573,8 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
     ctrl.kp_tau.value = conf.kp_tau
     ctrl.kff_tau.value = conf.kff_tau
     ctrl.kff_dq.value = conf.kff_dq
-    ctrl.kp_base_orientation.value = 6*(conf.kp_waist,)
-    ctrl.kd_base_orientation.value = 6*(conf.kd_waist,)
+    ctrl.kp_base_orientation.value = np.array(6*(conf.kp_waist,))
+    ctrl.kd_base_orientation.value = np.array(6*(conf.kd_waist,))
 
     ctrl.w_am.value = conf.w_am
     ctrl.w_feet.value = conf.w_feet
@@ -621,18 +622,18 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     ctrl.f_min.value = conf.fMin
     ctrl.f_max.value = conf.fMax
     ctrl.mu.value = conf.mu[0]
-    ctrl.kp_com.value = 3*(conf.kp_com,)
-    ctrl.kd_com.value = 3*(conf.kd_com,)
-    ctrl.kp_contact.value = 6*(conf.kp_contact,)
-    ctrl.kd_contact.value = 6*(conf.kd_contact,)
+    ctrl.kp_com.value = np.array(3*(conf.kp_com,))
+    ctrl.kd_com.value = np.array(3*(conf.kd_com,))
+    ctrl.kp_contact.value = np.array(6*(conf.kp_contact,))
+    ctrl.kd_contact.value = np.array(6*(conf.kd_contact,))
 
     ctrl.kp_posture.value = conf.kp_posture
     ctrl.kd_posture.value = conf.kd_posture
     ctrl.kp_pos.value = conf.kp_pos
     ctrl.kd_pos.value = conf.kd_pos
     ctrl.kp_tau.value = conf.kp_tau
-    ctrl.kp_waist.value = 6*(conf.kp_waist,)
-    ctrl.kd_waist.value = 6*(conf.kd_waist,)
+    ctrl.kp_waist.value = np.array(6*(conf.kp_waist,))
+    ctrl.kd_waist.value = np.array(6*(conf.kd_waist,))
 
     ctrl.w_com.value = conf.w_com
     ctrl.w_forces.value = conf.w_forces
@@ -702,55 +703,60 @@ def create_pyrene_ddp_controller(robot, conf, dt):
     ddp_controller.init(dt, conf.T, conf.nb_iter, conf.stop_criteria)
     return ddp_controller
 
-def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
-    ctrl_manager = ControlManager("ctrl_man");
+def create_parameter_server(conf, dt, robot_name='robot'):
+    param_server = ParameterServer("param_server")
+    fill_parameter_server(param_server, conf, dt, robot_name)
 
-    ctrl_manager.tau_predicted.value    = NJ*(0.0,);
-    ctrl_manager.i_measured.value       = NJ*(0.0,);
-    ctrl_manager.tau_max.value          = NJ*(conf.TAU_MAX,);
-    ctrl_manager.i_max.value            = NJ*(conf.CURRENT_MAX,);
-    ctrl_manager.u_max.value            = NJ*(conf.CTRL_MAX,);
-
+def fill_parameter_server(param_server, conf, dt, robot_name='robot'):
     # Init should be called before addCtrlMode
     # because the size of state vector must be known.
-    ctrl_manager.init(dt, conf.urdfFileName, robot_name)
+    param_server.init(dt, conf.urdfFileName, robot_name)
 
     # Set the map from joint name to joint ID
     for key in conf.mapJointNameToID:
-      ctrl_manager.setNameToId(key,conf.mapJointNameToID[key])
+        param_server.setNameToId(key, conf.mapJointNameToID[key])
 
     # Set the map joint limits for each id
     for key in conf.mapJointLimits:
-      ctrl_manager.setJointLimitsFromId(key,conf.mapJointLimits[key][0], \
-                              conf.mapJointLimits[key][1])
+        param_server.setJointLimitsFromId(key, conf.mapJointLimits[key][0], conf.mapJointLimits[key][1])
 
     # Set the force limits for each id
     for key in conf.mapForceIdToForceLimits:
-      ctrl_manager.setForceLimitsFromId(key,tuple(conf.mapForceIdToForceLimits[key][0]), \
-                              tuple(conf.mapForceIdToForceLimits[key][1]))
+        param_server.setForceLimitsFromId(key, np.array(conf.mapForceIdToForceLimits[key][0]),
+                                          np.array(conf.mapForceIdToForceLimits[key][1]))
 
     # Set the force sensor id for each sensor name
     for key in conf.mapNameToForceId:
-      ctrl_manager.setForceNameToForceId(key,conf.mapNameToForceId[key])
+        param_server.setForceNameToForceId(key, conf.mapNameToForceId[key])
 
     # Set the map from the urdf joint list to the sot joint list
-    ctrl_manager.setJointsUrdfToSot(conf.urdftosot)
+    param_server.setJointsUrdfToSot(np.array(conf.urdftosot))
 
     # Set the foot frame name
     for key in conf.footFrameNames:
-      ctrl_manager.setFootFrameName(key,conf.footFrameNames[key])
-
-    # Set the hand frame name
-    for key in conf.handFrameNames:
-      ctrl_manager.setHandFrameName(key,conf.handFrameNames[key])
+        param_server.setFootFrameName(key, conf.footFrameNames[key])
 
     # Set IMU hosting joint name
-    ctrl_manager.setImuJointName(conf.ImuJointName)
+    param_server.setImuJointName(conf.ImuJointName)
 
-    ctrl_manager.setRightFootForceSensorXYZ(conf.rightFootSensorXYZ);
-    ctrl_manager.setRightFootSoleXYZ(conf.rightFootSoleXYZ);
+    param_server.setRightFootForceSensorXYZ(np.array(conf.rightFootSensorXYZ))
+    param_server.setRightFootSoleXYZ(np.array(conf.rightFootSoleXYZ))
 
-    return ctrl_manager;
+    return param_server
+
+
+def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
+    ctrl_manager = ControlManager("ctrl_man");
+
+    ctrl_manager.signal('tau_predicted').value = np.zeros(NJ);
+    ctrl_manager.signal('i_measured').value = np.zeros(NJ);
+    ctrl_manager.signal('tau_max').value = np.ones(NJ)*(conf.TAU_MAX,);
+    ctrl_manager.signal('i_max').value = np.ones(NJ)*(conf.CURRENT_MAX,);
+    ctrl_manager.signal('u_max').value = np.ones(NJ)*(conf.CTRL_MAX,);
+    # Init should be called before addCtrlMode
+    # because the size of state vector must be known.
+    ctrl_manager.init(dt, conf.urdfFileName, robot_name)
+    return ctrl_manager
 
 def connect_ctrl_manager(robot):
     # connect to device

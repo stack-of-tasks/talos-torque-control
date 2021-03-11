@@ -21,8 +21,8 @@ from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
 from dynamic_graph.tracer_real_time import TracerRealTime
 
-from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
-from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
+from dynamic_graph.sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
+from dynamic_graph.sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
 
 #from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
