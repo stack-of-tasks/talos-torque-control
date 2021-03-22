@@ -8,11 +8,14 @@ from balance_ctrl_conf import *
 # CONTROLLER GAINS
 NJ = 32
 # kp_posture  = (10., 5., 5., 1., 1., 10., 10., 5., 5., 1., 1., 10., 5000., 5000., 50., 100., 10., 10., 10., 10., 100., 50., 50., 100., 10., 10., 10., 10., 100., 50., 100., 100.)  # proportional gain of postural task
-# kp_posture  = (50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 500., 500., 50., 50., 50., 50., 50., 50., 50., 10., 50., 50., 50., 50., 50., 50., 50., 10., 100., 100.)  # proportional gain of postural task
+# kp_posture  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100., 50., 50., 50., 50., 50., 50., 50., 10., 50., 50., 50., 50., 50., 50., 50., 10., 100., 100.))  # proportional gain of postural task
 
-# kp_posture  = np.array((30., 30., 30., 10., 30., 30., 30., 30., 30., 10., 30., 30., 1500., 1500., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.)) # proportional gain of postural task
+# kp_posture  = np.array((30., 30., 30., 10., 30., 30., 30., 30., 30., 10., 30., 30., 100., 100., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.)) # proportional gain of postural task
+#kp_posture  = np.array((1500., 1000., 1000., 1000., 1000., 1000., 1500., 1000., 1000., 1000., 1000., 1000., 2000., 2000., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 1000., 1000.)) # proportional gain of postural task
 
-kp_posture  = np.array((10., 5., 5., 1., 10., 10., 10., 5., 5., 1., 10., 10., 100., 100., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.))  # proportional gain of postural task
+# kp_posture  = np.array((1500., 1000., 1000., 1000., 1000., 1000., 1500., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 1000., 1000.)) # proportional gain of postural task
+kp_posture  = np.array((1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1500., 1500., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 1000., 1000.)) # proportional gain of postural task
+# kp_posture  = np.array((10., 5., 5., 1., 10., 10., 10., 5., 5., 1., 10., 10., 100., 100., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100.))  # proportional gain of postural task
 kd_posture = np.array(2 * np.sqrt(kp_posture))
 
 kp_pos = np.array(
@@ -71,7 +74,7 @@ kp_com      = 100.0
 kd_com      = 5#2.0*sqrt(kp_com)
 kp_com_vel  = 100.0
 kd_com_vel  = 2.0*sqrt(kp_com)
-kp_waist    = 100.0
+kp_waist    = 500.0
 kd_waist    = 2.0*sqrt(kp_waist)
 kp_am       = 10
 kd_am       = 2.0*sqrt(kp_am)
@@ -79,13 +82,13 @@ kp_feet     = 100.0
 kd_feet     = 5#2.0*sqrt(kp_feet)
 
 # # CONTROLLER WEIGTHS
-w_com = 1e6
+w_com = 50
 w_com_vel  = 1e6
 w_posture = 1e-1 # weight of postural task
 w_forces = 1e-3
 w_waist = 10.0
 w_am = 2e-2
-w_feet = 1e3
+w_feet = 10
 
 # CONTACT PARAMETERS
 RIGHT_FOOT_SIZES  = np.array((0.1,  -0.11,  0.069,  -0.069)) # pos x, neg x, pos y, neg y size 

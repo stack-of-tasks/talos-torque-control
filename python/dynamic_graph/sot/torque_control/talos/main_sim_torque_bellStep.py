@@ -87,8 +87,8 @@ robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_pa
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator
-robot.inv_dyn.left_foot_pos_quat.recompute(0)
-robot.inv_dyn.right_foot_pos_quat.recompute(0)
+robot.inv_dyn.left_foot_pos_ref_quat.recompute(0)
+robot.inv_dyn.left_foot_pos_ref_quat.recompute(0)
 plug(robot.inv_dyn.left_foot_pos_ref_quat, robot.base_estimator.lf_ref_xyzquat)
 plug(robot.inv_dyn.right_foot_pos_ref_quat, robot.base_estimator.rf_ref_xyzquat)
 

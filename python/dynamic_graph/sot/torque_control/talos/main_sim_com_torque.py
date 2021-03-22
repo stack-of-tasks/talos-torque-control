@@ -64,8 +64,7 @@ robot.base_estimator.v.recompute(0)
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_simple_inverse_dyn_controller(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
-robot.inv_dyn.kp_com.value = np.array([600, 600, 600])
-robot.inv_dyn.kd_com.value = np.array([5, 5, 5])
+robot.inv_dyn.kd_com.value = np.array([20, 20, 20])
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator

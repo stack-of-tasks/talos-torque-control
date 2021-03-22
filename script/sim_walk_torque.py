@@ -66,6 +66,8 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_walk.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk_torque.pdf"])
 
+input("Wait before going to halfSitting")
+runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
 if pattern_generator:
   input("Waiting before going to halfSitting")
   runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
@@ -96,17 +98,38 @@ else:
     runCommandClient("robot.inv_dyn.kp_constraints.value = np.array(6*(100,))")
     runCommandClient("robot.inv_dyn.kd_constraints.value = np.array(6*(200,))")
   else:
-    runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
-    runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(12,))")
-    runCommandClient("robot.inv_dyn.kp_com.value = np.array((600, 600, 600))")
-    runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
+    # runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
+    # runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(12,))")
+    # runCommandClient("robot.inv_dyn.kp_com.value = np.array((600, 600, 600))")
+    # runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
+
+    runCommandClient("robot.inv_dyn.kp_feet.value = np.array((15000, 15000, 15000, 15000, 15000, 15000))")
+    runCommandClient("robot.inv_dyn.kd_feet.value = np.array((150, 150, 150, 150, 150, 150))")
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((30, 30, 1500))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((3, 3, 20))")
+  if walk_type == "isa":
+    input("Waiting before going to isa pose")
+    print("Go to isa pose")   
+    runCommandClient('init_value_com = np.loadtxt(folder + walk_type + "/com.dat", usecols=(0,1,2))[0]')
+    runCommandClient("robot.com_traj_gen.move(0,init_value_com[0],5.0)")
+    runCommandClient("robot.com_traj_gen.move(1,init_value_com[1],5.0)")
+    runCommandClient("robot.com_traj_gen.move(2,init_value_com[2],5.0)")
+    time.sleep(6.5)
+    runCommandClient("robot.phases_traj_gen.set(0,1.0) ")
 
   input("Waiting before setting trajectories")
   runCommandClient('robot.com_traj_gen.playTrajectoryFile(folder + walk_type + "/com.dat")')    
   runCommandClient('robot.phases_traj_gen.playTrajectoryFile(folder + walk_type + "/phases.dat")')
   runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
   runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
-  runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
+  if (walk_type != "isa") and (walk_type != "platforms"):
+    pass
+    # runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
+  if walk_type == "isa":
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((800, 950, 600))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((3, 2, 4))")
+    runCommandClient("robot.inv_dyn.kp_am.value = np.array(3*(2.5,))")
+
   input("Waiting before playing trajectories")
   print("Playing trajectories")
   runCommandClient("robot.traj_sync.turnOn()")
