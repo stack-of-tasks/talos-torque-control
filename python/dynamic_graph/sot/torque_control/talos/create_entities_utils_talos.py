@@ -588,6 +588,33 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot',
 
     return ctrl;
 
+def create_posture_task(robot, conf, dt, robot_name='robot'):
+    from dynamic_graph.sot.torque_control.posture_task import PostureTask
+    ctrl = PostureTask("PostureTask")
+    try:
+        plug(robot.base_estimator.q, ctrl.q)
+        plug(robot.base_estimator.v, ctrl.v)
+    except:
+        q = Mix_of_vector('selecJointConf')
+        q.setSignalNumber(2);
+        plug(robot.device.robotState, q.default)
+        q.sin1.value = robot.halfSitting
+        q.addSelec(1, 0, 6)
+        plug(q.sout, ctrl.q)
+        plug(robot.device.robotVelocity, ctrl.v)
+        
+    plug(robot.dynamic.com, ctrl.com_measured)
+
+    plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
+    plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
+    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)
+
+    ctrl.kp_posture.value = conf.kp_posture
+    ctrl.kd_posture.value = conf.kd_posture
+    ctrl.w_posture.value = conf.w_posture
+    ctrl.init(dt, robot_name)
+    return ctrl
+
 def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name='robot'):
     from dynamic_graph.sot.torque_control.simple_inverse_dyn import SimpleInverseDyn
     ctrl = SimpleInverseDyn("invDynCtrl")

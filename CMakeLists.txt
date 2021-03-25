@@ -85,6 +85,8 @@ find_package(catkin REQUIRED)
 catkin_package()
 catkin_install_python(PROGRAMS
                       script/sim_walk_torque.py
+                      script/sim_com.py
+                      script/sim_posture.py
                       script/run_test_utils.py
                       script/sim_walk_vel.py
                       script/test_ddp_sinu_effort.py
