@@ -103,6 +103,7 @@ create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos', 'LF_pos_inv_dyn', 
 create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos', 'RF_pos_inv_dyn', robot=robot, data_type='vector')
 
 create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotVelocity', 'device_rV', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'robotState', 'device_rq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'state', 'device_q', robot=robot, data_type='vector')
