@@ -52,8 +52,9 @@ robot.base_estimator.v.recompute(0)
 robot.inv_dyn = create_posture_task(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
 robot.inv_dyn.w_posture.value = 1
-robot.inv_dyn.kp_posture.value  = np.array((20000., 20000., 20000., 20000., 22000., 22000., 20000., 20000., 20000., 20000., 22000., 22000., 5000., 5000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000.)) # proportional gain of postural task
-robot.inv_dyn.kd_posture.value  = np.array((200., 200., 200., 200., 300., 300., 200., 200., 200., 200., 300., 300., 200., 200., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50, 50)) # derivative gain of postural task
+robot.inv_dyn.kp_posture.value  = np.array((3000., 3000., 3000., 3000., 5000., 5000., 3000., 3000., 3000., 3000., 5000., 5000., 3000., 3000., 2000., 2000., 2000., 2000., 100., 100., 100., 100., 2000., 2000., 2000., 2000., 100., 100., 100., 100., 100., 100.)) # proportional gain of postural task
+# robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
+robot.inv_dyn.kd_posture.value  = np.array((100., 100., 100., 100., 150., 150., 100., 100., 100., 100., 150., 150., 100., 100., 100., 100., 100., 100., 5., 5., 5., 5., 100., 100., 100., 100., 5., 5., 5., 5., 5, 5)) # derivative gain of postural task
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator
@@ -64,7 +65,7 @@ robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos.value
 
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
-effortLimit = 0.8 * robot.dynamic.model.effortLimit[6:]
+effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
 robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
 robot.ff_torque = Stack_of_vector('ff_torque')
 robot.ff_torque.sin1.value = np.zeros(6)
