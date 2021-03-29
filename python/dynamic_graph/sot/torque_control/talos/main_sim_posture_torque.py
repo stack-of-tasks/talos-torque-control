@@ -51,10 +51,9 @@ robot.base_estimator.v.recompute(0)
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_posture_task(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
-robot.inv_dyn.w_posture.value = 1
-robot.inv_dyn.kp_posture.value  = np.array((3000., 3000., 3000., 3000., 5000., 5000., 3000., 3000., 3000., 3000., 5000., 5000., 3000., 3000., 2000., 2000., 2000., 2000., 100., 100., 100., 100., 2000., 2000., 2000., 2000., 100., 100., 100., 100., 100., 100.)) # proportional gain of postural task
-# robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
-robot.inv_dyn.kd_posture.value  = np.array((100., 100., 100., 100., 150., 150., 100., 100., 100., 100., 150., 150., 100., 100., 100., 100., 100., 100., 5., 5., 5., 5., 100., 100., 100., 100., 5., 5., 5., 5., 5, 5)) # derivative gain of postural task
+robot.inv_dyn.kp_posture.value  = np.array((2000., 1000., 1000., 1000., 2000., 2000., 2000., 1000., 1000., 1000., 2000., 2000., 1500., 1500., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 1000., 1000.)) # proportional gain of postural task
+robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
+
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator

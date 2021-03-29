@@ -612,6 +612,15 @@ def create_posture_task(robot, conf, dt, robot_name='robot'):
     ctrl.kp_posture.value = conf.kp_posture
     ctrl.kd_posture.value = conf.kd_posture
     ctrl.w_posture.value = conf.w_posture
+    ctrl.kp_constraints.value = np.array(6*(conf.kp_contact,))
+    ctrl.kd_constraints.value = np.array(6*(conf.kd_contact,))
+    ctrl.w_forces.value = conf.w_forces    
+    ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
+    ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS
+    ctrl.f_min.value = conf.fMin
+    ctrl.f_max_right_foot.value = conf.fMax
+    ctrl.f_max_left_foot.value =  conf.fMax
+    ctrl.mu.value = conf.mu[0]
     ctrl.init(dt, robot_name)
     return ctrl
 
