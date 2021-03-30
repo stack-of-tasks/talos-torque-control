@@ -29,13 +29,13 @@ from dynamic_graph.sot.core.parameter_server import ParameterServer
 
 def get_default_conf():
     import dynamic_graph.sot.torque_control.talos.balance_ctrl_sim_conf as balance_ctrl_conf
-    import dynamic_graph.sot.torque_control.talos.base_estimator_conf as base_estimator_conf
+    import dynamic_graph.sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
     import dynamic_graph.sot.torque_control.talos.control_manager_conf as control_manager_conf
     import dynamic_graph.sot.torque_control.talos.current_controller_conf as current_controller_conf
     import dynamic_graph.sot.torque_control.talos.force_torque_estimator_conf as force_torque_estimator_conf
     import dynamic_graph.sot.torque_control.talos.joint_torque_controller_conf as joint_torque_controller_conf
     import dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains as pos_ctrl_gains
-    import dynamic_graph.sot.torque_control.talos.motors_parameters as motor_params
+    import dynamic_graph.sot_talos_balance.motor_parameters as motor_params
     import dynamic_graph.sot.torque_control.talos.ddp_controller_conf as ddp_controller_conf
     conf = Bunch()
     conf.balance_ctrl              = balance_ctrl_conf

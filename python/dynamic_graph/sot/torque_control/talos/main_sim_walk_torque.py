@@ -4,7 +4,7 @@ import pinocchio as pin
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf 
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf, get_default_conf 
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_filters, create_encoders, create_am_traj_gen
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller
@@ -21,11 +21,13 @@ import dynamic_graph.sot_talos_balance.talos.control_manager_conf as cm_conf
 from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector, MatrixToRPY
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
-conf = get_sim_conf()
+#conf = get_sim_conf()
+conf = get_default_conf()
 dt = robot.timeStep
 robot.device.setControlInputType('noInteg') # No integration for torque control
 # robot.device.resize(102)
-cm_conf.CTRL_MAX = 1e6 # temporary hack
+# cm_conf.CTRL_MAX = 1e6 # temporary hack
+
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 # TMP: overwrite halfSitting configuration to use SoT joint order
 q = [0., 0., 1.018213, 0., 0., 0.] # Free flyer
@@ -130,6 +132,8 @@ robot.pos_ctrl = posCtrl
 
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
+effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
+robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
 # robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
 # plug(robot.device.currents, robot.ctrl_manager.signal('i_measured'))
 # plug(robot.device.ptorque, robot.ctrl_manager.signal('tau'))

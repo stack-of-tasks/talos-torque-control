@@ -13,11 +13,11 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 import dynamic_graph.sot_talos_balance.talos.control_manager_conf as cm_conf
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
-conf = get_sim_conf()
-#conf = get_default_conf()
+#conf = get_sim_conf()
+conf = get_default_conf()
 dt = robot.timeStep
 robot.device.setControlInputType('noInteg') # No integration for torque control
-cm_conf.CTRL_MAX = 1e6 # temporary hack
+# cm_conf.CTRL_MAX = 1e6 # temporary hack
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 # TMP: overwrite halfSitting configuration to use SoT joint order
@@ -74,20 +74,22 @@ robot.base_estimator.lf_ref_xyzquat.value = robot.inv_dyn.left_foot_pos.value
 robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos.value
 
 # --- High gains position controller
-from dynamic_graph.sot.torque_control.position_controller import PositionController
-posCtrl = PositionController('pos_ctrl')
-posCtrl.Kp.value = np.array(conf.pos_ctrl_gains.kp_pos[round(dt,3)]);
-posCtrl.Kd.value = np.array(conf.pos_ctrl_gains.kd_pos[round(dt,3)]);
-posCtrl.Ki.value = np.array(conf.pos_ctrl_gains.ki_pos[round(dt,3)]);
-plug(robot.device.robotState, posCtrl.base6d_encoders);
-plug(robot.device_filters.vel_filter.x_filtered, posCtrl.jointsVelocities);
-plug(robot.traj_gen.q, posCtrl.qRef);
-plug(robot.traj_gen.dq, posCtrl.dqRef);
-posCtrl.init(dt, "robot");
-robot.pos_ctrl = posCtrl
+# from dynamic_graph.sot.torque_control.position_controller import PositionController
+# posCtrl = PositionController('pos_ctrl')
+# posCtrl.Kp.value = np.array(conf.pos_ctrl_gains.kp_pos[round(dt,3)]);
+# posCtrl.Kd.value = np.array(conf.pos_ctrl_gains.kd_pos[round(dt,3)]);
+# posCtrl.Ki.value = np.array(conf.pos_ctrl_gains.ki_pos[round(dt,3)]);
+# plug(robot.device.robotState, posCtrl.base6d_encoders);
+# plug(robot.device_filters.vel_filter.x_filtered, posCtrl.jointsVelocities);
+# plug(robot.traj_gen.q, posCtrl.qRef);
+# plug(robot.traj_gen.dq, posCtrl.dqRef);
+# posCtrl.init(dt, "robot");
+# robot.pos_ctrl = posCtrl
 
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
+effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
+robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
 # robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
 # plug(robot.device.currents, robot.ctrl_manager.i_measured)
 # plug(robot.device.ptorque, robot.ctrl_manager.tau)
@@ -100,18 +102,18 @@ robot.ff_torque.selec2(0, 32)
 
 robot.ctrl_manager.addCtrlMode("torque")
 # plug(robot.inv_dyn.u, robot.ctrl_manager.ctrl_torque)
-robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
-robot.ff_pos = Stack_of_vector('ff_pos')
-robot.ff_pos.sin1.value = np.zeros(6)
-plug(robot.pos_ctrl.pwmDes, robot.ff_pos.sin2)
-robot.ff_pos.selec1(0, 6)
-robot.ff_pos.selec2(0, 32)
+# robot.ff_pos = Stack_of_vector('ff_pos')
+# robot.ff_pos.sin1.value = np.zeros(6)
+# plug(robot.pos_ctrl.pwmDes, robot.ff_pos.sin2)
+# robot.ff_pos.selec1(0, 6)
+# robot.ff_pos.selec2(0, 32)
 
-robot.ctrl_manager.addCtrlMode("pos")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
-plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
+# robot.ctrl_manager.addCtrlMode("pos")
+# robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
+# plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
 
 robot.ctrl_manager.addCtrlMode("base")
 robot.ctrl_manager.setCtrlMode("freeflyer", "base")

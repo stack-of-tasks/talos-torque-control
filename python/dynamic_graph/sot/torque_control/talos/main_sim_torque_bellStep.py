@@ -3,7 +3,7 @@ from dynamic_graph import plug
 from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
 from dynamic_graph.sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories, create_force_traj_gen
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf 
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_sim_conf, get_default_conf
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_filters, create_encoders, create_am_traj_gen, create_foot_traj_gen
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller
@@ -16,7 +16,8 @@ from dynamic_graph.sot_talos_balance.delay import DelayVector
 from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
-conf = get_sim_conf()
+#conf = get_sim_conf()
+conf = get_default_conf()
 dt = robot.timeStep
 robot.device.setControlInputType('noInteg') # No integration for torque control
 
@@ -26,8 +27,8 @@ q = [0., 0., 1.018213, 0., 0., 0.] # Free flyer
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.006761] # Chest
-q += [0.25847, 0.173046, -0.0002, -0.525366, 0.0, -0.0, 0.1, -0.005] # arms
-q += [-0.25847, -0.173046, 0.0002, -0.525366, 0.0, 0.0, 0.1, -0.005] # arms
+q += [0., 0.5, -0.0002, -1.525366, 0.0, -0.0, 0.1, -0.005] # arms
+q += [-0., -0.5, 0.0002, -1.525366, 0.0, 0.0, 0.1, -0.005] # arms
 q += [0., 0.] # Head
 
 robot.halfSitting = q
@@ -107,7 +108,9 @@ robot.pos_ctrl = posCtrl
 
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(conf.control_manager, dt, robot_name='robot')
-robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
+effortLimit = 0.8 * robot.dynamic.model.effortLimit[6:]
+robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
+#robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
 # plug(robot.device.currents, robot.ctrl_manager.i_measured)
 # plug(robot.device.ptorque, robot.ctrl_manager.tau)
 

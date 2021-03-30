@@ -105,8 +105,8 @@ else:
 
     runCommandClient("robot.inv_dyn.kp_feet.value = np.array((15000, 15000, 15000, 15000, 15000, 15000))")
     runCommandClient("robot.inv_dyn.kd_feet.value = np.array((150, 150, 150, 150, 150, 150))")
-    runCommandClient("robot.inv_dyn.kp_com.value = np.array((30, 30, 1500))")
-    runCommandClient("robot.inv_dyn.kd_com.value = np.array((3, 3, 20))")
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((50, 50, 600))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((30, 30, 20))")
   if walk_type == "isa":
     input("Waiting before going to isa pose")
     print("Go to isa pose")   
@@ -123,8 +123,7 @@ else:
   runCommandClient('robot.rf_traj_gen.playTrajectoryFile(folder + walk_type + "/rightFoot.dat")')
   runCommandClient('robot.lf_traj_gen.playTrajectoryFile(folder + walk_type + "/leftFoot.dat")')
   if (walk_type != "isa") and (walk_type != "platforms"):
-    pass
-    # runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
+    runCommandClient('robot.am_traj_gen.playTrajectoryFile(folder + walk_type + "/am.dat")')
   if walk_type == "isa":
     runCommandClient("robot.inv_dyn.kp_com.value = np.array((800, 950, 600))")
     runCommandClient("robot.inv_dyn.kd_com.value = np.array((3, 2, 4))")
