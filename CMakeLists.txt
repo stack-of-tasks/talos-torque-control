@@ -40,6 +40,7 @@ ENDIF(INITIALIZE_WITH_NAN)
 
 # Project dependencies
 ADD_PROJECT_DEPENDENCY(sot-torque-control REQUIRED PKG_CONFIG_REQUIRES sot-torque-control)
+ADD_PROJECT_DEPENDENCY(dynamic_graph_bridge_msgs REQUIRED)
 
 IF(BUILD_PYTHON_INTERFACE)
   FINDPYTHON()
@@ -87,6 +88,7 @@ catkin_install_python(PROGRAMS
                       script/sim_walk_torque.py
                       script/sim_com.py
                       script/sim_posture.py
+                      script/sim_sinusoid_elbow.py
                       script/run_test_utils.py
                       script/sim_walk_vel.py
                       script/test_ddp_sinu_effort.py

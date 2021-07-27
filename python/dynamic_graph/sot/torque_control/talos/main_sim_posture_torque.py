@@ -110,6 +110,21 @@ create_topic(robot.publisher, robot.device, 'state', 'device_q', robot=robot, da
 create_topic(robot.publisher, robot.device, 'velocity', 'device_v', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.device_filters.vel_filter, 'x_filtered', 'v_filt', robot=robot, data_type='vector')
 
+create_topic(robot.publisher, robot.inv_dyn, 'energy', 'energy', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_derivative', 'energy_derivative', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_tank', 'energy_tank', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'denergy_tank', 'denergy_tank', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_bound', 'energy_bound', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_bound', 'task_energy_bound', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_alpha', 'task_energy_alpha', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_beta', 'task_energy_beta', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_gamma', 'task_energy_gamma', robot=robot, data_type='double')
+
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.traj_gen, 'q', 'q_ref', robot=robot, data_type='vector')
+
 # # --- TRACER
 # robot.tracer = TracerRealTime("tau_tracer")
 # robot.tracer.setBufferSize(80*(2**20))

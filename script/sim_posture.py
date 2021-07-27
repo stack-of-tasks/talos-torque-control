@@ -26,11 +26,11 @@ proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_posture.dot", "-o
 
 input("Waiting before moving elbow")
 print("Go to sinusoid pose")
-runCommandClient("robot.traj_gen.moveJoint('re', -1.2, 1.5)") 
+runCommandClient("robot.traj_gen.moveJoint('re', -1.2, 5)") 
 
 input("Waiting before starting sinusoid move")
 print("Start Sinusoid move")
-runCommandClient("robot.traj_gen.startSinusoid('re', -1.9, 1.5)") 
+runCommandClient("robot.traj_gen.startSinusoid('re', -1.5, 5)") 
 
 input("Waiting before stopping sinusoid move")
 print("Stop Sinusoid move")

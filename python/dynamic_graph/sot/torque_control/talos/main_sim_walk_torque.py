@@ -34,8 +34,10 @@ q = [0., 0., 1.018213, 0., 0., 0.] # Free flyer
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.0, -0.411354, 0.859395, -0.448041, -0.001708] # legs
 q += [0.0, 0.006761] # Chest
-q += [0., 0.5, -0.0002, -1.525366, 0.0, -0.0, 0.1, -0.005] # arms
-q += [-0., -0.5, 0.0002, -1.525366, 0.0, 0.0, 0.1, -0.005] # arms
+# q += [0.35, 0.173046, -0.0002, -0.8, 0.0, -0.0, 0.1, -0.005] # arms
+# q += [-0.35, -0.173046, 0.0002, -1., 0.0, 0.0, 0.1, -0.005] # arms
+q += [0.25847, 0.173046, -0.0002, -0.525366, 0.0, -0.0, 0.1, -0.005] # arms
+q += [-0.25847, -0.173046, 0.0002, -0.525366, 0.0, 0.0, 0.1, -0.005] # arms
 q += [0., 0.] # Head
 
 robot.halfSitting = q
@@ -110,6 +112,10 @@ robot.base_estimator.v.recompute(0)
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque")
 robot.inv_dyn.active_joints.value = np.ones(32)
+robot.inv_dyn.kp_com = np.array((20, 20, 1500))
+robot.inv_dyn.kd_com = np.array((5, 5, 20))
+robot.inv_dyn.ref_pos_final.value = np.array(robot.halfSitting) #final_pose
+plug(robot.device_filters.torque_filter.x_filtered, robot.inv_dyn.tau_measured)
 
 # --- Reference position of the feet for base estimator
 robot.inv_dyn.left_foot_pos_ref_quat.recompute(0)
@@ -193,8 +199,16 @@ robot.odom.selec(0,6);
 robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.odom, 'sout', 'base_odom', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'com', 'inv_dyn_com', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
-create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'energy', 'energy', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_derivative', 'energy_derivative', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_tank', 'energy_tank', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'denergy_tank', 'denergy_tank', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'energy_bound', 'energy_bound', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_const', 'task_energy_const', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_bound', 'task_energy_bound', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_alpha', 'task_energy_alpha', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_beta', 'task_energy_beta', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_gamma', 'task_energy_gamma', robot=robot, data_type='double')
 # create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
 # create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
@@ -219,7 +233,17 @@ create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot
 # create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
 # create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
+# create_topic(robot.publisher, robot.inv_dyn, 'zmp_des', 'zmp_des', robot=robot, data_type='vector')  # estimated DCM
 create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated DCM
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')
+create_topic(robot.publisher, robot.device_filters.ft_LH_filter, 'x_filtered', 'ft_LH', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.traj_gen, 'q', 'q_ref', robot=robot, data_type='vector')
+
+
