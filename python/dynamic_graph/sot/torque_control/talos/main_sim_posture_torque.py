@@ -73,9 +73,15 @@ robot.ff_torque.selec1(0, 6)
 robot.ff_torque.selec2(0, 32) 
 
 robot.ctrl_manager.addCtrlMode("torque")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+robot.ctrl_manager.setCtrlMode("lsy-lsr-lay-le", "torque")
+# robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
+robot.ctrl_manager.addCtrlMode("pos")
+robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "pos")
+joint_ctrl = np.zeros(38)
+joint_ctrl = robot.device.robotState.value
+robot.ctrl_manager.signal('ctrl_pos').value = joint_ctrl
 
 robot.ctrl_manager.addCtrlMode("base")
 robot.ctrl_manager.setCtrlMode("freeflyer", "base")
@@ -123,7 +129,12 @@ create_topic(robot.publisher, robot.inv_dyn, 'task_energy_gamma', 'task_energy_g
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')
-create_topic(robot.publisher, robot.traj_gen, 'q', 'q_ref', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.traj_gen, 'q', 'q_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.traj_gen, 'dq', 'dq_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.traj_gen, 'ddq', 'ddq_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
+create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.ctrl_manager, 'u_safe', 'u_safe', robot=robot, data_type='vector')
 
 # # --- TRACER
 # robot.tracer = TracerRealTime("tau_tracer")
