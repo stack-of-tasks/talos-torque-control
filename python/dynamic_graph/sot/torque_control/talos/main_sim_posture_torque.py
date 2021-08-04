@@ -4,7 +4,7 @@ from dynamic_graph.sot.core.operator import Selec_of_vector, Substract_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_trajectory_switch, connect_synchronous_trajectories
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import NJ, create_rospublish, create_topic, get_default_conf, get_sim_conf, create_encoders_velocity
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_waist_traj_gen, create_trajectory_generator, create_com_traj_gen, create_encoders
-from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_posture_task
+from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_posture_task, create_waist_traj_gen
 from dynamic_graph.sot_talos_balance.create_entities_utils import fill_parameter_server, create_ctrl_manager
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position, go_to_position_sinusoid
@@ -39,6 +39,10 @@ robot.encoders_velocity = create_encoders_velocity(robot)
 robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
+# --- Base orientation (SE3 on the waist) trajectory
+robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
+robot.waist_traj_gen.x.recompute(0)
+
 # --- Base Estimator
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
@@ -51,9 +55,9 @@ robot.base_estimator.v.recompute(0)
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_posture_task(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
-robot.inv_dyn.kp_posture.value  = np.array((2000., 1000., 1000., 1000., 2000., 2000., 2000., 1000., 1000., 1000., 2000., 2000., 1500., 1500., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 1000., 1000.)) # proportional gain of postural task
+robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 200., 200., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
 robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
-
+robot.inv_dyn.w_posture.value = 10.0
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator
@@ -65,6 +69,8 @@ robot.base_estimator.rf_ref_xyzquat.value = robot.inv_dyn.right_foot_pos.value
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
 effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
+effortLimit[0] = 0.6*effortLimit[0]
+effortLimit[6] = 0.6*effortLimit[6]
 robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
 robot.ff_torque = Stack_of_vector('ff_torque')
 robot.ff_torque.sin1.value = np.zeros(6)
@@ -73,12 +79,12 @@ robot.ff_torque.selec1(0, 6)
 robot.ff_torque.selec2(0, 32) 
 
 robot.ctrl_manager.addCtrlMode("torque")
-robot.ctrl_manager.setCtrlMode("lsy-lsr-lay-le", "torque")
-# robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+#robot.ctrl_manager.setCtrlMode("lsy-lsr-lay-le", "torque")
+robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
 robot.ctrl_manager.addCtrlMode("pos")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "pos")
+robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
 joint_ctrl = np.zeros(38)
 joint_ctrl = robot.device.robotState.value
 robot.ctrl_manager.signal('ctrl_pos').value = joint_ctrl
@@ -135,6 +141,8 @@ create_topic(robot.publisher, robot.traj_gen, 'ddq', 'ddq_traj_gen', robot=robot
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.ctrl_manager, 'u_safe', 'u_safe', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'forceRARM', 'forceRARM', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'forceLARM', 'forceLARM', robot = robot, data_type='vector')
 
 # # --- TRACER
 # robot.tracer = TracerRealTime("tau_tracer")

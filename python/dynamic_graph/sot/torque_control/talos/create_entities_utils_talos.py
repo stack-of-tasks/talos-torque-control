@@ -607,8 +607,14 @@ def create_posture_task(robot, conf, dt, robot_name='robot'):
 
     plug(robot.traj_gen.q,                        ctrl.posture_ref_pos)
     plug(robot.traj_gen.dq,                       ctrl.posture_ref_vel)
-    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)
+    plug(robot.traj_gen.ddq,                      ctrl.posture_ref_acc)    
+    plug(robot.waist_traj_gen.x,                  ctrl.base_orientation_ref_pos)
+    plug(robot.waist_traj_gen.dx,                 ctrl.base_orientation_ref_vel)
+    plug(robot.waist_traj_gen.ddx,                ctrl.base_orientation_ref_acc)
 
+    ctrl.kp_base_orientation.value = np.array(6*(conf.kp_waist,))
+    ctrl.kd_base_orientation.value = np.array(6*(conf.kd_waist,))
+    ctrl.w_base_orientation.value = conf.w_waist
     ctrl.kp_posture.value = conf.kp_posture
     ctrl.kd_posture.value = conf.kd_posture
     ctrl.w_posture.value = conf.w_posture

@@ -33,7 +33,7 @@ runCommandClient("robot.traj_gen.moveJoint('le',-1.2,5.0)")
 
 input("Waiting before starting sinusoid")
 print("Start sinusoid")
-runCommandClient("robot.traj_gen.startSinusoid('le',-1.5,2.0)")
+runCommandClient("robot.traj_gen.startSinusoid('le',-1.6,3.0)")
 
 input("Waiting before stopping sinusoid")
 print("Stop Sinusoid")
@@ -41,4 +41,22 @@ runCommandClient("robot.traj_gen.stop('le')")
 time.sleep(5.0)
 print("Putting the robot back...")
 runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
+
+input("Waiting before going to sinusoid pose")
+print("Go to sinusoid pose")
+runCommandClient("robot.com_traj_gen.move(1,-0.06, 3.0)")
+
+input("Waiting before starting sinusoid")
+print("Start sinusoid")
+runCommandClient("robot.com_traj_gen.startSinusoid(1,0.06,3.0)")
+
+input("Waiting before stopping sinusoid")
+print("Stop Sinusoid")
+runCommandClient("robot.com_traj_gen.stop(1)")
+time.sleep(1.0)
+print("Putting the robot back...")
+runCommandClient('robot.com_traj_gen.move(1,0.0,1.0)')
+time.sleep(1.0)
+print("The robot is back in position!")
+
 

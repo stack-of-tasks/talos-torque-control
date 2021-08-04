@@ -112,8 +112,8 @@ robot.base_estimator.v.recompute(0)
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque")
 robot.inv_dyn.active_joints.value = np.ones(32)
-robot.inv_dyn.kp_com = np.array((20, 20, 1500))
-robot.inv_dyn.kd_com = np.array((5, 5, 20))
+robot.inv_dyn.kp_com = np.array((20, 20, 50))
+robot.inv_dyn.kd_com = np.array((5, 5, 5))
 robot.inv_dyn.ref_pos_final.value = np.array(robot.halfSitting) #final_pose
 plug(robot.device_filters.torque_filter.x_filtered, robot.inv_dyn.tau_measured)
 
@@ -139,6 +139,8 @@ robot.pos_ctrl = posCtrl
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
 effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
+effortLimit[0] = 0.6*effortLimit[0]
+effortLimit[6] = 0.6*effortLimit[6]
 robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
 # robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
 # plug(robot.device.currents, robot.ctrl_manager.signal('i_measured'))
@@ -151,18 +153,22 @@ robot.ff_torque.selec1(0, 6)
 robot.ff_torque.selec2(0, 32)
 
 robot.ctrl_manager.addCtrlMode("torque")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
-robot.ff_pos = Stack_of_vector('ff_pos')
-robot.ff_pos.sin1.value = np.zeros(6)
-plug(robot.pos_ctrl.pwmDes, robot.ff_pos.sin2)
-robot.ff_pos.selec1(0, 6)
-robot.ff_pos.selec2(0, 32)
+# robot.ff_pos = Stack_of_vector('ff_pos')
+# robot.ff_pos.sin1.value = np.zeros(6)
+# plug(robot.pos_ctrl.pwmDes, robot.ff_pos.sin2)
+# robot.ff_pos.selec1(0, 6)
+# robot.ff_pos.selec2(0, 32)
+
+joint_ctrl = np.zeros(38)
+joint_ctrl = robot.device.robotState.value
 
 robot.ctrl_manager.addCtrlMode("pos")
 robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
-plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
+robot.ctrl_manager.signal('ctrl_pos').value = joint_ctrl
+# plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
 
 robot.ctrl_manager.addCtrlMode("base")
 robot.ctrl_manager.setCtrlMode("freeflyer", "base")
@@ -238,8 +244,8 @@ create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, da
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
+# create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
+# create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')
