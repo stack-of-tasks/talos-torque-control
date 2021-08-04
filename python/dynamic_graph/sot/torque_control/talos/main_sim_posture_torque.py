@@ -143,7 +143,7 @@ create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = ro
 create_topic(robot.publisher, robot.ctrl_manager, 'u_safe', 'u_safe', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'forceRARM', 'forceRARM', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'forceLARM', 'forceLARM', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'base_orientation', 'base_orientation', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'base_orientation', 'base_orientation_error', robot = robot, data_type='double')
 create_topic(robot.publisher, robot.waist_traj_gen, 'x', 'ref_base_orientation', robot = robot, data_type='vector')
 
 # # --- TRACER
