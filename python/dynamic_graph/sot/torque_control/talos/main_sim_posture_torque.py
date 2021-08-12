@@ -40,8 +40,12 @@ robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
 # --- Base orientation (SE3 on the waist) trajectory
-robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
-robot.waist_traj_gen.x.recompute(0)
+# robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
+# robot.waist_traj_gen.x.recompute(0)
+
+# --- CoM trajectory
+robot.com_traj_gen = create_com_traj_gen(robot, dt)
+robot.com_traj_gen.x.recompute(0)
 
 # --- Base Estimator
 robot.device_filters = create_device_filters(robot, dt)
@@ -57,7 +61,10 @@ robot.inv_dyn = create_posture_task(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
 robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 200., 200., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
 robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
-robot.inv_dyn.w_posture.value = 10.0
+robot.inv_dyn.w_posture.value = 0.1
+robot.inv_dyn.kp_com.value  = np.array([50, 50, 50])
+robot.inv_dyn.kd_com.value  = np.array([5, 5, 5])
+robot.inv_dyn.w_com.value = 100.0
 robot.inv_dyn.active_joints.value = np.ones(32)
 
 # --- Reference position of the feet for base estimator
@@ -80,18 +87,21 @@ robot.ff_torque.selec2(0, 32)
 
 robot.ctrl_manager.addCtrlMode("torque")
 #robot.ctrl_manager.setCtrlMode("lsy-lsr-lay-le", "torque")
-robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
 robot.ctrl_manager.addCtrlMode("pos")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
+robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos", "position")
 joint_ctrl = np.zeros(38)
 joint_ctrl = robot.device.robotState.value
+joint_ctrl[27] = -0.01
+joint_ctrl[35] = -0.01
 robot.ctrl_manager.signal('ctrl_pos').value = joint_ctrl
 
 robot.ctrl_manager.addCtrlMode("base")
-robot.ctrl_manager.setCtrlMode("freeflyer", "base")
+robot.ctrl_manager.setCtrlMode("freeflyer", "base", "freeflyer")
 plug(robot.inv_dyn.q_des, robot.ctrl_manager.signal('ctrl_base'))
+plug(robot.inv_dyn.q_des, robot.ctrl_manager.signal('q_predicted'))
 
 plug(robot.ctrl_manager.signal('u_safe'), robot.device.control)
 
@@ -143,9 +153,9 @@ create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = ro
 create_topic(robot.publisher, robot.ctrl_manager, 'u_safe', 'u_safe', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'forceRARM', 'forceRARM', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'forceLARM', 'forceLARM', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'base_orientation', 'base_orientation_error', robot = robot, data_type='double')
-create_topic(robot.publisher, robot.waist_traj_gen, 'x', 'ref_base_orientation', robot = robot, data_type='vector')
-
+# create_topic(robot.publisher, robot.inv_dyn, 'base_orientation', 'base_orientation_error', robot = robot, data_type='double')
+# create_topic(robot.publisher, robot.waist_traj_gen, 'x', 'ref_base_orientation', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.com_traj_gen, 'x', 'ref_com', robot = robot, data_type='vector')
 # # --- TRACER
 # robot.tracer = TracerRealTime("tau_tracer")
 # robot.tracer.setBufferSize(80*(2**20))
