@@ -61,3 +61,5 @@ Instructions for running a simulation or an experiment using the DDP on the righ
 Instructions for running a simulation of Pyrene executing a foot sinusoid in the air in torque control can be found <a href="md_doc_bellStepRun.html">here</a>.
 
 Instructions for running a simulation of Pyrene walking in torque control can be found <a href="md_doc_walkRun.html">here</a>.
+
+Instructions for running a simulation of Pyrene realizing a contact-force task in torque control with passivity can be found <a href="md_doc_forceEnergy.html">here</a>.
