@@ -89,6 +89,7 @@ catkin_install_python(PROGRAMS
                       script/sim_com.py
                       script/sim_posture.py
                       script/sim_sinusoid_elbow.py
+                      script/sim_wrist_force.py
                       script/run_test_utils.py
                       script/sim_walk_vel.py
                       script/test_ddp_sinu_effort.py
@@ -99,9 +100,10 @@ catkin_install_python(PROGRAMS
                       python/dynamic_graph/sot/torque_control/talos/main_sim_walk_torque_online.py
                       python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel.py
                       python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel_online.py
+                      python/start_talos_block_gazebo.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-FOREACH(dir python traj_multicontact_api)
+FOREACH(dir python launch worlds)
   INSTALL(DIRECTORY ${dir}
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 ENDFOREACH(dir)

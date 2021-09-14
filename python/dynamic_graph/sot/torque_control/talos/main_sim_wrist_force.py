@@ -9,7 +9,7 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import c
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_filters, create_encoders, create_am_traj_gen
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import create_balance_controller, create_simple_inverse_dyn_controller
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import addTrace, dump_tracer, create_encoders_velocity
-from dynamic_graph.sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator
+from dynamic_graph.sot_talos_balance.create_entities_utils import create_device_filters, create_imu_filters, create_base_estimator, create_ft_wrist_calibrator
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.core.operator import Component_of_vector, Stack_of_vector, Selec_of_vector
@@ -19,14 +19,19 @@ from dynamic_graph.sot_talos_balance.create_entities_utils import fill_parameter
 import dynamic_graph.sot_talos_balance.talos.parameter_server_conf as param_server_conf
 import dynamic_graph.sot_talos_balance.talos.control_manager_conf as cm_conf
 from dynamic_graph.sot.core.math_small_entities import Derivator_of_Vector, MatrixToRPY
+import dynamic_graph.sot_talos_balance.talos.ft_wrist_calibration_conf as forceConf
+from dynamic_graph.sot_talos_balance.euler_to_quat import EulerToQuat
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 #conf = get_sim_conf()
 conf = get_default_conf()
 dt = robot.timeStep
 robot.device.setControlInputType('noInteg') # No integration for torque control
-# robot.device.resize(102)
-# cm_conf.CTRL_MAX = 1e6 # temporary hack
+device = 'simu'
+endEffector = 'rightWrist'
+endEffectorWeight = forceConf.handWeight[device]
+rightOC = np.array(forceConf.rightLeverArm)
+leftOC = np.array(forceConf.leftLeverArm)
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 # TMP: overwrite halfSitting configuration to use SoT joint order
@@ -45,7 +50,6 @@ robot.halfSitting = q
 # --- CREATE ENTITIES ----------------------------------------------------------
 
 fill_parameter_server(robot.param_server,param_server_conf, dt)
-# robot.ctrl_manager = create_ctrl_manager(conf.control_manager, conf.motor_params, dt)
 robot.encoders = create_encoders(robot)
 robot.encoders_velocity = create_encoders_velocity(robot)
 
@@ -54,8 +58,7 @@ robot.traj_gen = create_trajectory_generator(robot, dt)
 robot.traj_gen.q.recompute(0)
 
 # --- CoM trajectory
-init_value_com = np.loadtxt(folder + walk_type + "/com.dat", usecols=(0,1,2))[0]
-robot.com_traj_gen = create_com_traj_gen(robot, dt, init_value_com)
+robot.com_traj_gen = create_com_traj_gen(robot, dt)
 robot.com_traj_gen.x.recompute(0)
 
 # --- Base orientation (SE3 on the waist) trajectory
@@ -63,8 +66,7 @@ robot.waist_traj_gen = create_waist_traj_gen("tg_waist_ref", robot, dt)
 robot.waist_traj_gen.x.recompute(0)
 
 # --- Angular momentum trajectory
-init_value_am = np.loadtxt(folder + walk_type + "/am.dat", usecols=(0,1,2))[0]
-robot.am_traj_gen = create_am_traj_gen(robot, dt, init_value_am)
+robot.am_traj_gen = create_am_traj_gen(robot, dt)
 robot.am_traj_gen.x.recompute(0)
 
 # --- Contact phases trajectories
@@ -94,10 +96,15 @@ robot.lh_traj_gen = SE3TrajectoryGenerator("tg_lh")
 robot.rh_traj_gen.init(dt)
 robot.lh_traj_gen.init(dt)
 
+# --- Force hand trajectory
+robot.force_hand_traj_gen = NdTrajectoryGenerator("tg_force_hand")
+robot.force_hand_traj_gen.initial_value.value = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+robot.force_hand_traj_gen.init(dt, 6)
+
 # --- Switch which synchronizes trajectories
 robot.traj_sync = create_trajectory_switch()
 trajs = [robot.com_traj_gen, robot.waist_traj_gen, robot.am_traj_gen, robot.phases_traj_gen]
-trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen]
+trajs += [robot.rf_traj_gen, robot.lf_traj_gen, robot.rh_traj_gen, robot.lh_traj_gen, robot.force_hand_traj_gen]
 connect_synchronous_trajectories(robot.traj_sync, trajs)
 
 # --- Base Estimator
@@ -109,12 +116,27 @@ plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velo
 robot.base_estimator.q.recompute(0)
 robot.base_estimator.v.recompute(0)
 
+# Get configuration vector
+robot.e2q = EulerToQuat("e2q")
+plug(robot.base_estimator.q, robot.e2q.euler)
+
+robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC)
+
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque")
 robot.inv_dyn.active_joints.value = np.ones(32)
-robot.inv_dyn.kp_com = np.array((20, 20, 50))
-robot.inv_dyn.kd_com = np.array((5, 5, 5))
-robot.inv_dyn.ref_pos_final.value = np.array(robot.halfSitting) #final_pose
+robot.inv_dyn.kp_com.value = np.array((100, 100, 100))
+robot.inv_dyn.kd_com.value = np.array((5, 5, 5))
+robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 500., 500., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
+robot.inv_dyn.kd_posture.value = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
+robot.inv_dyn.kp_hands.value  = np.array([10.0, 10.0, 10.0, 1.0, 1.0, 1.0])
+robot.inv_dyn.kd_hands.value = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+robot.inv_dyn.w_hands.value = 10
+
+plug(robot.forceCalibrator.leftWristForceOut, robot.inv_dyn.f_ext_left_arm)
+plug(robot.device_filters.ft_LH_filter.dx, robot.inv_dyn.df_ext_left_arm)
+plug(robot.force_hand_traj_gen.x, robot.inv_dyn.f_ref_left_arm)
+plug(robot.force_hand_traj_gen.dx, robot.inv_dyn.df_ref_left_arm)
 plug(robot.device_filters.torque_filter.x_filtered, robot.inv_dyn.tau_measured)
 
 # --- Reference position of the feet for base estimator
@@ -123,28 +145,12 @@ robot.inv_dyn.right_foot_pos_ref_quat.recompute(0)
 plug(robot.inv_dyn.left_foot_pos_ref_quat, robot.base_estimator.lf_ref_xyzquat)
 plug(robot.inv_dyn.right_foot_pos_ref_quat, robot.base_estimator.rf_ref_xyzquat)
 
-# --- High gains position controller
-from dynamic_graph.sot.torque_control.position_controller import PositionController
-posCtrl = PositionController('pos_ctrl')
-posCtrl.Kp.value = np.array(conf.pos_ctrl_gains.kp_pos[round(dt,3)]);
-posCtrl.Kd.value = np.array(conf.pos_ctrl_gains.kd_pos[round(dt,3)]);
-posCtrl.Ki.value = np.array(conf.pos_ctrl_gains.ki_pos[round(dt,3)]);
-plug(robot.device.robotState, posCtrl.base6d_encoders);
-plug(robot.device_filters.vel_filter.x_filtered, posCtrl.jointsVelocities);
-plug(robot.traj_gen.q, posCtrl.qRef);
-plug(robot.traj_gen.dq, posCtrl.dqRef);
-posCtrl.init(dt, "robot");
-robot.pos_ctrl = posCtrl
-
 # --- Connect control manager
 robot.ctrl_manager = create_ctrl_manager(cm_conf, dt, robot_name='robot')
-effortLimit = 0.9 * robot.dynamic.model.effortLimit[6:]
-effortLimit[0] = 0.6*effortLimit[0]
-effortLimit[6] = 0.6*effortLimit[6]
+effortLimit = robot.dynamic.model.effortLimit[6:]
+# effortLimit[0] = 0.6*effortLimit[0]
+# effortLimit[6] = 0.6*effortLimit[6]
 robot.ctrl_manager.u_max.value = np.concatenate((100*np.ones(6), effortLimit))
-# robot.ctrl_manager.u_max.value = np.array(38 * (conf.control_manager.CTRL_MAX, ))
-# plug(robot.device.currents, robot.ctrl_manager.signal('i_measured'))
-# plug(robot.device.ptorque, robot.ctrl_manager.signal('tau'))
 
 robot.ff_torque = Stack_of_vector('ff_torque')
 robot.ff_torque.sin1.value = np.zeros(6)
@@ -156,12 +162,6 @@ robot.ctrl_manager.addCtrlMode("torque")
 robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
-# robot.ff_pos = Stack_of_vector('ff_pos')
-# robot.ff_pos.sin1.value = np.zeros(6)
-# plug(robot.pos_ctrl.pwmDes, robot.ff_pos.sin2)
-# robot.ff_pos.selec1(0, 6)
-# robot.ff_pos.selec2(0, 32)
-
 joint_ctrl = np.zeros(38)
 joint_ctrl = robot.device.robotState.value
 joint_ctrl[27] = -0.01
@@ -169,7 +169,6 @@ joint_ctrl[35] = -0.01
 robot.ctrl_manager.addCtrlMode("pos")
 robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos", "position")
 robot.ctrl_manager.signal('ctrl_pos').value = joint_ctrl
-# plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
 
 robot.ctrl_manager.addCtrlMode("base")
 robot.ctrl_manager.setCtrlMode("freeflyer", "base", "freeflyer")
@@ -192,7 +191,6 @@ plug(robot.inv_dyn.v_des, robot.delay_vel.sin)
 # --- Fix robot.dynamic inputs
 plug(robot.delay_pos.previous, robot.dynamic.position)
 plug(robot.delay_vel.previous, robot.dynamic.velocity)
-# plug(robot.delay_vel.previous, robot.vselec.sin)
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
 plug(robot.delay_vel.previous, robot.dvdt.sin)
@@ -211,46 +209,34 @@ create_topic(robot.publisher, robot.inv_dyn, 'energy_derivative', 'energy_deriva
 create_topic(robot.publisher, robot.inv_dyn, 'energy_tank', 'energy_tank', robot=robot, data_type='double')
 create_topic(robot.publisher, robot.inv_dyn, 'denergy_tank', 'denergy_tank', robot=robot, data_type='double')
 create_topic(robot.publisher, robot.inv_dyn, 'energy_bound', 'energy_bound', robot=robot, data_type='double')
-create_topic(robot.publisher, robot.inv_dyn, 'task_energy_const', 'task_energy_const', robot=robot, data_type='double')
-create_topic(robot.publisher, robot.inv_dyn, 'task_energy_bound', 'task_energy_bound', robot=robot, data_type='double')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_alpha', 'task_energy_alpha', robot=robot, data_type='double')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_beta', 'task_energy_beta', robot=robot, data_type='double')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_gamma', 'task_energy_gamma', robot=robot, data_type='double')
-# create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
-# create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'am_L', 'inv_dyn_am', robot=robot, data_type='vector') 
+create_topic(robot.publisher, robot.inv_dyn, 'am_dL', 'inv_dyn_dam', robot=robot, data_type='vector') 
 create_topic(robot.publisher, robot.inv_dyn, 'q_des', 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'v_des', 'v_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'dv_des', 'dv_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'tau_des', 'tau_des', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'tau_pd_des', 'tau_pd_des', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos_quat', 'left_foot_pos_quat', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos_quat', 'right_foot_pos_quat', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'left_foot_pos_ref_quat', 'left_foot_pos_ref_quat', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'right_foot_pos_ref_quat', 'right_foot_pos_ref_quat', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'base_orientation', 'waist_se3', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.phaseInt, 'sout', 'contactphase', robot=robot, data_type='int')
 create_topic(robot.publisher, robot.com_traj_gen, 'x', 'com_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.waist_traj_gen, 'x', 'waist_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.lf_traj_gen, 'x', 'lf_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.rf_traj_gen, 'x', 'rf_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.am_traj_gen, 'x', 'am_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.am_traj_gen, 'dx', 'dam_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.device, 'motorcontrol', 'motorcontrol', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.device, 'robotState', 'robotState', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.waist_traj_gen, 'x', 'waist_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.am_traj_gen, 'x', 'am_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.am_traj_gen, 'dx', 'dam_traj_gen', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'zmp', 'zmp_estim', robot=robot, data_type='vector')  # estimated ZMP
-# create_topic(robot.publisher, robot.inv_dyn, 'zmp_des', 'zmp_des', robot=robot, data_type='vector')  # estimated DCM
-create_topic(robot.publisher, robot.inv_dyn, 'dcm', 'dcm_estim', robot=robot, data_type='vector')  # estimated DCM
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
-# create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
-# create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')
-create_topic(robot.publisher, robot.device_filters.ft_LH_filter, 'x_filtered', 'ft_LH', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device_filters.ft_LH_filter, 'x_filtered', 'ft_LH_filter', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.traj_gen, 'q', 'q_ref', robot=robot, data_type='vector')
-
-
+create_topic(robot.publisher, robot.inv_dyn, 'f_ref_left_arm', 'f_ref_left_arm', data_type='vector')
+create_topic(robot.publisher, robot.inv_dyn, 'LH_force_world', 'LH_force_world', data_type='vector')
+create_topic(robot.publisher, robot.forceCalibrator, 'leftWristForceOut', 'LWForce_calib', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.forceCalibrator, 'rightWristForceOut', 'RWForce_calib', robot=robot, data_type='vector')  # calibrated right wrench

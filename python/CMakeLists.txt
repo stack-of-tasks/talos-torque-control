@@ -29,6 +29,7 @@ SET(${PROJECT_NAME}_PYTHON
   main_sim_walk_vel.py
   main_sim_walk_vel_online.py
   main_sim_torque_bellStep.py
+  main_sim_wrist_force.py
   )
 
 FOREACH(file ${${PROJECT_NAME}_PYTHON})

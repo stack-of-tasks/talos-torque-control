@@ -195,7 +195,7 @@ robot.ff_torque.selec1(0, 6)
 robot.ff_torque.selec2(0, 32)
 
 robot.ctrl_manager.addCtrlMode("torque")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy-lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque")
+robot.ctrl_manager.setCtrlMode("lhy-lhr-lhp-lk-lap-lar-rhy-rhr-rhp-rk-rap-rar-ty-tp-lsy-lsr-lay-le-lwy-lwp-lwr-rsy-rsr-ray-re-rwy-rwp-rwr", "torque", "torque")
 plug(robot.ff_torque.sout, robot.ctrl_manager.signal('ctrl_torque'))
 
 robot.ff_pos = Stack_of_vector('ff_pos')
@@ -205,11 +205,11 @@ robot.ff_pos.selec1(0, 6)
 robot.ff_pos.selec2(0, 32)
 
 robot.ctrl_manager.addCtrlMode("pos")
-robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos")
+robot.ctrl_manager.setCtrlMode("lh-rh-hp-hy", "pos", "torque")
 plug(robot.ff_pos.sout, robot.ctrl_manager.signal('ctrl_pos'))
 
 robot.ctrl_manager.addCtrlMode("base")
-robot.ctrl_manager.setCtrlMode("freeflyer", "base")
+robot.ctrl_manager.setCtrlMode("freeflyer", "base", "freeflyer")
 plug(robot.inv_dyn.q_des, robot.ctrl_manager.signal('ctrl_base'))
 plug(robot.ctrl_manager.signal('u_safe'), robot.device.control)
 
@@ -246,8 +246,8 @@ create_topic(robot.publisher, robot.base_estimator, 'q', 'base_q', robot=robot, 
 create_topic(robot.publisher, robot.base_estimator, 'v', 'base_v', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.pg, 'comref', 'com_pg', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.pg, 'dcomref', 'dcom_pg', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.pg, 'amref', 'am_pg', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.pg, 'damref', 'dam_pg', robot=robot, data_type='vector')
+# create_topic(robot.publisher, robot.pg, 'amref', 'am_pg', robot=robot, data_type='vector')
+# create_topic(robot.publisher, robot.pg, 'damref', 'dam_pg', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.pg, 'contactphase', 'contactphase', robot=robot, data_type='int')
 create_topic(robot.publisher, robot.pg, 'leftfootref', 'lf_pg', robot=robot, data_type='matrixHomo')
 create_topic(robot.publisher, robot.pg, 'rightfootref', 'rf_pg', robot=robot, data_type='matrixHomo')
