@@ -98,15 +98,8 @@ else:
     runCommandClient("robot.inv_dyn.kp_constraints.value = np.array(6*(100,))")
     runCommandClient("robot.inv_dyn.kd_constraints.value = np.array(6*(200,))")
   else:
-    # runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
-    # runCommandClient("robot.inv_dyn.kd_feet.value = np.array(6*(12,))")
-    # runCommandClient("robot.inv_dyn.kp_com.value = np.array((600, 600, 600))")
-    # runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
-
-    runCommandClient("robot.inv_dyn.kp_feet.value = np.array((15000, 15000, 15000, 15000, 15000, 15000))")
-    runCommandClient("robot.inv_dyn.kd_feet.value = np.array((150, 150, 150, 150, 150, 150))")
-    runCommandClient("robot.inv_dyn.kp_com.value = np.array((50, 50, 600))")
-    runCommandClient("robot.inv_dyn.kd_com.value = np.array((30, 30, 20))")
+    runCommandClient("robot.inv_dyn.kp_com.value = np.array((50, 50, 50))")
+    runCommandClient("robot.inv_dyn.kd_com.value = np.array((5, 5, 5))")
   if walk_type == "isa":
     input("Waiting before going to isa pose")
     print("Go to isa pose")   

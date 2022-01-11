@@ -125,18 +125,18 @@ robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rig
 # --- Inverse dynamic controller
 robot.inv_dyn = create_balance_controller(robot, conf.balance_ctrl,conf.motor_params, dt, controlType="torque")
 robot.inv_dyn.active_joints.value = np.ones(32)
-robot.inv_dyn.kp_com.value = np.array((100, 100, 100))
+robot.inv_dyn.kp_com.value = np.array((50, 50, 50))
 robot.inv_dyn.kd_com.value = np.array((5, 5, 5))
-robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 500., 500., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
+robot.inv_dyn.kp_posture.value  = 80 * np.ones(32)
 robot.inv_dyn.kd_posture.value = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
-robot.inv_dyn.kp_hands.value  = np.array([10.0, 10.0, 10.0, 1.0, 1.0, 1.0])
+robot.inv_dyn.kp_hands.value  = np.array([10.0, 10.0, 10.0, 10.0, 10.0, 10.0])
 robot.inv_dyn.kd_hands.value = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 robot.inv_dyn.w_hands.value = 10
 
 plug(robot.forceCalibrator.leftWristForceOut, robot.inv_dyn.f_ext_left_arm)
-plug(robot.device_filters.ft_LH_filter.dx, robot.inv_dyn.df_ext_left_arm)
+# plug(robot.device_filters.ft_LH_filter.dx, robot.inv_dyn.df_ext_left_arm)
 plug(robot.force_hand_traj_gen.x, robot.inv_dyn.f_ref_left_arm)
-plug(robot.force_hand_traj_gen.dx, robot.inv_dyn.df_ref_left_arm)
+# plug(robot.force_hand_traj_gen.dx, robot.inv_dyn.df_ref_left_arm)
 plug(robot.device_filters.torque_filter.x_filtered, robot.inv_dyn.tau_measured)
 
 # --- Reference position of the feet for base estimator
