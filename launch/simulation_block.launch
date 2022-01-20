@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+  <arg name="start_half_sitting" default="true"/>
+  <arg name="world_name" default="talos_block_full"/>
+  <arg name="world_filename" default="$(find talos-torque-control)/worlds/$(arg world_name).world"/>
+  <arg name="gzpose" default="-x 0.0 -y 0.0 -z 1.16 -R 0.0 -P 0.0 -Y 0.0" unless="$(arg start_half_sitting)"/>
+  <arg name="gui" default="true"/>
+  <arg name="debug" default="false"/>
+  <arg name="recording" default="false"/>
+  <arg name="extra_gazebo_args" default=""/>
+
+  <arg name="load_model" default="true"/> <!-- AS: should probably be false by default -->
+  <arg name="robot"  default="full_v2"/>          <!-- full, lower_body, foot -->
+  <arg name="foot_collision" default="thinbox"/>
+  <arg name="enable_leg_passive" default="false"/>
+  <arg name="enable_fixed_robot" default="false"/>
+  <arg name="default_configuration_type" default="zeros"/>
+
+  <env name="GAZEBO_MODEL_PATH" value="$(find talos_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+
+  <!-- start up world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_filename)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="recording" value="$(arg recording)"/>
+    <arg name="extra_gazebo_args" value="$(arg extra_gazebo_args)"/>
+  </include>
+
+</launch>

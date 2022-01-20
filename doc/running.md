@@ -1,4 +1,4 @@
-# Running a test
+# Pyrene CoM sinusoid in position or torque control
 
 In the following, we quickly demonstrate how to run a test with  <a href="https://github.com/stack-of-tasks/sot-torque-control">sot-torque-control</a> and talos-torque-control.
 
@@ -56,6 +56,8 @@ It also saves the dynamic graph in /tmp/sot_talos_tsid_com.pdf.
 
 \image html Sot_torque_control_framework_for_position_control.png
 
+If not displayed correctly see [here](pictures/Sot_torque_control_framework_for_position_control.png)
+
 For torque control simply run:
 
 ```
@@ -64,6 +66,8 @@ python sim_com.py torque
 ### Graph of the architecture
 
 \image html Sot_torque_control_framework_for_torque_control.png
+
+If not displayed correctly see [here](pictures/Sot_torque_control_framework_for_torque_control.png)
 
 These two examples replicate the ex2 of the TSID jupyter notebooks in position and torque control in Gazebo (see the jupyter <a href="https://github.com/stack-of-tasks/tsid/blob/master/exercizes/notebooks/TSID_ex2.ipynb">here</a>). 
 

@@ -40,6 +40,7 @@ ENDIF(INITIALIZE_WITH_NAN)
 
 # Project dependencies
 ADD_PROJECT_DEPENDENCY(sot-torque-control REQUIRED PKG_CONFIG_REQUIRES sot-torque-control)
+ADD_PROJECT_DEPENDENCY(dynamic_graph_bridge_msgs REQUIRED)
 
 IF(BUILD_PYTHON_INTERFACE)
   FINDPYTHON()
@@ -78,3 +79,31 @@ PKG_CONFIG_APPEND_LIBS(${PROJECT_NAME})
 IF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
   INSTALL(FILES package.xml DESTINATION share/${PROJECT_NAME})
 ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
+
+# Install scripts
+find_package(catkin REQUIRED)
+
+catkin_package()
+catkin_install_python(PROGRAMS
+                      script/sim_walk_torque.py
+                      script/sim_com.py
+                      script/sim_posture.py
+                      script/sim_sinusoid_elbow.py
+                      script/sim_wrist_force.py
+                      script/run_test_utils.py
+                      script/sim_walk_vel.py
+                      script/test_ddp_sinu_effort.py
+                      script/integ_sim_walk_torque.py
+                      script/integ_run_test_utils.py
+                      script/integ_sim_walk_vel.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_torque.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_torque_online.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel.py
+                      python/dynamic_graph/sot/torque_control/talos/main_sim_walk_vel_online.py
+                      python/start_talos_block_gazebo.py
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+FOREACH(dir python launch worlds)
+  INSTALL(DIRECTORY ${dir}
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+ENDFOREACH(dir)

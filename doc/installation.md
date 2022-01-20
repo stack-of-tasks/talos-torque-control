@@ -2,7 +2,7 @@
 
 1. Clone the git repository:
 ```
-git clone --recursive git@gitlab.laas.fr:pyrene-dev/talos-torque-control.git
+git clone --recursive https://github.com/stack-of-tasks/talos-torque-control.git
 cd talos-torque-control
 ```
 
