@@ -2,7 +2,7 @@
 import time, subprocess, os
 from sys import argv
 from run_test_utils import runCommandClient, run_test
-
+from distutils.util import strtobool
 try:
     # Python 2
     input = raw_input  # noqa
@@ -66,11 +66,16 @@ runCommandClient("writeGraph('/tmp/sot_talos_tsid_walk.dot')")
 print("Convert graph to PDF in /tmp/sot_talos_tsid_walk.pdf")
 proc3 = subprocess.Popen(["dot", "-Tpdf", "/tmp/sot_talos_tsid_walk.dot", "-o", "/tmp/sot_talos_tsid_walk_torque.pdf"])
 
-input("Wait before going to halfSitting")
-runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
+c = input("Adding Energy Task? [y/N] ")
+try:
+  cb = strtobool(c)
+  print("Add Energy Task !")
+except Exception:
+  cb = False
+if cb:
+  runCommandClient("robot.inv_dyn.addTaskEnergy(0.0)")
+
 if pattern_generator:
-  input("Waiting before going to halfSitting")
-  runCommandClient("go_to_position(robot.traj_gen, robot.halfSitting[6:], 5.0)")
   input("Waiting before setting gains")
   print("Setting gains")
   runCommandClient("robot.inv_dyn.kp_feet.value = np.array(6*(1200,))")
@@ -123,6 +128,7 @@ else:
     runCommandClient("robot.inv_dyn.kp_am.value = np.array(3*(2.5,))")
 
   input("Waiting before playing trajectories")
+  runCommandClient("robot.inv_dyn.setEnergyTank(5.0)")
   print("Playing trajectories")
   runCommandClient("robot.traj_sync.turnOn()")
   input("Waiting before stopping the trajectories")

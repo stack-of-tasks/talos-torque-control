@@ -229,8 +229,6 @@ create_topic(robot.publisher, robot.inv_dyn, 'zmp', 'zmp_estim', robot=robot, da
 create_topic(robot.publisher, robot.device, 'forceLLEG', 'forceLLEG', robot = robot, data_type='vector') # measured left wrench
 create_topic(robot.publisher, robot.device, 'forceRLEG', 'forceRLEG', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device, 'ptorque', 'tau_meas', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.rh_traj_gen, 'x', 'rh_traj_gen', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.inv_dyn, 'right_hand_pos', 'rh_pose', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_S', 'task_energy_S', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_dS', 'task_energy_dS', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.inv_dyn, 'task_energy_A', 'task_energy_A', robot=robot, data_type='double')

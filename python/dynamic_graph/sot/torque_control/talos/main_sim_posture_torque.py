@@ -51,6 +51,8 @@ robot.com_traj_gen.x.recompute(0)
 robot.device_filters = create_device_filters(robot, dt)
 robot.imu_filters = create_imu_filters(robot, dt)
 robot.base_estimator = create_base_estimator(robot, dt, conf.base_estimator)
+# plug(robot.device.imu_orientation, robot.base_estimator.imu_quaternion)
+# robot.device.imu_orientation.recompute(0)
 plug(robot.device_filters.vel_filter.x_filtered, robot.base_estimator.joint_velocities)
 
 robot.base_estimator.q.recompute(0)
@@ -59,7 +61,7 @@ robot.base_estimator.v.recompute(0)
 # --- Simple inverse dynamic controller
 robot.inv_dyn = create_posture_task(robot, conf.balance_ctrl, dt)
 robot.inv_dyn.setControlOutputType("torque")
-robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 200., 200., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
+robot.inv_dyn.kp_posture.value  = np.array((50., 50.,50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 100., 100., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 10., 10.))
 robot.inv_dyn.kd_posture.value  = np.array(2 * np.sqrt(robot.inv_dyn.kp_posture.value))
 robot.inv_dyn.w_posture.value = 0.1
 robot.inv_dyn.kp_com.value  = np.array([50, 50, 50])

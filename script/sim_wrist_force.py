@@ -42,16 +42,15 @@ run_ft_wrist_calibration('robot.forceCalibrator')
 input("Wait before adding EnergyTask")
 runCommandClient("robot.inv_dyn.addTaskEnergy(0.0)")
 input("Wait before adding TaskLeftHandContact")
-runCommandClient("robot.inv_dyn.addTaskLeftHandContact(0.0)")
+runCommandClient("robot.inv_dyn.addTaskLeftHandContact()")
 
-# # time.sleep(5)
 input("Wait before setting 10N force")
 runCommandClient("robot.force_hand_traj_gen.move(2, 10, 3)")
 time.sleep(20)
 runCommandClient("robot.force_hand_traj_gen.move(2, 30, 5)")
 time.sleep(40)
 print("REMOVE BLOCK ! ")
-time.sleep(3)
+time.sleep(2)
 runCommandClient("robot.inv_dyn.removeTaskLeftHandContact(0.0)")
 
  
