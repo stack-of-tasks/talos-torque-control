@@ -77,7 +77,8 @@ ROTOR_INERTIAS = (
     1.3,
 )
 
-### New motor parameters with current measurment (used by ForceTorqueEstimator and JointTorqueController) ###
+# New motor parameters with current measurment
+# used by ForceTorqueEstimator and JointTorqueController
 Kt_p = zeros(NJ) + 1.0
 Kt_n = zeros(NJ) + 1.0
 Kf_p = zeros(NJ)

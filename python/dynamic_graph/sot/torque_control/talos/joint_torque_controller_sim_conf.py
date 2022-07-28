@@ -82,17 +82,17 @@ alpha_leaking = np.array(
     ]
 )
 
-## PARAMETERS OF R_hip_y JOINT 0
-# k_p_torque[0] = 12.0;
-## PARAMETERS OF R_hip_r JOINT 1
-# k_p_torque[1] = 5; #15.0 # could easily go up to 20, but it's a bit less stable
-## PARAMETERS OF R_hip_p JOINT 2
-# k_p_torque[2] = 6; #with delay 30 ms
-## PARAMETERS OF R_knee JOINT 3
-# k_p_torque[3] = 10.0;  # with 12 it starts vibrating at low velocity
-## PARAMETERS OF R_ankle pitch JOINT 4
-# k_p_torque[4] = 10.0;  # 10 feels good, but maybe i could go higher
-## PARAMETERS OF R_ankle roll JOINT 5
-# k_p_torque[5] = 15.0; # could go higher, but it feels already good
-## PARAMETERS OF Left hip pitch JOINT 8
-# k_p_torque[8] = 6.0;   # with delay 20 ms
+# ## PARAMETERS OF R_hip_y JOINT 0
+# # k_p_torque[0] = 12.0;
+# ## PARAMETERS OF R_hip_r JOINT 1
+# # k_p_torque[1] = 5; #15.0 # could easily go up to 20, but it's a bit less stable
+# ## PARAMETERS OF R_hip_p JOINT 2
+# # k_p_torque[2] = 6; #with delay 30 ms
+# ## PARAMETERS OF R_knee JOINT 3
+# # k_p_torque[3] = 10.0;  # with 12 it starts vibrating at low velocity
+# ## PARAMETERS OF R_ankle pitch JOINT 4
+# # k_p_torque[4] = 10.0;  # 10 feels good, but maybe i could go higher
+# ## PARAMETERS OF R_ankle roll JOINT 5
+# # k_p_torque[5] = 15.0; # could go higher, but it feels already good
+# ## PARAMETERS OF Left hip pitch JOINT 8
+# # k_p_torque[8] = 6.0;   # with delay 20 ms

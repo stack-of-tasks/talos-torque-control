@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import time, subprocess
+import subprocess
 from sys import argv
 from run_test_utils import runCommandClient, run_test
 

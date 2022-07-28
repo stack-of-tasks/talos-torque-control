@@ -7,7 +7,6 @@
 from __future__ import print_function
 
 from dynamic_graph import plug
-from dynamic_graph.sot.core.filter_differentiator import FilterDifferentiator
 from dynamic_graph.sot.core.latch import Latch
 from dynamic_graph.sot.torque_control.control_manager import ControlManager
 from dynamic_graph.sot.torque_control.current_controller import CurrentController
@@ -19,10 +18,11 @@ from dynamic_graph.sot.torque_control.joint_trajectory_generator import (
 )
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.position_controller import PositionController
-from dynamic_graph.sot.torque_control.se3_trajectory_generator import (
-    SE3TrajectoryGenerator,
+
+from dynamic_graph.sot.torque_control.talos.motors_parameters import (
+    NJ,
+    InverseDynamicsController,
 )
-from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
 from dynamic_graph.sot.torque_control.utils.filter_utils import (
     create_butter_lp_filter_Wn_05_N_3,
@@ -68,7 +68,8 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     plug(robot.filters.ft_RF_filter.dx, base_estimator.dforceRLEG)
     plug(robot.filters.estimator_kin.dx, base_estimator.joint_velocities)
     plug(robot.imu_filter.imu_quat, base_estimator.imu_quaternion)
-    # plug(robot.imu_offset_compensation.accelerometer_out, base_estimator.accelerometer);
+    # plug(robot.imu_offset_compensation.accelerometer_out,
+    # base_estimator.accelerometer);
     # plug(robot.imu_offset_compensation.gyrometer_out,     base_estimator.gyroscope);
     plug(robot.filters.gyro_filter.x_filtered, base_estimator.gyroscope)
     plug(robot.filters.acc_filter.x_filtered, base_estimator.accelerometer)
@@ -76,7 +77,7 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     try:
         base_estimator.w_lf_in.value = conf.w_lf_in
         base_estimator.w_rf_in.value = conf.w_rf_in
-    except:
+    except Exception:
         pass
 
     base_estimator.set_imu_weight(conf.w_imu)
@@ -151,16 +152,17 @@ def create_free_flyer_locator(ent, robot_name="robot"):
     plug(ent.filters.estimator_kin.dx, ff_locator.joint_velocities)
     try:
         plug(ff_locator.base6dFromFoot_encoders, ent.dynamic.position)
-    except:
+    except Exception:
         print(
-            "[WARNING] Could not connect to dynamic entity, probably because you are in simulation"
+            "[WARNING] Could not connect to dynamic entity, "
+            "probably because you are in simulation"
         )
     ff_locator.init(robot_name)
     return ff_locator
 
 
 def create_flex_estimator(robot, dt=0.001):
-    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (
+    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (  # noqa
         HRP2ModelBaseFlexEstimatorIMUForce,
     )
 
@@ -176,7 +178,7 @@ def create_flex_estimator(robot, dt=0.001):
 
 
 def create_floatingBase(robot):
-    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (
+    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (  # noqa
         FromLocalToGLobalFrame,
     )
 
@@ -202,13 +204,13 @@ def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
     try:  # this works only in simulation
         # plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
         plug(robot.encoders_velocity.sout, posCtrl.jointsVelocities)
-    except:
+    except Exception:
         plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities)
         pass
     plug(posCtrl.pwmDes, robot.device.control)
     try:
         plug(robot.traj_gen.q, posCtrl.qRef)
-    except:
+    except Exception:
         pass
     posCtrl.init(dt, robot_name)
     return posCtrl
@@ -260,9 +262,10 @@ def create_filters(robot, conf, motor_params, dt):
     try:
         plug(robot.traj_gen.dq,       estimator_ft.dqRef);
         plug(robot.traj_gen.ddq,      estimator_ft.ddqRef);
-    except:
+    except Exception:
         pass;
-    estimator_ft.wCurrentTrust.value     = tuple(NJ*[conf.CURRENT_TORQUE_ESTIMATION_TRUST,])
+    estimator_ft.wCurrentTrust.value     =
+    tuple(NJ*[conf.CURRENT_TORQUE_ESTIMATION_TRUST,])
     estimator_ft.saturationCurrent.value = tuple(NJ*[conf.SATURATION_CURRENT,])
 
     estimator_ft.motorParameterKt_p.value  = tuple(motor_params.Kt_p)
@@ -337,7 +340,7 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name="robot")
     try:
         plug(robot.base_estimator.q, ctrl.q)
         plug(robot.base_estimator.v, ctrl.v)
-    except:
+    except Exception:
         plug(robot.ff_locator.base6dFromFoot_encoders, ctrl.q)
         plug(robot.ff_locator.v, ctrl.v)
 
@@ -348,9 +351,10 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name="robot")
         plug(ctrl.dv_des, robot.ddq_des.sin)
         robot.ddq_des.selec(6, NJ + 6)
         # plug(robot.ddq_des.sout, robot.estimator_ft.ddqRef);
-    except:
+    except Exception:
         print(
-            "WARNING: Could not connect dv_des from BalanceController to ForceTorqueEstimator"
+            "WARNING: Could not connect dv_des "
+            "from BalanceController to ForceTorqueEstimator"
         )
 
     # plug(robot.estimator_ft.contactWrenchRightSole, ctrl.wrench_right_foot);
@@ -627,7 +631,7 @@ def create_ros_topics(robot):
         #        create_topic(ros, robot.device.forceRARM,       'forceRARM');
         #        create_topic(ros, robot.device.forceLARM,       'forceLARM');
         robot.device.after.addDownsampledSignal("rosPublish.trigger", 1)
-    except:
+    except Exception:
         pass
 
     try:
@@ -639,48 +643,53 @@ def create_ros_topics(robot):
             ros, robot.estimator_ft.contactWrenchRightSole, "contactWrenchRightSole"
         )
         create_topic(ros, robot.estimator_ft.jointsTorques, "jointsTorques")
-    #        create_topic(ros, robot.estimator.jointsTorquesFromInertiaModel,  'jointsTorquesFromInertiaModel');
-    #        create_topic(ros, robot.estimator.jointsTorquesFromMotorModel,    'jointsTorquesFromMotorModel');
-    #        create_topic(ros, robot.estimator.currentFiltered,                'currentFiltered');
-    except:
+    #        create_topic(ros, robot.estimator.jointsTorquesFromInertiaModel,
+    # 'jointsTorquesFromInertiaModel');
+    #        create_topic(ros, robot.estimator.jointsTorquesFromMotorModel,
+    # 'jointsTorquesFromMotorModel');
+    #        create_topic(ros, robot.estimator.currentFiltered,
+    # 'currentFiltered');
+    except Exception:
         pass
 
     try:
         create_topic(ros, robot.torque_ctrl.u, "i_des_torque_ctrl")
-    except:
+    except Exception:
         pass
 
     try:
         create_topic(ros, robot.traj_gen.q, "q_ref")
     #        create_topic(ros, robot.traj_gen.dq,  'dq_ref');
     #        create_topic(ros, robot.traj_gen.ddq, 'ddq_ref');
-    except:
+    except Exception:
         pass
 
     try:
         create_topic(ros, robot.ctrl_manager.pwmDes, "i_des")
         create_topic(ros, robot.ctrl_manager.pwmDesSafe, "i_des_safe")
 
-    #        create_topic(ros, robot.ctrl_manager.signOfControlFiltered,   'signOfControlFiltered');
-    #        create_topic(ros, robot.ctrl_manager.signOfControl,           'signOfControl');
-    except:
+    #        create_topic(ros, robot.ctrl_manager.signOfControlFiltered,
+    # 'signOfControlFiltered');
+    #        create_topic(ros, robot.ctrl_manager.signOfControl,
+    # 'signOfControl');
+    except Exception:
         pass
 
     try:
         create_topic(ros, robot.inv_dyn.tau_des, "tau_des")
-    except:
+    except Exception:
         pass
 
     try:
         create_topic(
             ros, robot.ff_locator.base6dFromFoot_encoders, "base6dFromFoot_encoders"
         )
-    except:
+    except Exception:
         pass
 
     try:
         create_topic(ros, robot.floatingBase.soutPos, "floatingBase_pos")
-    except:
+    except Exception:
         pass
 
     return ros
@@ -719,14 +728,14 @@ def create_tracer(
     addSignalsToTracer(tracer, device)
 
     with open("/tmp/dg_info.dat", "a") as f:
-        if estimator_kin != None:
+        if estimator_kin is not None:
             f.write("Estimator encoder delay: {0}\n".format(estimator_kin.getDelay()))
-        if inv_dyn != None:
+        if inv_dyn is not None:
             f.write("Inv dyn Ks: {0}\n".format(inv_dyn.Kp.value))
             f.write("Inv dyn Kd: {0}\n".format(inv_dyn.Kd.value))
             f.write("Inv dyn Kf: {0}\n".format(inv_dyn.Kf.value))
             f.write("Inv dyn Ki: {0}\n".format(inv_dyn.Ki.value))
-        if torque_ctrl != None:
+        if torque_ctrl is not None:
             f.write("Torque ctrl KpTorque: {0}\n".format(torque_ctrl.KpTorque.value))
     f.close()
     return tracer

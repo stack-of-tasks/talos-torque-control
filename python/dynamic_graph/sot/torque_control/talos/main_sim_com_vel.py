@@ -1,7 +1,5 @@
 from dynamic_graph import plug
-from dynamic_graph.sot.core import Selec_of_vector
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import (
-    NJ,
     create_rospublish,
     create_topic,
     get_sim_conf,
@@ -18,13 +16,12 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import (
 )
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import (
     addTrace,
-    dump_tracer,
 )
-from dynamic_graph.sot.torque_control.talos.sot_utils_talos import go_to_position
 from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.core import Substract_of_vector
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
+robot = locals()["robot"]
 conf = get_sim_conf()
 dt = robot.timeStep
 

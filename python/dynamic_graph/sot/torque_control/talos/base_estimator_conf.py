@@ -1,4 +1,4 @@
-""" *********************** USER-PARAMETERS OF BASE ESTIMATOR *********************** """
+""" ********************* USER-PARAMETERS OF BASE ESTIMATOR ********************* """
 K = (4034, 23770, 239018, 707, 502, 936)
 std_dev_zmp = 0.02
 std_dev_fz = 50.0

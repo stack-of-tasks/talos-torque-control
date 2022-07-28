@@ -2,7 +2,8 @@
 """
 Created on Mon Feb  9 13:55:16 2015
 
-Position control PID gains stored according to the controller time step (1, 2, 5 or 10 ms).
+Position control PID gains
+stored according to the controller time step (1, 2, 5 or 10 ms).
 
 @author: adelpret
 """

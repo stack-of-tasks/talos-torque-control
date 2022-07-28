@@ -4,7 +4,7 @@ Created on Mon Feb  9 13:55:16 2015
 
 @author: adelpret
 """
-from current_controller_conf import *
+from current_controller_conf import *  # noqa
 
 CURRENT_OFFSET_ITERS = 0
 # Number of itertion while control is disabled to calibrate current sensors
@@ -15,7 +15,8 @@ CTRL_MAX = 1e6
 CTRL_SATURATION = 1e6
 # saturation of the control signal
 IN_OUT_GAIN = 1.0
-# factor to convert from a [-20.0 ; 20.0] Ampers value to the [-2048 ; 2048] 12bit DAC register
+# factor to convert from a [-20.0 ; 20.0] Ampers value
+# to the [-2048 ; 2048] 12bit DAC register
 percentage_dead_zone_compensation = NJ * [
     0.0,
 ]

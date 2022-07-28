@@ -164,7 +164,7 @@ def monitor_tracking_error(sig, sigRef, dt, time):
 
 def dump_signal_to_file(sig_list, index, filename, T, dt):
     N = int(T / dt)
-    m = len(sig_list)
+    # m = len(sig_list)
     f = open("/tmp/" + filename, "a", 1)
     for t in range(N):
         for s in sig_list:

@@ -16,7 +16,8 @@ CTRL_MAX = 10.0
 CTRL_SATURATION = 2047
 # saturation of the control signal
 IN_OUT_GAIN = 102.4
-# factor to convert from a [-20.0 ; 20.0] Ampers value to the [-2048 ; 2048] 12bit DAC register
+# factor to convert from a [-20.0 ; 20.0] Ampers value
+# to the [-2048 ; 2048] 12bit DAC register
 percentage_dead_zone_compensation = NJ * [
     0.0,
 ]
@@ -64,12 +65,10 @@ percentage_dead_zone_compensation[6] = 0.8
 percentage_dead_zone_compensation[7] = 0.8
 percentage_dead_zone_compensation[8] = 0.8
 percentage_dead_zone_compensation[9] = 0.8
-percentage_dead_zone_compensation[
-    10
-] = 0.8  # very asymettric error, a bit unstable on negative currents, may need investigation
-percentage_dead_zone_compensation[
-    11
-] = 0.8  # getting some vibrations for negative errors, may need investigation
+# very asymettric error, a bit unstable on negative currents, may need investigation
+percentage_dead_zone_compensation[10] = 0.8
+# getting some vibrations for negative errors, may need investigation
+percentage_dead_zone_compensation[11] = 0.8
 
 i_max_dz_comp[0] = 0.03
 

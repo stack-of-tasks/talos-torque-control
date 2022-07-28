@@ -1,4 +1,8 @@
-from balance_ctrl_conf import *
+from math import sqrt
+
+import numpy as np
+
+from balance_ctrl_conf import *  # noqa
 
 
 """ *********************** USER-PARAMETERS *********************** """

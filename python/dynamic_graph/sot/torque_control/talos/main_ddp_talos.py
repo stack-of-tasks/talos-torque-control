@@ -1,4 +1,3 @@
-import numpy as np
 from dynamic_graph import plug
 from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import (
     create_rospublish,
@@ -24,18 +23,13 @@ from dynamic_graph.sot.torque_control.talos.create_entities_utils_talos import (
     create_position_controller,
     create_pyrene_ddp_controller,
 )
-from dynamic_graph.sot.torque_control.talos.sot_utils_talos import (
-    go_to_position_sinusoid,
-    go_to_position,
-)
-from dynamic_graph.ros import RosPublish, RosSubscribe
-from dynamic_graph.tracer_real_time import TracerRealTime
-from time import sleep
 
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 
+robot = locals()["robot"]
 dt = robot.timeStep
 robot.device.setControlInputType("noInteg")
+conf_default = locals()["conf_default"]
 conf = get_default_conf() if conf_default else get_sim_conf()
 
 

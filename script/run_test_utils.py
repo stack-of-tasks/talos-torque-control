@@ -8,8 +8,8 @@ from __future__ import print_function
 
 import rospy
 
-from std_srvs.srv import *
-from dynamic_graph_bridge_msgs.srv import *
+from std_srvs.srv import *  # noqa
+from dynamic_graph_bridge_msgs.srv import *  # noqa
 
 _runCommandClient = rospy.ServiceProxy("run_command", RunCommand)
 
