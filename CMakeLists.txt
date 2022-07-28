@@ -1,64 +1,65 @@
 # Copyright 2014, 2020, Andrea Del Prete, Guilhem Saurel, LAAS-CNRS
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+cmake_minimum_required(VERSION 3.1)
 
 # Project properties
-SET(PROJECT_ORG stack-of-tasks)
-SET(PROJECT_NAME talos-torque-control)
-SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aiming at the implementation of torque control on TALOS.")
-SET(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
+set(PROJECT_ORG stack-of-tasks)
+set(PROJECT_NAME talos-torque-control)
+set(PROJECT_DESCRIPTION
+    "Collection of dynamic-graph entities aiming at the implementation of torque control on TALOS."
+)
+set(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
 
 # Project options
-OPTION(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
-OPTION(INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" ON)
+option(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
+option(INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" ON)
 
 # Project configuration
-SET(PROJECT_USE_CMAKE_EXPORT TRUE)
-SET(CUSTOM_HEADER_DIR "sot/torque-control")
-SET(CXX_DISABLE_WERROR TRUE)
-SET(DOXYGEN_USE_MATHJAX YES)
+set(PROJECT_USE_CMAKE_EXPORT TRUE)
+set(CUSTOM_HEADER_DIR "sot/torque-control")
+set(CXX_DISABLE_WERROR TRUE)
+set(DOXYGEN_USE_MATHJAX YES)
 
 # JRL-cmakemodule setup
-INCLUDE(cmake/base.cmake)
-INCLUDE(cmake/boost.cmake)
-INCLUDE(cmake/sphinx.cmake)
+include(cmake/base.cmake)
+include(cmake/boost.cmake)
+include(cmake/sphinx.cmake)
 
 # Project definition
-COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
-PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
-CHECK_MINIMAL_CXX_STANDARD(11 ENFORCE)
+compute_project_args(PROJECT_ARGS LANGUAGES CXX)
+project(${PROJECT_NAME} ${PROJECT_ARGS})
+check_minimal_cxx_standard(11 ENFORCE)
 
-IF(INITIALIZE_WITH_NAN)
-  MESSAGE(STATUS "Initialize with NaN all the Eigen entries.")
-  ADD_DEFINITIONS(-DEIGEN_INITIALIZE_MATRICES_BY_NAN)
-ENDIF(INITIALIZE_WITH_NAN)
+if(INITIALIZE_WITH_NAN)
+  message(STATUS "Initialize with NaN all the Eigen entries.")
+  add_definitions(-DEIGEN_INITIALIZE_MATRICES_BY_NAN)
+endif(INITIALIZE_WITH_NAN)
 
 # Project dependencies
-ADD_PROJECT_DEPENDENCY(sot-torque-control REQUIRED PKG_CONFIG_REQUIRES sot-torque-control)
-ADD_PROJECT_DEPENDENCY(dynamic-graph-python 4.0.6 REQUIRED)
+add_project_dependency(sot-torque-control REQUIRED PKG_CONFIG_REQUIRES
+                       sot-torque-control)
+add_project_dependency(dynamic-graph-python 4.0.6 REQUIRED)
 
 # Main Library
-SET(${PROJECT_NAME}_HEADERS
-  include/${CUSTOM_HEADER_DIR}/talos-common.hh
-  )
+set(${PROJECT_NAME}_HEADERS include/${CUSTOM_HEADER_DIR}/talos-common.hh)
 
-SET(${PROJECT_NAME}_SOURCES
-  src/talos-common.cpp
-  )
+set(${PROJECT_NAME}_SOURCES src/talos-common.cpp)
 
-ADD_LIBRARY(${PROJECT_NAME} SHARED
-  ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}
-  sot-torque-control::sot-torque-control)
+add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES}
+                                   ${${PROJECT_NAME}_HEADERS})
+target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_link_libraries(${PROJECT_NAME} sot-torque-control::sot-torque-control)
 
-IF(SUFFIX_SO_VERSION)
-  SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
-ENDIF(SUFFIX_SO_VERSION)
+if(SUFFIX_SO_VERSION)
+  set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
+endif(SUFFIX_SO_VERSION)
 
-INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${TARGETS_EXPORT_NAME}
+  DESTINATION lib)
 
-ADD_SUBDIRECTORY(python)
+add_subdirectory(python)
 
-PKG_CONFIG_APPEND_LIBS(${PROJECT_NAME})
-INSTALL(FILES package.xml DESTINATION share/${PROJECT_NAME})
+pkg_config_append_libs(${PROJECT_NAME})
+install(FILES package.xml DESTINATION share/${PROJECT_NAME})

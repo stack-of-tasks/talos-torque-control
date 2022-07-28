@@ -6,9 +6,9 @@ Created on Mon Feb  9 13:55:16 2015
 """
 from numpy import zeros as zeros
 
-NJ = 32;
-k_tau = zeros(NJ);
-k_v   = zeros(NJ);
+NJ = 32
+k_tau = zeros(NJ)
+k_v = zeros(NJ)
 
 # PARAMETERS OF R_hip_y JOINT 0
 k_v[0] = 0.017585

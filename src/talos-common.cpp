@@ -3,9 +3,10 @@
  *
  */
 
-#include <sot/torque-control/talos-common.hh>
-#include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
+
+#include <sot/core/debug.hh>
+#include <sot/torque-control/talos-common.hh>
 
 namespace dynamicgraph {
 namespace sot {
@@ -14,7 +15,8 @@ namespace dg = ::dynamicgraph;
 using namespace dg;
 using namespace dg::command;
 
-bool base_se3_to_sot(dg::sot::ConstRefVector pos, dg::sot::ConstRefMatrix R, dg::sot::RefVector q_sot) {
+bool base_se3_to_sot(dg::sot::ConstRefVector pos, dg::sot::ConstRefMatrix R,
+                     dg::sot::RefVector q_sot) {
   assert(q_sot.size() == 6);
   assert(pos.size() == 3);
   assert(R.rows() == 3);
@@ -40,7 +42,8 @@ bool base_se3_to_sot(dg::sot::ConstRefVector pos, dg::sot::ConstRefMatrix R, dg:
   return true;
 }
 
-bool base_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot) {
+bool base_urdf_to_sot(dg::sot::ConstRefVector q_urdf,
+                      dg::sot::RefVector q_sot) {
   assert(q_urdf.size() == 7);
   assert(q_sot.size() == 6);
   // ********* Quat to RPY *********
@@ -52,7 +55,8 @@ bool base_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot) 
   return base_se3_to_sot(q_urdf.head<3>(), R, q_sot);
 }
 
-bool base_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf) {
+bool base_sot_to_urdf(dg::sot::ConstRefVector q_sot,
+                      dg::sot::RefVector q_urdf) {
   assert(q_urdf.size() == 7);
   assert(q_sot.size() == 6);
   // *********  RPY to Quat *********
@@ -75,7 +79,8 @@ bool base_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf) 
   return true;
 }
 
-bool config_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot) {
+bool config_urdf_to_sot(dg::sot::ConstRefVector q_urdf,
+                        dg::sot::RefVector q_sot) {
   assert(q_urdf.size() == N_JOINTS + 7);
   assert(q_sot.size() == N_JOINTS + 6);
   // ********* Quat to RPY *********
@@ -83,11 +88,10 @@ bool config_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot
   //        const double X = q_urdf[3];
   //        const double Y = q_urdf[4];
   //        const double Z = q_urdf[5];
-  //        const Eigen::Matrix3d M = Eigen::Quaterniond(W, X, Y, Z).toRotationMatrix();
-  //        double r,p,y,m;
-  //        m = sqrt(M(2, 1) *M(2, 1) + M(2, 2) * M(2, 2));
-  //        p = atan2(-M(2, 0), m);
-  //        if (abs(abs(p) - M_PI / 2) < 0.001 )
+  //        const Eigen::Matrix3d M = Eigen::Quaterniond(W, X, Y,
+  //        Z).toRotationMatrix(); double r,p,y,m; m = sqrt(M(2, 1) *M(2, 1) +
+  //        M(2, 2) * M(2, 2)); p = atan2(-M(2, 0), m); if (abs(abs(p) - M_PI /
+  //        2) < 0.001 )
   //        {
   //          r = 0;
   //          y = -atan2(M(0, 1), M(1, 1));
@@ -144,7 +148,8 @@ bool config_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot
   return true;
 }
 
-bool config_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf) {
+bool config_sot_to_urdf(dg::sot::ConstRefVector q_sot,
+                        dg::sot::RefVector q_urdf) {
   assert(q_urdf.size() == N_JOINTS + 7);
   assert(q_sot.size() == N_JOINTS + 6);
   // *********  RPY to Quat *********
@@ -154,7 +159,8 @@ bool config_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf
   //        const Eigen::AngleAxisd  rollAngle(r, Eigen::Vector3d::UnitX());
   //        const Eigen::AngleAxisd pitchAngle(p, Eigen::Vector3d::UnitY());
   //        const Eigen::AngleAxisd   yawAngle(y, Eigen::Vector3d::UnitZ());
-  //        const Eigen::Quaternion<double> quat = yawAngle * pitchAngle * rollAngle;
+  //        const Eigen::Quaternion<double> quat = yawAngle * pitchAngle *
+  //        rollAngle;
 
   //        q_urdf[0 ]=q_sot[0 ]; //BASE
   //        q_urdf[1 ]=q_sot[1 ];
@@ -205,7 +211,8 @@ bool config_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf
   return true;
 }
 
-bool velocity_urdf_to_sot(dg::sot::ConstRefVector v_urdf, dg::sot::RefVector v_sot) {
+bool velocity_urdf_to_sot(dg::sot::ConstRefVector v_urdf,
+                          dg::sot::RefVector v_sot) {
   assert(v_urdf.size() == N_JOINTS + 6);
   assert(v_sot.size() == N_JOINTS + 6);
   v_sot.head<6>() = v_urdf.head<6>();
@@ -256,7 +263,8 @@ bool velocity_urdf_to_sot(dg::sot::ConstRefVector v_urdf, dg::sot::RefVector v_s
   return true;
 }
 
-bool velocity_sot_to_urdf(dg::sot::ConstRefVector v_sot, dg::sot::RefVector v_urdf) {
+bool velocity_sot_to_urdf(dg::sot::ConstRefVector v_sot,
+                          dg::sot::RefVector v_urdf) {
   assert(v_urdf.size() == N_JOINTS + 6);
   assert(v_sot.size() == N_JOINTS + 6);
   v_urdf.head<6>() = v_sot.head<6>();
@@ -307,7 +315,8 @@ bool velocity_sot_to_urdf(dg::sot::ConstRefVector v_sot, dg::sot::RefVector v_ur
   return true;
 }
 
-bool joints_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot) {
+bool joints_urdf_to_sot(dg::sot::ConstRefVector q_urdf,
+                        dg::sot::RefVector q_sot) {
   assert(q_urdf.size() == N_JOINTS);
   assert(q_sot.size() == N_JOINTS);
 
@@ -349,7 +358,8 @@ bool joints_urdf_to_sot(dg::sot::ConstRefVector q_urdf, dg::sot::RefVector q_sot
   return true;
 }
 
-bool joints_sot_to_urdf(dg::sot::ConstRefVector q_sot, dg::sot::RefVector q_urdf) {
+bool joints_sot_to_urdf(dg::sot::ConstRefVector q_sot,
+                        dg::sot::RefVector q_urdf) {
   assert(q_urdf.size() == N_JOINTS);
   assert(q_sot.size() == N_JOINTS);
 

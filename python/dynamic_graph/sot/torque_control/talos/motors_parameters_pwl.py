@@ -6,38 +6,38 @@ Created on Mon Feb  9 13:55:16 2015
 """
 from numpy import zeros as zeros
 
-NJ = 32;
-f_k1p = zeros(NJ);
-f_k2p = zeros(NJ);
-f_k3p = zeros(NJ);
-f_k1n = zeros(NJ);
-f_k2n = zeros(NJ);
-f_k3n = zeros(NJ);
-f_q1p = zeros(NJ);
-f_q2p = zeros(NJ);
-f_q3p = zeros(NJ);
-f_q1n = zeros(NJ);
-f_q2n = zeros(NJ);
-f_q3n = zeros(NJ);
-f_tau1p = zeros(NJ);
-f_tau2p = zeros(NJ);
-f_tau1n = zeros(NJ);
-f_tau2n = zeros(NJ);
+NJ = 32
+f_k1p = zeros(NJ)
+f_k2p = zeros(NJ)
+f_k3p = zeros(NJ)
+f_k1n = zeros(NJ)
+f_k2n = zeros(NJ)
+f_k3n = zeros(NJ)
+f_q1p = zeros(NJ)
+f_q2p = zeros(NJ)
+f_q3p = zeros(NJ)
+f_q1n = zeros(NJ)
+f_q2n = zeros(NJ)
+f_q3n = zeros(NJ)
+f_tau1p = zeros(NJ)
+f_tau2p = zeros(NJ)
+f_tau1n = zeros(NJ)
+f_tau2n = zeros(NJ)
 
 
-k_p = zeros(NJ);
-k_tau = zeros(NJ);
-k_v   = zeros(NJ);
-k_tp = zeros(NJ);
-k_tn = zeros(NJ);
-k_cp = zeros(NJ);
-k_cn = zeros(NJ);
-k_s  = zeros(NJ);
-k_d  = zeros(NJ);
-k_f  = zeros(6*4);
-tau_max = zeros(NJ);
+k_p = zeros(NJ)
+k_tau = zeros(NJ)
+k_v = zeros(NJ)
+k_tp = zeros(NJ)
+k_tn = zeros(NJ)
+k_cp = zeros(NJ)
+k_cn = zeros(NJ)
+k_s = zeros(NJ)
+k_d = zeros(NJ)
+k_f = zeros(6 * 4)
+tau_max = zeros(NJ)
 
-tau_max[:] = 1000.0;
+tau_max[:] = 1000.0
 
 # PARAMETERS OF 4_(R_knee_p) JOINT 3
 f_k1p[3] = 0.000064
@@ -58,50 +58,65 @@ f_tau1n[3] = -8.327572
 f_tau2n[3] = -7.158899
 
 # PARAMETERS OF R_hip_y JOINT 0
-k_v[0] = 0.013; # originally it was 0.0156, but I decreased after tests on hrp2
-k_tau[0] = 0.000212;
-k_p[0] = 12.0;
-k_s[0] = 1550; # 1550 is equivalent to pos ctrl (or maybe 1500?)
-k_d[0] = 30;
+k_v[0] = 0.013
+# originally it was 0.0156, but I decreased after tests on hrp2
+k_tau[0] = 0.000212
+k_p[0] = 12.0
+k_s[0] = 1550
+# 1550 is equivalent to pos ctrl (or maybe 1500?)
+k_d[0] = 30
 # PARAMETERS OF R_hip_r JOINT 1
 k_v[1] = 0.006332
 k_tau[1] = 0.000030
-k_p[1] = 5; #15.0 # could easily go up to 20, but it's a bit less stable
-k_s[1] = 11100; #11100 is equivalent to position ctrl
-k_d[1] = 70;
+k_p[1] = 5
+# 15.0 # could easily go up to 20, but it's a bit less stable
+k_s[1] = 11100
+# 11100 is equivalent to position ctrl
+k_d[1] = 70
 # PARAMETERS OF R_hip_p JOINT 2
-k_v[2] = 0.007; #it was 0.008109
+k_v[2] = 0.007
+# it was 0.008109
 k_tau[2] = 0.00012
 k_tp[2] = 0.001574
 k_tn[2] = 0.000169
-k_p[2] = 6; #with delay 30 ms
-k_s[2] = 2800;   # 2800 is equivalent to pos ctrl
-k_d[2] = 30;
+k_p[2] = 6
+# with delay 30 ms
+k_s[2] = 2800
+# 2800 is equivalent to pos ctrl
+k_d[2] = 30
 # PARAMETERS OF R_knee JOINT 3
 k_v[3] = 0.006561
 k_tau[3] = 0.000051
-k_p[3] = 10.0;  # with 12 it starts vibrating at low velocity
-k_s[3] = 6530; # 6530 is equivalent to pos ctrl
-k_d[3] = 50;
+k_p[3] = 10.0
+# with 12 it starts vibrating at low velocity
+k_s[3] = 6530
+# 6530 is equivalent to pos ctrl
+k_d[3] = 50
 # PARAMETERS OF R_ankle pitch JOINT 4
-k_v[4] = 0.9*0.007698
+k_v[4] = 0.9 * 0.007698
 k_tau[4] = 0.000177
-k_p[4] = 10.0;  # 10 feels good, but maybe i could go higher
-k_s[4] = 1900; # 1900 is equivalent to pos ctrl
-k_d[4] = 20;
+k_p[4] = 10.0
+# 10 feels good, but maybe i could go higher
+k_s[4] = 1900
+# 1900 is equivalent to pos ctrl
+k_d[4] = 20
 # PARAMETERS OF R_ankle roll JOINT 5
-k_v[5] = 0.006; # it was 0.007042, but i decreased it to make it more stable
+k_v[5] = 0.006
+# it was 0.007042, but i decreased it to make it more stable
 k_tau[5] = 0.000240
-k_p[5] = 15.0; # could go higher, but it feels already good
-k_s[5] = 1390; #1390 is equivalent to pos ctrl
-k_d[5] = 10;
+k_p[5] = 15.0
+# could go higher, but it feels already good
+k_s[5] = 1390
+# 1390 is equivalent to pos ctrl
+k_d[5] = 10
 # PARAMETERS OF Left hip pitch JOINT 8
 k_v[8] = 0.007561
 k_tau[8] = 0.000084
-k_p[8] = 6.0;   # with delay 20 ms
+k_p[8] = 6.0
+# with delay 20 ms
 
-k_p[:] = 2.0;
-k_s = 0.1*k_s;
+k_p[:] = 2.0
+k_s = 0.1 * k_s
 
 # PARAMETERS OF 1_(R_hip_y) JOINT 0
 f_k1p[0] = 0.000388
@@ -293,19 +308,19 @@ f_tau1n[11] = -2.207792
 f_tau2n[11] = -1.330901
 
 # PARAMETERS OF 3\_(R\_hip\_p) JOINT 2
-#g_k1p[2] = 0.012274
-#g_k2p[2] = 0.025269
-#g_k3p[2] = 0.012301
-#g_k1n[2] = 0.012188
-#g_k2n[2] = 0.032493
-#g_k3n[2] = 0.012035
-#g_q1p[2] = -0.003859
-#g_q2p[2] = -0.003162
-#g_q3p[2] = -0.000673
-#g_q1n[2] = -0.001845
-#g_q2n[2] = -0.000563
-#g_q3n[2] = 0.001133
-#g_dq1p[2] = -0.053629
-#g_dq2p[2] = 0.191807
-#g_dq1n[2] = -0.063182
-#g_dq2n[2] = 0.082912
+# g_k1p[2] = 0.012274
+# g_k2p[2] = 0.025269
+# g_k3p[2] = 0.012301
+# g_k1n[2] = 0.012188
+# g_k2n[2] = 0.032493
+# g_k3n[2] = 0.012035
+# g_q1p[2] = -0.003859
+# g_q2p[2] = -0.003162
+# g_q3p[2] = -0.000673
+# g_q1n[2] = -0.001845
+# g_q2n[2] = -0.000563
+# g_q3n[2] = 0.001133
+# g_dq1p[2] = -0.053629
+# g_dq2p[2] = 0.191807
+# g_dq1n[2] = -0.063182
+# g_dq2n[2] = 0.082912

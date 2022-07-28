@@ -11,25 +11,36 @@ from dynamic_graph.sot.core.filter_differentiator import FilterDifferentiator
 from dynamic_graph.sot.core.latch import Latch
 from dynamic_graph.sot.torque_control.control_manager import ControlManager
 from dynamic_graph.sot.torque_control.current_controller import CurrentController
-from dynamic_graph.sot.torque_control.joint_torque_controller import JointTorqueController
-from dynamic_graph.sot.torque_control.joint_trajectory_generator import JointTrajectoryGenerator
+from dynamic_graph.sot.torque_control.joint_torque_controller import (
+    JointTorqueController,
+)
+from dynamic_graph.sot.torque_control.joint_trajectory_generator import (
+    JointTrajectoryGenerator,
+)
 from dynamic_graph.sot.torque_control.numerical_difference import NumericalDifference
 from dynamic_graph.sot.torque_control.position_controller import PositionController
-from dynamic_graph.sot.torque_control.se3_trajectory_generator import SE3TrajectoryGenerator
+from dynamic_graph.sot.torque_control.se3_trajectory_generator import (
+    SE3TrajectoryGenerator,
+)
 from dynamic_graph.sot.torque_control.talos.motors_parameters import *
 from dynamic_graph.sot.torque_control.talos.sot_utils_talos import Bunch
-from dynamic_graph.sot.torque_control.utils.filter_utils import create_butter_lp_filter_Wn_05_N_3
+from dynamic_graph.sot.torque_control.utils.filter_utils import (
+    create_butter_lp_filter_Wn_05_N_3,
+)
 from dynamic_graph.tracer_real_time import TracerRealTime
 
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
-from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController as AdmittanceController
+from sot_talos_balance.simple_admittance_controller import (
+    SimpleAdmittanceController as AdmittanceController,
+)
 
-#from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
+# from dynamic_graph.sot.torque_control.talos.joint_pos_ctrl_gains import *
 
 
 def create_encoders(robot):
     from dynamic_graph.sot.core import Selec_of_vector
-    encoders = Selec_of_vector('qn')
+
+    encoders = Selec_of_vector("qn")
     plug(robot.device.robotState, encoders.sin)
     encoders.selec(6, NJ + 6)
     return encoders
@@ -37,7 +48,8 @@ def create_encoders(robot):
 
 def create_encoders_velocity(robot):
     from dynamic_graph.sot.core import Selec_of_vector
-    encoders = Selec_of_vector('dqn')
+
+    encoders = Selec_of_vector("dqn")
     plug(robot.device.robotVelocity, encoders.sin)
     encoders.selec(6, NJ + 6)
     return encoders
@@ -45,18 +57,19 @@ def create_encoders_velocity(robot):
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):
     from dynamic_graph.sot.torque_control.base_estimator import BaseEstimator
-    base_estimator = BaseEstimator('base_estimator')
+
+    base_estimator = BaseEstimator("base_estimator")
     plug(robot.encoders.sout, base_estimator.joint_positions)
-    #plug(robot.device.forceRLEG,            base_estimator.forceRLEG);
-    #plug(robot.device.forceLLEG,            base_estimator.forceLLEG);
+    # plug(robot.device.forceRLEG,            base_estimator.forceRLEG);
+    # plug(robot.device.forceLLEG,            base_estimator.forceLLEG);
     plug(robot.filters.ft_LF_filter.x_filtered, base_estimator.forceLLEG)
     plug(robot.filters.ft_RF_filter.x_filtered, base_estimator.forceRLEG)
     plug(robot.filters.ft_LF_filter.dx, base_estimator.dforceLLEG)
     plug(robot.filters.ft_RF_filter.dx, base_estimator.dforceRLEG)
     plug(robot.filters.estimator_kin.dx, base_estimator.joint_velocities)
     plug(robot.imu_filter.imu_quat, base_estimator.imu_quaternion)
-    #plug(robot.imu_offset_compensation.accelerometer_out, base_estimator.accelerometer);
-    #plug(robot.imu_offset_compensation.gyrometer_out,     base_estimator.gyroscope);
+    # plug(robot.imu_offset_compensation.accelerometer_out, base_estimator.accelerometer);
+    # plug(robot.imu_offset_compensation.gyrometer_out,     base_estimator.gyroscope);
     plug(robot.filters.gyro_filter.x_filtered, base_estimator.gyroscope)
     plug(robot.filters.acc_filter.x_filtered, base_estimator.accelerometer)
     base_estimator.K_fb_feet_poses.value = conf.K_fb_feet_poses
@@ -85,8 +98,11 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
 
 
 def create_imu_offset_compensation(robot, dt):
-    from dynamic_graph.sot.torque_control.imu_offset_compensation import ImuOffsetCompensation
-    imu_offset_compensation = ImuOffsetCompensation('imu_offset_comp')
+    from dynamic_graph.sot.torque_control.imu_offset_compensation import (
+        ImuOffsetCompensation,
+    )
+
+    imu_offset_compensation = ImuOffsetCompensation("imu_offset_comp")
     plug(robot.device.accelerometer, imu_offset_compensation.accelerometer_in)
     plug(robot.device.gyrometer, imu_offset_compensation.gyrometer_in)
     imu_offset_compensation.init(dt)
@@ -95,7 +111,8 @@ def create_imu_offset_compensation(robot, dt):
 
 def create_imu_filter(robot, dt):
     from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
-    imu_filter = MadgwickAHRS('imu_filter')
+
+    imu_filter = MadgwickAHRS("imu_filter")
     imu_filter.init(dt)
     plug(robot.imu_offset_compensation.accelerometer_out, imu_filter.accelerometer)
     plug(robot.imu_offset_compensation.gyrometer_out, imu_filter.gyroscope)
@@ -128,19 +145,25 @@ def connect_synchronous_trajectories(switch, list_of_traj_gens):
 
 def create_free_flyer_locator(ent, robot_name="robot"):
     from dynamic_graph.sot.torque_control.free_flyer_locator import FreeFlyerLocator
+
     ff_locator = FreeFlyerLocator("ffLocator")
     plug(ent.device.robotState, ff_locator.base6d_encoders)
     plug(ent.filters.estimator_kin.dx, ff_locator.joint_velocities)
     try:
         plug(ff_locator.base6dFromFoot_encoders, ent.dynamic.position)
     except:
-        print("[WARNING] Could not connect to dynamic entity, probably because you are in simulation")
+        print(
+            "[WARNING] Could not connect to dynamic entity, probably because you are in simulation"
+        )
     ff_locator.init(robot_name)
     return ff_locator
 
 
 def create_flex_estimator(robot, dt=0.001):
-    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import HRP2ModelBaseFlexEstimatorIMUForce
+    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (
+        HRP2ModelBaseFlexEstimatorIMUForce,
+    )
+
     flex_est = HRP2ModelBaseFlexEstimatorIMUForce(robot, useMocap=False, dt=dt)
     flex_est.setOn(False)
     flex_est.interface.setExternalContactPresence(False)
@@ -153,12 +176,16 @@ def create_flex_estimator(robot, dt=0.001):
 
 
 def create_floatingBase(robot):
-    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import FromLocalToGLobalFrame
+    from dynamic_graph.sot.application.state_observation.initializations.hrp2_model_base_flex_estimator_imu_force import (
+        FromLocalToGLobalFrame,
+    )
+
     floatingBase = FromLocalToGLobalFrame(robot.flex_est, "FloatingBase")
     plug(robot.ff_locator.freeflyer_aa, floatingBase.sinPos)
 
     from dynamic_graph.sot.core import Selec_of_vector
-    base_vel_no_flex = Selec_of_vector('base_vel_no_flex')
+
+    base_vel_no_flex = Selec_of_vector("base_vel_no_flex")
     plug(robot.ff_locator.v, base_vel_no_flex.sin)
     base_vel_no_flex.selec(0, 6)
     plug(base_vel_no_flex.sout, floatingBase.sinVel)
@@ -166,14 +193,14 @@ def create_floatingBase(robot):
 
 
 def create_position_controller(robot, gains, dt=0.001, robot_name="robot"):
-    posCtrl = PositionController('pos_ctrl')
+    posCtrl = PositionController("pos_ctrl")
     posCtrl.Kp.value = tuple(gains.kp_pos[round(dt, 3)])
     posCtrl.Kd.value = tuple(gains.kd_pos[round(dt, 3)])
     posCtrl.Ki.value = tuple(gains.ki_pos[round(dt, 3)])
-    posCtrl.dqRef.value = NJ * (0.0, )
+    posCtrl.dqRef.value = NJ * (0.0,)
     plug(robot.device.robotState, posCtrl.base6d_encoders)
     try:  # this works only in simulation
-        #plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
+        # plug(robot.device.jointsVelocities,    posCtrl.jointsVelocities);
         plug(robot.encoders_velocity.sout, posCtrl.jointsVelocities)
     except:
         plug(robot.filters.estimator_kin.dx, posCtrl.jointsVelocities)
@@ -198,9 +225,9 @@ def create_filters(robot, conf, motor_params, dt):
     filters = Bunch()
 
     # create low-pass filter for motor currents
-    filters.current_filter = create_butter_lp_filter_Wn_05_N_3('current_filter', dt, NJ)
+    filters.current_filter = create_butter_lp_filter_Wn_05_N_3("current_filter", dt, NJ)
 
-    #filters.current_filter = NumericalDifference("current_filter");
+    # filters.current_filter = NumericalDifference("current_filter");
     filters.ft_RF_filter = NumericalDifference("ft_RF_filter")
     filters.ft_LF_filter = NumericalDifference("ft_LF_filter")
     filters.ft_RH_filter = NumericalDifference("ft_RH_filter")
@@ -219,15 +246,15 @@ def create_filters(robot, conf, motor_params, dt):
     plug(robot.device.forceRARM, filters.ft_RH_filter.x)
     plug(robot.device.forceLARM, filters.ft_LH_filter.x)
     plug(robot.device.currents, filters.current_filter.x)
-    '''plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
+    """plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
     plug(filters.gyro_filter.x_filtered,                  estimator_ft.gyro);
     plug(filters.gyro_filter.dx,                          estimator_ft.dgyro);
     plug(filters.ft_RF_filter.x_filtered,                 estimator_ft.ftSensRightFoot);
     plug(filters.ft_LF_filter.x_filtered,                 estimator_ft.ftSensLeftFoot);
     plug(filters.ft_RH_filter.x_filtered,                 estimator_ft.ftSensRightHand);
     plug(filters.ft_LH_filter.x_filtered,                 estimator_ft.ftSensLeftHand);
-    plug(filters.current_filter.x_filtered,               estimator_ft.current);'''
-    '''plug(filters.estimator_kin.x_filtered, estimator_ft.q_filtered);
+    plug(filters.current_filter.x_filtered,               estimator_ft.current);"""
+    """plug(filters.estimator_kin.x_filtered, estimator_ft.q_filtered);
     plug(filters.estimator_kin.dx,         estimator_ft.dq_filtered);
     plug(filters.estimator_kin.ddx,        estimator_ft.ddq_filtered);
     try:
@@ -250,8 +277,8 @@ def create_filters(robot, conf, motor_params, dt):
     estimator_ft.rotor_inertias.value = motor_params.ROTOR_INERTIAS;
     estimator_ft.gear_ratios.value    = motor_params.GEAR_RATIOS;
 
-    estimator_ft.init(True);'''
-    #filters.current_filter.init(dt,NJ, conf.DELAY_CURRENT*dt,1)
+    estimator_ft.init(True);"""
+    # filters.current_filter.init(dt,NJ, conf.DELAY_CURRENT*dt,1)
     filters.ft_RF_filter.init(dt, 6, conf.DELAY_FORCE * dt, 1)
     filters.ft_LF_filter.init(dt, 6, conf.DELAY_FORCE * dt, 1)
     filters.ft_RH_filter.init(dt, 6, conf.DELAY_FORCE * dt, 1)
@@ -269,19 +296,23 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     plug(robot.encoders.sout, torque_ctrl.jointsPositions)
     plug(robot.filters.estimator_kin.dx, torque_ctrl.jointsVelocities)
     plug(robot.filters.estimator_kin.ddx, torque_ctrl.jointsAccelerations)
-    #plug(robot.estimator_ft.jointsTorques,              torque_ctrl.jointsTorques);
+    # plug(robot.estimator_ft.jointsTorques,              torque_ctrl.jointsTorques);
     plug(robot.device.ptorque, torque_ctrl.jointsTorques)
-    #New
-    torque_ctrl.jointsTorquesDesired.value = NJ * (0.0, )
-    torque_ctrl.jointsTorquesDerivative.value = NJ * (0.0, )
-    torque_ctrl.dq_des.value = NJ * (0.0, )
+    # New
+    torque_ctrl.jointsTorquesDesired.value = NJ * (0.0,)
+    torque_ctrl.jointsTorquesDerivative.value = NJ * (0.0,)
+    torque_ctrl.dq_des.value = NJ * (0.0,)
     torque_ctrl.KpTorque.value = tuple(conf.k_p_torque)
     torque_ctrl.KdTorque.value = tuple(conf.k_d_torque)
     torque_ctrl.KiTorque.value = tuple(conf.k_i_torque)
     torque_ctrl.KdVel.value = tuple(conf.k_d_vel)
     torque_ctrl.KiVel.value = tuple(conf.k_i_vel)
-    torque_ctrl.torque_integral_saturation.value = tuple(conf.torque_integral_saturation)
-    torque_ctrl.coulomb_friction_compensation_percentage.value = NJ * (conf.COULOMB_FRICTION_COMPENSATION_PERCENTAGE, )
+    torque_ctrl.torque_integral_saturation.value = tuple(
+        conf.torque_integral_saturation
+    )
+    torque_ctrl.coulomb_friction_compensation_percentage.value = NJ * (
+        conf.COULOMB_FRICTION_COMPENSATION_PERCENTAGE,
+    )
 
     torque_ctrl.motorParameterKt_p.value = tuple(motor_params.Kt_p)
     torque_ctrl.motorParameterKt_n.value = tuple(motor_params.Kt_n)
@@ -291,13 +322,16 @@ def create_torque_controller(robot, conf, motor_params, dt=0.001, robot_name="ro
     torque_ctrl.motorParameterKv_n.value = tuple(motor_params.Kv_n)
     torque_ctrl.motorParameterKa_p.value = tuple(motor_params.Ka_p)
     torque_ctrl.motorParameterKa_n.value = tuple(motor_params.Ka_n)
-    torque_ctrl.polySignDq.value = NJ * (conf.poly_sign_dq, )
+    torque_ctrl.polySignDq.value = NJ * (conf.poly_sign_dq,)
     torque_ctrl.init(dt, robot_name)
     return torque_ctrl
 
 
-def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot'):
-    from dynamic_graph.sot.torque_control.inverse_dynamics_balance_controller import InverseDynamicsBalanceController
+def create_balance_controller(robot, conf, motor_params, dt, robot_name="robot"):
+    from dynamic_graph.sot.torque_control.inverse_dynamics_balance_controller import (
+        InverseDynamicsBalanceController,
+    )
+
     ctrl = InverseDynamicsBalanceController("invDynBalCtrl")
 
     try:
@@ -309,23 +343,26 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
 
     try:
         from dynamic_graph.sot.core import Selec_of_vector
-        robot.ddq_des = Selec_of_vector('ddq_des')
+
+        robot.ddq_des = Selec_of_vector("ddq_des")
         plug(ctrl.dv_des, robot.ddq_des.sin)
         robot.ddq_des.selec(6, NJ + 6)
         # plug(robot.ddq_des.sout, robot.estimator_ft.ddqRef);
     except:
-        print("WARNING: Could not connect dv_des from BalanceController to ForceTorqueEstimator")
+        print(
+            "WARNING: Could not connect dv_des from BalanceController to ForceTorqueEstimator"
+        )
 
-    #plug(robot.estimator_ft.contactWrenchRightSole, ctrl.wrench_right_foot);
-    #plug(robot.estimator_ft.contactWrenchLeftSole,  ctrl.wrench_left_foot);
+    # plug(robot.estimator_ft.contactWrenchRightSole, ctrl.wrench_right_foot);
+    # plug(robot.estimator_ft.contactWrenchLeftSole,  ctrl.wrench_left_foot);
     plug(robot.device.forceRLEG, ctrl.wrench_right_foot)
-    # New
+    # New
     plug(robot.device.forceLLEG, ctrl.wrench_left_foot)
-    # New
+    # New
     plug(ctrl.tau_des, robot.torque_ctrl.jointsTorquesDesired)
-    #plug(ctrl.dq_admittance,                        robot.torque_ctrl.dq_des);
-    robot.torque_ctrl.dq_des.value = NJ * (0.0, )
-    #plug(ctrl.tau_des,                              robot.estimator_ft.tauDes);
+    # plug(ctrl.dq_admittance,                        robot.torque_ctrl.dq_des);
+    robot.torque_ctrl.dq_des.value = NJ * (0.0,)
+    # plug(ctrl.tau_des,                              robot.estimator_ft.tauDes);
 
     plug(ctrl.right_foot_pos, robot.rf_traj_gen.initial_value)
     plug(robot.rf_traj_gen.x, ctrl.rf_ref_pos)
@@ -353,8 +390,12 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     #    ctrl.rotor_inertias.value = conf.ROTOR_INERTIAS;
     #    ctrl.gear_ratios.value = conf.GEAR_RATIOS;
     ctrl.rotor_inertias.value = tuple(
-        [g * g * r for (g, r) in zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)])
-    ctrl.gear_ratios.value = NJ * (1.0, )
+        [
+            g * g * r
+            for (g, r) in zip(motor_params.GEAR_RATIOS, motor_params.ROTOR_INERTIAS)
+        ]
+    )
+    ctrl.gear_ratios.value = NJ * (1.0,)
     ctrl.contact_normal.value = conf.FOOT_CONTACT_NORMAL
     ctrl.contact_points.value = conf.RIGHT_FOOT_CONTACT_POINTS
     ctrl.f_min.value = conf.fMin
@@ -362,12 +403,12 @@ def create_balance_controller(robot, conf, motor_params, dt, robot_name='robot')
     ctrl.f_max_left_foot.value = conf.fMax
     ctrl.mu.value = conf.mu[0]
     ctrl.weight_contact_forces.value = (1e2, 1e2, 1e0, 1e3, 1e3, 1e3)
-    ctrl.kp_com.value = 3 * (conf.kp_com, )
-    ctrl.kd_com.value = 3 * (conf.kd_com, )
-    ctrl.kp_constraints.value = 6 * (conf.kp_constr, )
-    ctrl.kd_constraints.value = 6 * (conf.kd_constr, )
-    ctrl.kp_feet.value = 6 * (conf.kp_feet, )
-    ctrl.kd_feet.value = 6 * (conf.kd_feet, )
+    ctrl.kp_com.value = 3 * (conf.kp_com,)
+    ctrl.kd_com.value = 3 * (conf.kd_com,)
+    ctrl.kp_constraints.value = 6 * (conf.kp_constr,)
+    ctrl.kd_constraints.value = 6 * (conf.kd_constr,)
+    ctrl.kp_feet.value = 6 * (conf.kp_feet,)
+    ctrl.kd_feet.value = 6 * (conf.kd_feet,)
     ctrl.kp_posture.value = conf.kp_posture
     ctrl.kd_posture.value = conf.kd_posture
     ctrl.kp_pos.value = conf.kp_pos
@@ -406,7 +447,7 @@ def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     plug(inv_dyn_ctrl.tauDes, robot.estimator_ft.tauDes)
     plug(robot.estimator_ft.dynamicsError, inv_dyn_ctrl.dynamicsError)
 
-    inv_dyn_ctrl.dynamicsErrorGain.value = (NJ + 6) * (0.0, )
+    inv_dyn_ctrl.dynamicsErrorGain.value = (NJ + 6) * (0.0,)
     inv_dyn_ctrl.Kp.value = tuple(conf.k_s)
     # joint proportional conf
     inv_dyn_ctrl.Kd.value = tuple(conf.k_d)
@@ -417,19 +458,19 @@ def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
     # force integral conf
     inv_dyn_ctrl.rotor_inertias.value = motor_params.ROTOR_INERTIAS
     inv_dyn_ctrl.gear_ratios.value = motor_params.GEAR_RATIOS
-    inv_dyn_ctrl.controlledJoints.value = NJ * (1.0, )
+    inv_dyn_ctrl.controlledJoints.value = NJ * (1.0,)
     inv_dyn_ctrl.init(dt)
     return inv_dyn_ctrl
 
 
-def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
+def create_ctrl_manager(conf, motor_params, dt, robot_name="robot"):
     ctrl_manager = ControlManager("ctrl_man")
 
-    ctrl_manager.tau_predicted.value = NJ * (0.0, )
-    ctrl_manager.i_measured.value = NJ * (0.0, )
-    ctrl_manager.tau_max.value = NJ * (conf.TAU_MAX, )
-    ctrl_manager.i_max.value = NJ * (conf.CURRENT_MAX, )
-    ctrl_manager.u_max.value = NJ * (conf.CTRL_MAX, )
+    ctrl_manager.tau_predicted.value = NJ * (0.0,)
+    ctrl_manager.i_measured.value = NJ * (0.0,)
+    ctrl_manager.tau_max.value = NJ * (conf.TAU_MAX,)
+    ctrl_manager.i_max.value = NJ * (conf.CURRENT_MAX,)
+    ctrl_manager.u_max.value = NJ * (conf.CTRL_MAX,)
 
     # Init should be called before addCtrlMode
     # because the size of state vector must be known.
@@ -441,13 +482,17 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
 
     # Set the map joint limits for each id
     for key in conf.mapJointLimits:
-        ctrl_manager.setJointLimitsFromId(key,conf.mapJointLimits[key][0], \
-                                conf.mapJointLimits[key][1])
+        ctrl_manager.setJointLimitsFromId(
+            key, conf.mapJointLimits[key][0], conf.mapJointLimits[key][1]
+        )
 
     # Set the force limits for each id
     for key in conf.mapForceIdToForceLimits:
-        ctrl_manager.setForceLimitsFromId(key,tuple(conf.mapForceIdToForceLimits[key][0]), \
-                                tuple(conf.mapForceIdToForceLimits[key][1]))
+        ctrl_manager.setForceLimitsFromId(
+            key,
+            tuple(conf.mapForceIdToForceLimits[key][0]),
+            tuple(conf.mapForceIdToForceLimits[key][1]),
+        )
 
     # Set the force sensor id for each sensor name
     for key in conf.mapNameToForceId:
@@ -477,24 +522,30 @@ def connect_ctrl_manager(robot):
     robot.ctrl_manager.addCtrlMode("torque")
     plug(robot.torque_ctrl.u, robot.ctrl_manager.ctrl_torque)
     plug(robot.pos_ctrl.pwmDes, robot.ctrl_manager.ctrl_pos)
-    #plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints);
+    # plug(robot.ctrl_manager.joints_ctrl_mode_torque,    robot.inv_dyn.active_joints);
     robot.ctrl_manager.setCtrlMode("all", "pos")
-    #plug(robot.ctrl_manager.u_safe,                     robot.current_ctrl.i_des);
+    # plug(robot.ctrl_manager.u_safe,                     robot.current_ctrl.i_des);
     plug(robot.ctrl_manager.u_safe, robot.device.control)
     return
 
 
-def create_current_controller(robot, conf, motor_params, dt, robot_name='robot'):
+def create_current_controller(robot, conf, motor_params, dt, robot_name="robot"):
     current_ctrl = CurrentController("current_ctrl")
 
-    current_ctrl.i_max.value = NJ * (conf.CURRENT_MAX, )
-    current_ctrl.u_max.value = NJ * (conf.CTRL_MAX, )
-    current_ctrl.u_saturation.value = NJ * (conf.CTRL_SATURATION, )
-    current_ctrl.percentage_dead_zone_compensation.value = tuple(conf.percentage_dead_zone_compensation)
-    current_ctrl.percentage_bemf_compensation.value = tuple(conf.percentage_bemf_compensation)
-    current_ctrl.i_sensor_offsets_low_level.value = tuple(conf.current_sensor_offsets_low_level)
+    current_ctrl.i_max.value = NJ * (conf.CURRENT_MAX,)
+    current_ctrl.u_max.value = NJ * (conf.CTRL_MAX,)
+    current_ctrl.u_saturation.value = NJ * (conf.CTRL_SATURATION,)
+    current_ctrl.percentage_dead_zone_compensation.value = tuple(
+        conf.percentage_dead_zone_compensation
+    )
+    current_ctrl.percentage_bemf_compensation.value = tuple(
+        conf.percentage_bemf_compensation
+    )
+    current_ctrl.i_sensor_offsets_low_level.value = tuple(
+        conf.current_sensor_offsets_low_level
+    )
     current_ctrl.i_max_dead_zone_compensation.value = tuple(conf.i_max_dz_comp)
-    current_ctrl.in_out_gain.value = NJ * (conf.IN_OUT_GAIN, )
+    current_ctrl.in_out_gain.value = NJ * (conf.IN_OUT_GAIN,)
     current_ctrl.kp_current.value = tuple(conf.kp_current)
     current_ctrl.ki_current.value = tuple(conf.ki_current)
     current_ctrl.bemf_factor.value = motor_params.K_bemf
@@ -510,7 +561,7 @@ def create_current_controller(robot, conf, motor_params, dt, robot_name='robot')
     return current_ctrl
 
 
-def create_admittance_ctrl(robot, conf, dt=0.001, robot_name='robot'):
+def create_admittance_ctrl(robot, conf, dt=0.001, robot_name="robot"):
     admit_ctrl = AdmittanceController("adm_ctrl")
     plug(robot.encoders.sout, admit_ctrl.encoders)
     plug(robot.filters.estimator_kin.dx, admit_ctrl.jointsVelocities)
@@ -521,8 +572,8 @@ def create_admittance_ctrl(robot, conf, dt=0.001, robot_name='robot'):
     plug(robot.inv_dyn.f_des_right_foot, admit_ctrl.fRightFootRef)
     plug(robot.inv_dyn.f_des_left_foot, admit_ctrl.fLeftFootRef)
 
-    admit_ctrl.damping.value = 4 * (0.05, )
-    admit_ctrl.controlledJoints.value = NJ * (1.0, )
+    admit_ctrl.damping.value = 4 * (0.05,)
+    admit_ctrl.controlledJoints.value = NJ * (1.0,)
     admit_ctrl.kp_force.value = conf.kp_force
     admit_ctrl.ki_force.value = conf.ki_force
     admit_ctrl.kp_vel.value = conf.kp_vel
@@ -532,7 +583,8 @@ def create_admittance_ctrl(robot, conf, dt=0.001, robot_name='robot'):
 
     # connect it to torque control
     from dynamic_graph.sot.core import Add_of_vector
-    robot.sum_torque_adm = Add_of_vector('sum_torque_adm')
+
+    robot.sum_torque_adm = Add_of_vector("sum_torque_adm")
     plug(robot.inv_dyn.tau_des, robot.sum_torque_adm.sin1)
     plug(admit_ctrl.u, robot.sum_torque_adm.sin2)
     plug(robot.sum_torque_adm.sout, robot.torque_ctrl.jointsTorquesDesired)
@@ -541,76 +593,93 @@ def create_admittance_ctrl(robot, conf, dt=0.001, robot_name='robot'):
     return admit_ctrl
 
 
-def create_topic(ros_import, signal, name, robot=None, entity=None, data_type='vector', sleep_time=0.1):
-    ros_import.add(data_type, name + '_ros', name)
-    plug(signal, ros_import.signal(name + '_ros'))
-    if (entity is not None and robot is not None):
-        robot.device.before.addDownsampledSignal(entity.name + '.' + signal.name.split('::')[-1], 1)
+def create_topic(
+    ros_import,
+    signal,
+    name,
+    robot=None,
+    entity=None,
+    data_type="vector",
+    sleep_time=0.1,
+):
+    ros_import.add(data_type, name + "_ros", name)
+    plug(signal, ros_import.signal(name + "_ros"))
+    if entity is not None and robot is not None:
+        robot.device.before.addDownsampledSignal(
+            entity.name + "." + signal.name.split("::")[-1], 1
+        )
     from time import sleep
+
     sleep(sleep_time)
 
 
 def create_ros_topics(robot):
     from dynamic_graph.ros import RosPublish
-    ros = RosPublish('rosPublish')
+
+    ros = RosPublish("rosPublish")
     try:
-        create_topic(ros, robot.device.robotState, 'position')
-        create_topic(ros, robot.device.gyrometer, 'gyrometer')
-        create_topic(ros, robot.device.accelerometer, 'accelerometer')
-        create_topic(ros, robot.device.forceRLEG, 'forceRLEG')
-        create_topic(ros, robot.device.forceLLEG, 'forceLLEG')
-        create_topic(ros, robot.device.currents, 'currents')
+        create_topic(ros, robot.device.robotState, "position")
+        create_topic(ros, robot.device.gyrometer, "gyrometer")
+        create_topic(ros, robot.device.accelerometer, "accelerometer")
+        create_topic(ros, robot.device.forceRLEG, "forceRLEG")
+        create_topic(ros, robot.device.forceLLEG, "forceLLEG")
+        create_topic(ros, robot.device.currents, "currents")
         #        create_topic(ros, robot.device.forceRARM,       'forceRARM');
         #        create_topic(ros, robot.device.forceLARM,       'forceLARM');
-        robot.device.after.addDownsampledSignal('rosPublish.trigger', 1)
+        robot.device.after.addDownsampledSignal("rosPublish.trigger", 1)
     except:
         pass
 
     try:
-        create_topic(ros, robot.filters.estimator_kin.dx, 'jointsVelocities')
-        create_topic(ros, robot.estimator_ft.contactWrenchLeftSole, 'contactWrenchLeftSole')
-        create_topic(ros, robot.estimator_ft.contactWrenchRightSole, 'contactWrenchRightSole')
-        create_topic(ros, robot.estimator_ft.jointsTorques, 'jointsTorques')
-#        create_topic(ros, robot.estimator.jointsTorquesFromInertiaModel,  'jointsTorquesFromInertiaModel');
-#        create_topic(ros, robot.estimator.jointsTorquesFromMotorModel,    'jointsTorquesFromMotorModel');
-#        create_topic(ros, robot.estimator.currentFiltered,                'currentFiltered');
+        create_topic(ros, robot.filters.estimator_kin.dx, "jointsVelocities")
+        create_topic(
+            ros, robot.estimator_ft.contactWrenchLeftSole, "contactWrenchLeftSole"
+        )
+        create_topic(
+            ros, robot.estimator_ft.contactWrenchRightSole, "contactWrenchRightSole"
+        )
+        create_topic(ros, robot.estimator_ft.jointsTorques, "jointsTorques")
+    #        create_topic(ros, robot.estimator.jointsTorquesFromInertiaModel,  'jointsTorquesFromInertiaModel');
+    #        create_topic(ros, robot.estimator.jointsTorquesFromMotorModel,    'jointsTorquesFromMotorModel');
+    #        create_topic(ros, robot.estimator.currentFiltered,                'currentFiltered');
     except:
         pass
 
     try:
-        create_topic(ros, robot.torque_ctrl.u, 'i_des_torque_ctrl')
+        create_topic(ros, robot.torque_ctrl.u, "i_des_torque_ctrl")
     except:
         pass
 
     try:
-        create_topic(ros, robot.traj_gen.q, 'q_ref')
-#        create_topic(ros, robot.traj_gen.dq,  'dq_ref');
-#        create_topic(ros, robot.traj_gen.ddq, 'ddq_ref');
+        create_topic(ros, robot.traj_gen.q, "q_ref")
+    #        create_topic(ros, robot.traj_gen.dq,  'dq_ref');
+    #        create_topic(ros, robot.traj_gen.ddq, 'ddq_ref');
     except:
         pass
 
     try:
-        create_topic(ros, robot.ctrl_manager.pwmDes, 'i_des')
-        create_topic(ros, robot.ctrl_manager.pwmDesSafe, 'i_des_safe')
+        create_topic(ros, robot.ctrl_manager.pwmDes, "i_des")
+        create_topic(ros, robot.ctrl_manager.pwmDesSafe, "i_des_safe")
 
-
-#        create_topic(ros, robot.ctrl_manager.signOfControlFiltered,   'signOfControlFiltered');
-#        create_topic(ros, robot.ctrl_manager.signOfControl,           'signOfControl');
+    #        create_topic(ros, robot.ctrl_manager.signOfControlFiltered,   'signOfControlFiltered');
+    #        create_topic(ros, robot.ctrl_manager.signOfControl,           'signOfControl');
     except:
         pass
 
     try:
-        create_topic(ros, robot.inv_dyn.tau_des, 'tau_des')
+        create_topic(ros, robot.inv_dyn.tau_des, "tau_des")
     except:
         pass
 
     try:
-        create_topic(ros, robot.ff_locator.base6dFromFoot_encoders, 'base6dFromFoot_encoders')
+        create_topic(
+            ros, robot.ff_locator.base6dFromFoot_encoders, "base6dFromFoot_encoders"
+        )
     except:
         pass
 
     try:
-        create_topic(ros, robot.floatingBase.soutPos, 'floatingBase_pos')
+        create_topic(ros, robot.floatingBase.soutPos, "floatingBase_pos")
     except:
         pass
 
@@ -621,48 +690,51 @@ def addTrace(tracer, entity, signalName):
     """
     Add a signal to a tracer
     """
-    signal = '{0}.{1}'.format(entity.name, signalName)
-    filename = '{0}-{1}'.format(entity.name, signalName)
+    signal = "{0}.{1}".format(entity.name, signalName)
+    filename = "{0}-{1}".format(entity.name, signalName)
     tracer.add(signal, filename)
 
 
 def addSignalsToTracer(tracer, device):
-    addTrace(tracer, device, 'robotState')
-    addTrace(tracer, device, 'gyrometer')
-    addTrace(tracer, device, 'accelerometer')
-    addTrace(tracer, device, 'forceRLEG')
-    addTrace(tracer, device, 'forceLLEG')
-    addTrace(tracer, device, 'forceRARM')
-    addTrace(tracer, device, 'forceLARM')
-    addTrace(tracer, device, 'control')
-    addTrace(tracer, device, 'currents')
-    addTrace(tracer, device, 'ptorque')
+    addTrace(tracer, device, "robotState")
+    addTrace(tracer, device, "gyrometer")
+    addTrace(tracer, device, "accelerometer")
+    addTrace(tracer, device, "forceRLEG")
+    addTrace(tracer, device, "forceLLEG")
+    addTrace(tracer, device, "forceRARM")
+    addTrace(tracer, device, "forceLARM")
+    addTrace(tracer, device, "control")
+    addTrace(tracer, device, "currents")
+    addTrace(tracer, device, "ptorque")
 
 
-def create_tracer(device, traj_gen=None, estimator_kin=None, inv_dyn=None, torque_ctrl=None):
-    tracer = TracerRealTime('motor_id_trace')
+def create_tracer(
+    device, traj_gen=None, estimator_kin=None, inv_dyn=None, torque_ctrl=None
+):
+    tracer = TracerRealTime("motor_id_trace")
     tracer.setBufferSize(80 * (2**20))
-    tracer.open('/tmp/', 'dg_', '.dat')
-    device.after.addSignal('{0}.triger'.format(tracer.name))
+    tracer.open("/tmp/", "dg_", ".dat")
+    device.after.addSignal("{0}.triger".format(tracer.name))
 
     addSignalsToTracer(tracer, device)
 
-    with open('/tmp/dg_info.dat', 'a') as f:
-        if (estimator_kin != None):
-            f.write('Estimator encoder delay: {0}\n'.format(estimator_kin.getDelay()))
-        if (inv_dyn != None):
-            f.write('Inv dyn Ks: {0}\n'.format(inv_dyn.Kp.value))
-            f.write('Inv dyn Kd: {0}\n'.format(inv_dyn.Kd.value))
-            f.write('Inv dyn Kf: {0}\n'.format(inv_dyn.Kf.value))
-            f.write('Inv dyn Ki: {0}\n'.format(inv_dyn.Ki.value))
-        if (torque_ctrl != None):
-            f.write('Torque ctrl KpTorque: {0}\n'.format(torque_ctrl.KpTorque.value))
+    with open("/tmp/dg_info.dat", "a") as f:
+        if estimator_kin != None:
+            f.write("Estimator encoder delay: {0}\n".format(estimator_kin.getDelay()))
+        if inv_dyn != None:
+            f.write("Inv dyn Ks: {0}\n".format(inv_dyn.Kp.value))
+            f.write("Inv dyn Kd: {0}\n".format(inv_dyn.Kd.value))
+            f.write("Inv dyn Kf: {0}\n".format(inv_dyn.Kf.value))
+            f.write("Inv dyn Ki: {0}\n".format(inv_dyn.Ki.value))
+        if torque_ctrl != None:
+            f.write("Torque ctrl KpTorque: {0}\n".format(torque_ctrl.KpTorque.value))
     f.close()
     return tracer
 
 
 def reset_tracer(device, tracer):
     from time import sleep
+
     tracer.stop()
     sleep(0.2)
     tracer.dump()
