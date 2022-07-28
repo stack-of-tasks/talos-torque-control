@@ -3,7 +3,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 # Project properties
-SET(PROJECT_ORG pyrene-dev)
+SET(PROJECT_ORG stack-of-tasks)
 SET(PROJECT_NAME talos-torque-control)
 SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aiming at the implementation of torque control on TALOS.")
 SET(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
