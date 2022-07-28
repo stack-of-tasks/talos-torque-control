@@ -55,5 +55,5 @@ def run_test(appli):
         raw_input("Wait before starting the dynamic graph")
         runCommandStartDynamicGraph()
         print()
-    except rospy.ServiceException, e:
+    except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
