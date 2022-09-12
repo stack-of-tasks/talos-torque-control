@@ -7,7 +7,10 @@ stored according to the controller time step (1, 2, 5 or 10 ms).
 
 @author: adelpret
 """
-from joint_pos_ctrl_gains import *  # noqa
+
+import numpy as np
+
+from joint_pos_ctrl_gains import kp_pos, ki_pos, kd_pos
 
 key = round(0.001, 3)
 # kp_pos[key] = np.array(

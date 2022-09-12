@@ -248,7 +248,8 @@ def create_filters(robot, conf, motor_params, dt):
     plug(robot.device.forceRARM, filters.ft_RH_filter.x)
     plug(robot.device.forceLARM, filters.ft_LH_filter.x)
     plug(robot.device.currents, filters.current_filter.x)
-    """plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
+    """
+    plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
     plug(filters.gyro_filter.x_filtered,                  estimator_ft.gyro);
     plug(filters.gyro_filter.dx,                          estimator_ft.dgyro);
     plug(filters.ft_RF_filter.x_filtered,                 estimator_ft.ftSensRightFoot);

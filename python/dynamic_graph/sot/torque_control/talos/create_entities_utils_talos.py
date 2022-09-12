@@ -381,7 +381,8 @@ def create_filters(robot, conf, motor_params, dt):
     plug(robot.device.forceLARM, filters.ft_LH_filter.x)
     plug(robot.device.currents, filters.current_filter.x)
 
-    """plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
+    """
+    plug(filters.acc_filter.x_filtered,                   estimator_ft.accelerometer);
     plug(filters.gyro_filter.x_filtered,                  estimator_ft.gyro);
     plug(filters.gyro_filter.dx,                          estimator_ft.dgyro);
     plug(filters.ft_RF_filter.x_filtered,                 estimator_ft.ftSensRightFoot);
@@ -695,7 +696,7 @@ def create_simple_inverse_dyn_controller(robot, conf, dt, robot_name="robot"):
 
 
 def create_inverse_dynamics(robot, conf, motor_params, dt=0.001):
-    inv_dyn_ctrl = InverseDynamicsController("inv_dyn")
+    inv_dyn_ctrl = InverseDynamicsController("inv_dyn")  # noqa
     plug(robot.device.robotState, inv_dyn_ctrl.base6d_encoders)
     plug(robot.filters.estimator_kin.dx, inv_dyn_ctrl.jointsVelocities)
     plug(robot.traj_gen.q, inv_dyn_ctrl.qRef)
@@ -1051,7 +1052,7 @@ def create_tracer(
         if estimator_kin is not None:
             f.write(
                 "Estimator encoder delay: {0}\n".format(
-                    robot.filters.estimator_kin.getDelay()
+                    robot.filters.estimator_kin.getDelay()  # noqa
                 )
             )
         if inv_dyn is not None:
@@ -1061,7 +1062,7 @@ def create_tracer(
             f.write("Inv dyn Ki: {0}\n".format(inv_dyn.Ki.value))
         if torque_ctrl is not None:
             f.write(
-                "Torque ctrl KpTorque: {0}\n".format(robot.torque_ctrl.KpTorque.value)
+                "Torque ctrl KpTorque: %s\n" % robot.torque_ctrl.KpTorque.value  # noqa
             )
     f.close()
     return tracer
