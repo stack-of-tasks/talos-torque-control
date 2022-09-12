@@ -8,8 +8,15 @@ from __future__ import print_function
 
 import rospy
 
-from std_srvs.srv import *  # noqa
-from dynamic_graph_bridge_msgs.srv import *  # noqa
+from std_srvs.srv import Empty
+from dynamic_graph_bridge_msgs.srv import RunCommand
+
+
+try:
+    # Python 2
+    input = raw_input  # noqa
+except NameError:
+    pass
 
 _runCommandClient = rospy.ServiceProxy("run_command", RunCommand)
 
@@ -30,7 +37,7 @@ def evalCommandClient(code):
 
 
 def launch_script(code, title, description=""):
-    raw_input(title + ":   " + description)
+    input(title + ":   " + description)
     rospy.loginfo(title)
     rospy.loginfo(code)
     for line in code:
@@ -57,7 +64,7 @@ def run_test(appli):
         rospy.loginfo("Stack of Tasks launched")
 
         launch_script(initCode, "initialize SoT")
-        raw_input("Wait before starting the dynamic graph")
+        input("Wait before starting the dynamic graph")
         runCommandStartDynamicGraph()
         print()
     except rospy.ServiceException as e:
