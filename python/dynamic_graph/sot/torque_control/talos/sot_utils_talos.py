@@ -18,7 +18,7 @@ class Bunch:
 
     def __str__(self, prefix=""):
         res = ""
-        for (key, value) in self.__dict__.iteritems():
+        for key, value in self.__dict__.iteritems():
             if (
                 isinstance(value, np.ndarray)
                 and len(value.shape) == 2
@@ -175,7 +175,6 @@ def dump_signal_to_file(sig_list, index, filename, T, dt):
 
 
 def go_to_position_sinusoid(robot):
-
     robot.position1 = (
         # Free flyer
         0.0,
@@ -229,7 +228,6 @@ def go_to_position_sinusoid(robot):
 
 
 def start_movement_sinusoid(robot):
-
     robot.traj_gen.startSinusoid("re", -1.9, 3)
     return robot
 
