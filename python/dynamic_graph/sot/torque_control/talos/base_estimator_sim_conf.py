@@ -1,4 +1,4 @@
-""" ********************* USER-PARAMETERS OF BASE ESTIMATOR *********************** """
+"""********************* USER-PARAMETERS OF BASE ESTIMATOR ***********************"""
 
 from base_estimator_conf import *  # noqa
 
